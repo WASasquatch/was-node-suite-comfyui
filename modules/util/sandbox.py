@@ -7,9 +7,12 @@ path inside a permitted root, or raise :class:`PathNotAllowed`. Writes exclude C
 
 from __future__ import annotations
 
+import fnmatch
 import glob
 import os
+import time
 import unicodedata
+from collections import deque
 from pathlib import Path, PureWindowsPath
 from typing import Iterable
 
@@ -82,6 +85,21 @@ DEVICE_NAMES = frozenset({
 
 #: Links followed through one another before a path is refused.
 MAX_LINKS = 16
+
+#: Characters that make a configured entry a pattern, when it names no folder as written.
+WILDCARDS = frozenset("*?[")
+
+#: A pattern segment matching any number of folders, none included.
+ANY_DEPTH = "**"
+
+#: Folders one pattern looks into before its matching stops.
+PATTERN_FOLDERS = 20000
+
+#: Seconds a pattern's matches are used before its folders are looked at again.
+PATTERN_REFRESH = 10.0
+
+#: ``(key, pattern)`` to when it was matched and the folders it matched.
+_matched: dict[tuple[str, str], tuple[float, list[Path]]] = {}
 
 
 class PathNotAllowed(ValueError):
@@ -156,7 +174,9 @@ def _configured(key: str) -> list[Path]:
         key: Either ``"allow_read"`` or ``"allow_write"``.
 
     Returns:
-        Resolved directories. Entries that are not directories are dropped with a warning.
+        Resolved directories. An entry holding ``*``, ``?`` or ``[`` that names no folder as
+        written gives every folder it matches. Entries that are not directories are dropped
+        with a warning.
     """
     configured = (load_config().get("paths") or {}).get(key) or []
     if isinstance(configured, (str, os.PathLike)):
@@ -177,6 +197,9 @@ def _configured(key: str) -> list[Path]:
                 f"quoted path, as 'D:/prompts'.",
             )
             continue
+        if _is_pattern(entry):
+            roots.extend(root for root in _pattern_roots(key, os.fspath(entry)) if root not in roots)
+            continue
         try:
             root = Path(entry).expanduser().resolve()
         except (OSError, ValueError, RuntimeError):
@@ -186,6 +209,156 @@ def _configured(key: str) -> list[Path]:
             continue
         roots.append(root)
     return roots
+
+
+def _is_pattern(entry) -> bool:
+    """Whether a configured entry is a pattern: it holds a wildcard and names no folder as written.
+
+    Args:
+        entry: The entry as configured.
+
+    Returns:
+        True for an entry holding ``*``, ``?`` or ``[`` that is not an existing folder, and for
+        one with ``..`` anywhere after its first wildcard.
+    """
+    text = os.fspath(entry)
+    if not any(character in WILDCARDS for character in text):
+        return False
+    first = min(text.index(character) for character in WILDCARDS if character in text)
+    if ".." in text[first:].replace("\\", "/").split("/"):
+        return True
+    try:
+        return not os.path.isdir(os.path.expanduser(text))
+    except (OSError, ValueError):
+        return True
+
+
+def _pattern_roots(key: str, pattern: str) -> list[Path]:
+    """The folders a configured pattern matches, matched again after :data:`PATTERN_REFRESH` seconds.
+
+    Args:
+        key: ``"allow_read"`` or ``"allow_write"``.
+        pattern: The entry as configured.
+
+    Returns:
+        Resolved directories, none inside another.
+    """
+    now = time.monotonic()
+    cached = _matched.get((key, pattern))
+    if cached is not None and now - cached[0] < PATTERN_REFRESH:
+        return cached[1]
+    found = _match_pattern(key, pattern)
+    _matched[(key, pattern)] = (now, found)
+    return found
+
+
+def _match_pattern(key: str, pattern: str) -> list[Path]:
+    """Every folder a configured pattern matches, beneath the folder written before its first wildcard.
+
+    Args:
+        key: ``"allow_read"`` or ``"allow_write"``.
+        pattern: The entry as configured, such as ``D:/clients/*/renders``. ``*``, ``?`` and
+            ``[abc]`` match within one folder name and ``**`` matches any number of folders.
+
+    Returns:
+        Resolved directories, none inside another. A pattern with no absolute folder before its
+        first wildcard, or with ``..`` after it, gives none and is warned about.
+    """
+    written = os.path.expanduser(pattern)
+    if os.name == "nt":
+        written = written.replace("\\", "/")
+    first = min(written.index(character) for character in WILDCARDS if character in written)
+    cut = written.rfind("/", 0, first)
+    base_text = written[:cut + 1]
+    segments = [segment for segment in written[cut + 1:].split("/") if segment not in ("", ".")]
+    if not base_text or not os.path.isabs(base_text):
+        _warn_once(
+            key, pattern,
+            f"paths.{key} pattern {pattern} is ignored: a pattern starts with a whole folder, "
+            f"such as 'D:/projects/*/renders' or '/home/me/projects/*/renders'.",
+        )
+        return []
+    if ".." in segments:
+        _warn_once(
+            key, pattern,
+            f"paths.{key} pattern {pattern} is ignored: '..' cannot follow a wildcard. Write the "
+            f"folder it means before the first wildcard.",
+        )
+        return []
+    try:
+        base = Path(base_text).resolve()
+    except (OSError, ValueError, RuntimeError):
+        base = None
+    if base is None or not base.is_dir():
+        _warn_once(key, pattern, f"paths.{key} pattern {pattern} is ignored: {base_text} is not a directory.")
+        return []
+    found = _walk_pattern(key, pattern, base, segments)
+    if not found:
+        _warn_once(key, pattern, f"paths.{key} pattern {pattern} matches no directory yet.")
+    return found
+
+
+def _walk_pattern(key: str, pattern: str, base: Path, segments: list[str]) -> list[Path]:
+    """Look for the folders below ``base`` that a pattern's segments name, skipping links.
+
+    Args:
+        key: ``"allow_read"`` or ``"allow_write"``.
+        pattern: The entry as configured, for a warning.
+        base: The resolved folder before the first wildcard.
+        segments: The folder names after it, each a literal, a wildcard or :data:`ANY_DEPTH`.
+
+    Returns:
+        Resolved directories inside ``base``, none inside another.
+    """
+    from .file_listing import linked
+
+    found: list[Path] = []
+    queue = deque([(base, 0)])
+    seen: set[tuple[Path, int]] = set()
+    looked = 0
+    while queue:
+        folder, step = queue.popleft()
+        if (folder, step) in seen or any(contains(root, folder) for root in found):
+            continue
+        seen.add((folder, step))
+        if step == len(segments):
+            found.append(folder)
+            continue
+        segment = segments[step]
+        if segment == ANY_DEPTH:
+            queue.append((folder, step + 1))
+        if looked >= PATTERN_FOLDERS:
+            _warn_once(
+                key, ("folders", pattern),
+                f"paths.{key} pattern {pattern} stopped after looking in {PATTERN_FOLDERS} "
+                f"directories, so directories past those are not matched. Write more of the path "
+                f"before the first wildcard.",
+            )
+            break
+        looked += 1
+        try:
+            with os.scandir(folder) as listing:
+                children = [
+                    entry for entry in listing
+                    if not linked(entry) and entry.is_dir(follow_symlinks=False)
+                ]
+        except OSError:
+            continue
+        for entry in children:
+            if segment == ANY_DEPTH:
+                queue.append((Path(entry.path), step))
+            elif fnmatch.fnmatch(entry.name, segment):
+                queue.append((Path(entry.path), step + 1))
+
+    kept: list[Path] = []
+    for folder in sorted(found, key=lambda path: len(path.parts)):
+        try:
+            real = folder.resolve()
+        except (OSError, RuntimeError):
+            continue
+        if contains(base, real) and not any(contains(root, real) for root in kept):
+            kept.append(real)
+    return kept
 
 
 #: Characters a backslash escape in a double-quoted YAML string turns into, and the escape.

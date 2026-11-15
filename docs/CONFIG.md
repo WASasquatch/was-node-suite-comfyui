@@ -75,8 +75,8 @@ against.
 | `paths.wildcards` | path or `null` | `null` | Directory of wildcard `.txt` files. `null` means `<user_dir>/was-node-suite/wildcards`. |
 | `paths.styles` | path or `null` | `null` | A style library to import. A `.json` file or an Automatic1111 `styles.csv` is read into the library each time the file changes, and is never written to. A style the library holds that this file has never named is kept. `null` means `<user_dir>/was-node-suite/styles.json`. |
 | `paths.luts` | path or `null` | `null` | Directory of `.cube` colour lookup tables, and where **Save LUT** writes. `null` means `<user_dir>/was-node-suite/luts`. ComfyUI's `models/LUT` is read after this directory, whichever it is. |
-| `paths.allow_read` | list of paths | `[]` | Extra directories nodes may read from. See [Containment](#containment). |
-| `paths.allow_write` | list of paths | `[]` | Extra directories nodes may write to. See [Containment](#containment). |
+| `paths.allow_read` | list of paths or patterns | `[]` | Extra directories nodes may read from. See [Patterns](#patterns) and [Containment](#containment). |
+| `paths.allow_write` | list of paths or patterns | `[]` | Extra directories nodes may write to. See [Patterns](#patterns) and [Containment](#containment). |
 | `paths.menu_limit` | int | `1000` | Most files one file menu lists, `1` to `20000`. Past it, `input`, `output`, `temp` and each `allow_read` folder share the limit, each keeping its newest files, and the log names the kinds of file left out. A path wired into the menu reads a file it leaves out. |
 
 Two folders have no key. **Image Draw Text** reads typefaces from
@@ -100,6 +100,32 @@ Every file and folder menu a node reads from also takes a path wired in as text,
 `D:/photos` or `D:\photos\sunset.png` from a String node. It is read only when it lies inside
 ComfyUI's `input/`, `output/` or `temp/` or a folder `allow_read` lists, and a file must be one
 of the kinds the menu lists; anything else is refused.
+
+### Patterns
+
+An entry in `allow_read` or `allow_write` holding `*`, `?` or `[` is a pattern, unless it names
+an existing folder as written. `*`, `?` and `[abc]` match within one folder name and `**`
+matches any number of folders. A pattern starts with an absolute folder that exists, and every
+folder it matches is added as if it were listed by name.
+
+| Entry | Adds |
+|---|---|
+| `D:/clients/*/renders` | the `renders` folder of each folder directly under `D:/clients` |
+| `D:/clients/**/renders` | every `renders` folder at any depth under `D:/clients` |
+| `D:/clients/[ab]*` | each folder under `D:/clients` whose name starts with `a` or `b` |
+| `D:/clients/**` | `D:/clients` itself |
+| `/home/me/projects/*/assets` | the `assets` folder of each folder directly under `/home/me/projects` |
+
+Matching follows no symlink or Windows junction, looks into at most 20000 folders per pattern,
+and looks again for new folders every 10 seconds. Names match without regard to case on
+Windows and with regard to it on Linux and macOS.
+
+| Log warning | Fix |
+|---|---|
+| `pattern * is ignored: a pattern starts with a whole folder` | Write the absolute folder before the first wildcard: `D:/projects/*`, not `*` or `projects/*`. To allow a whole drive, list it as a folder: `D:/`. |
+| `pattern ... is ignored: '..' cannot follow a wildcard` | Write the folder `..` points to before the first wildcard. |
+| `pattern ... matches no directory yet` | Check the spelling of the folder before the first wildcard. A folder created later is added within 10 seconds. |
+| `pattern ... stopped after looking in 20000 directories` | Write more of the path before the first wildcard, or replace `**` with `*`. |
 
 ### Containment
 
@@ -131,7 +157,7 @@ name and replaces a file only with `existing` on `replace`. None of the three de
 
 Both sides of a comparison are fully resolved first, which covers `..` segments and symlinks: a
 symlink inside a root pointing outside it does not widen the boundary. Comparison is
-case-folded on Windows. Every entry must be an existing directory.
+case-folded on Windows. Every entry must be an existing directory or a pattern matching one.
 
 A refusal names the path as it was given, the permitted roots as `input`, `output`, `temp`,
 `ComfyUI/user/was-node-suite` and how many folders the key lists, and the key that would

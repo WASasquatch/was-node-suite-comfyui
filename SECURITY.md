@@ -199,7 +199,10 @@ is opened, listed or written, whatever value arrives: a menu offers labels, and 
 or an expanded App Workflow can still deliver any string. ComfyUI's `input/`, `output/` and
 `temp/`, the pack's state directory `ComfyUI/user/was-node-suite`, and anything in
 `paths.allow_read` or `paths.allow_write` are permitted; everything else is refused. Both sides
-of the comparison are resolved, which covers `..` segments and symlinks. Model files are read
+of the comparison are resolved, which covers `..` segments and symlinks. An entry in either list
+holding `*`, `?` or `[` that names no existing folder is a pattern: it starts with an absolute
+folder, adds only folders inside that folder, follows no symlink or Windows junction, is ignored
+when `..` follows a wildcard, and looks into at most 20000 folders. Model files are read
 from ComfyUI's model folders, saved workflows from a user's workflows folder (the App Workflow
 node and its menu read the default user's; the route reads the asking user's) and fonts from the
 font catalog, each by a name that cannot leave its folder. A glob pattern holding `**` lists through

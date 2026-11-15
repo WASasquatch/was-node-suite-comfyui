@@ -19,7 +19,8 @@ import { openPopupMenu } from "./interface/popup_menu.js";
 import {
   ALL, BLANK, CONCATENATE, DECREMENT, FIXED, INCREMENT, ITEM_LIMIT, LIST_LIMIT, MAX_COMBINED, MODE, MODES, NOTE, OFF_MARK, PRECOMPILE, PROMPT,
   RANDOM, REFERENCE, SECTION, TERM, VERSION, classify, combine, glossary, groupLines, handedOn,
-  hiddenLines, joinLines, listEntries, listLines, listSeed, parseChoices, precompiled, readLists, resolve,
+  hiddenLines, joinLines, listEntries, listLines, listSeed, noteSpans, parseChoices, precompiled, readLists,
+  resolve,
 } from "./interface/prompt_lines.js";
 import { withGraphChange } from "./interface/region.js";
 import { watchSurfaceRatio } from "./interface/resolution.js";
@@ -389,17 +390,18 @@ function markChoices(parts, at, paint) {
 }
 
 /**
- * Cut a line into runs of one colour each: marks, choices, terms, tokens and escapes.
+ * Cut a line into runs of one colour each: marks, choices, terms, tokens, escapes and notes.
  *
  * @param {string} raw - The line as written.
  * @param {object|undefined} line - What it is, from `classify`.
  * @param {Map<string, string>} terms - The terms defined.
  * @param {string} hue - The colour of its group.
  * @param {Set<string>} unknown - Collects every name used with no term.
+ * @param {boolean} [notes] - Notes inside the line are cut out of what it hands on.
  * @returns {Array<[string, string|null]>} The runs, each text and a colour or null for the
  *   row's own.
  */
-function highlight(raw, line, terms, hue, unknown) {
+function highlight(raw, line, terms, hue, unknown, notes = true) {
   if (!line || line.kind === NOTE || line.kind === BLANK) return [[raw, null]];
   const colours = new Array(raw.length).fill(null);
   const paint = (start, end, colour) => {
@@ -448,6 +450,9 @@ function highlight(raw, line, terms, hue, unknown) {
     }
     for (const found of body.matchAll(TOKEN)) paint(at + found.index, at + found.index + found[0].length, TOKEN_HUE);
     for (const found of body.matchAll(ESCAPE)) paint(at + found.index, at + found.index + 1, MUTED);
+  }
+  if (notes) {
+    for (const [start, end] of noteSpans(raw).spans) paint(start, end, MUTED);
   }
   const runs = [];
   let start = 0;
@@ -842,12 +847,12 @@ function createLineBox(host) {
     const locked = host.locked();
     const text = box.value;
     const { seed, skipBlank, skipComments } = context;
-    const parsed = classify(text);
+    const parsed = classify(text, skipComments);
     const groups = groupLines(parsed);
     const own = glossary(parsed, groups, seed);
     const terms = new Map([...(context.terms ?? new Map()), ...own]);
     const hidden = hiddenLines(parsed);
-    const resolved = resolve(text, seed, context.terms);
+    const resolved = resolve(text, seed, context.terms, 0, skipComments);
     const raw = text.split("\n");
     current = caretLine();
     while (rows.length < raw.length) {
@@ -955,7 +960,9 @@ function createLineBox(host) {
       }
       if (under) look = isOff ? OFF_LOOK : HIDDEN_LOOK;
       const plain = isOff || under || kind === END;
-      const runs = plain ? [[value, null]] : highlight(value, line, terms, spot?.colour ?? ACCENT, unknown);
+      const runs = plain
+        ? [[value, null]]
+        : highlight(value, line, terms, spot?.colour ?? ACCENT, unknown, skipComments);
       let number = locked ? 0 : numberAt.get(index) ?? 0;
       let numberTitle = "";
       if (kind === SECTION && !ownOff && !locked) {
@@ -1546,9 +1553,10 @@ function createListsEditor(node, setup) {
   const sharedTerms = () => {
     const seed = readSeed(node);
     const terms = new Map();
+    const { skipComments } = flags();
     lists.forEach((entry, index) => {
       if (!entry.on) return;
-      const parsed = classify(entry.lines);
+      const parsed = classify(entry.lines, skipComments);
       for (const [name, value] of glossary(parsed, groupLines(parsed), listSeed(seed, index))) terms.set(name, value);
     });
     return terms;

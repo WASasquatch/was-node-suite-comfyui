@@ -63,6 +63,9 @@ const LINE_NOTES = ["#", "//"];
 const BLOCK_OPEN = "/*";
 const BLOCK_CLOSE = "*/";
 
+// What a `//` note inside a line follows: the start of the line or a space.
+const NOTE_LEAD = " \t";
+
 // A line break as a text box writes one.
 const BREAKS = /\r\n|\r|\n/;
 
@@ -163,28 +166,95 @@ function headed(line, stripped) {
 }
 
 /**
+ * Find the notes written inside a line.
+ *
+ * @param {string} line - One line.
+ * @returns {{spans: Array<[number, number]>, open: boolean}} `[start, end]` per note in order, and
+ *   whether the last is a `/*` left open. A `//` counts at the start of the line or after a space,
+ *   so `https://` is text.
+ */
+export function noteSpans(line) {
+  const spans = [];
+  let index = 0;
+  while (index < line.length) {
+    if (line.startsWith(BLOCK_OPEN, index)) {
+      const close = line.indexOf(BLOCK_CLOSE, index + BLOCK_OPEN.length);
+      if (close < 0) {
+        spans.push([index, line.length]);
+        return { spans, open: true };
+      }
+      spans.push([index, close + BLOCK_CLOSE.length]);
+      index = close + BLOCK_CLOSE.length;
+      continue;
+    }
+    if (line.startsWith("//", index) && (index === 0 || NOTE_LEAD.includes(line[index - 1]))) {
+      spans.push([index, line.length]);
+      return { spans, open: false };
+    }
+    index += 1;
+  }
+  return { spans, open: false };
+}
+
+/**
+ * A line with its notes cut out.
+ *
+ * @param {string} line - One line.
+ * @param {Array<[number, number]>} spans - From `noteSpans`.
+ * @returns {string} The line without them; a note with a space on both sides leaves one space.
+ */
+export function cutNotes(line, spans) {
+  let out = "";
+  let last = 0;
+  for (const [start, end] of spans) {
+    out += line.slice(last, start);
+    last = end;
+    if (out && NOTE_LEAD.includes(out[out.length - 1])) {
+      while (last < line.length && NOTE_LEAD.includes(line[last])) last += 1;
+    }
+  }
+  return out + line.slice(last);
+}
+
+/**
  * Name what each line is.
  *
  * @param {string} text - The text, one part per line.
+ * @param {boolean} [notes] - Cut `//` and `/* *\/` notes out of the lines they are written in, a
+ *   `/*` left open making the lines after it notes up to its `*\/`.
  * @returns {object[]} One line per line: `{kind, line, body, off, mode, picked, name, block}`.
  */
-export function classify(text) {
+export function classify(text, notes = true) {
   const found = [];
   let inBlock = false;
   for (const line of splitLines(text)) {
-    const stripped = strip(line);
+    let stripped = strip(line);
     if (inBlock) {
       found.push(lineOf(NOTE, line, { body: line, block: true }));
       if (line.includes(BLOCK_CLOSE)) inBlock = false;
-    } else if (!stripped) {
+      continue;
+    }
+    if (!stripped) {
       found.push(lineOf(BLANK, line));
-    } else if (stripped.startsWith(BLOCK_OPEN)) {
+      continue;
+    }
+    if (stripped.startsWith(BLOCK_OPEN)) {
       found.push(lineOf(NOTE, line, { body: line, block: true }));
       inBlock = !stripped.slice(BLOCK_OPEN.length).includes(BLOCK_CLOSE);
-    } else if (LINE_NOTES.some((mark) => stripped.startsWith(mark))) {
+      continue;
+    }
+    if (LINE_NOTES.some((mark) => stripped.startsWith(mark))) {
       found.push(lineOf(NOTE, line, { body: line }));
-    } else if (section(line, stripped)) {
-      found.push(section(line, stripped));
+      continue;
+    }
+    if (notes) {
+      const { spans, open } = noteSpans(line);
+      inBlock = open;
+      if (spans.length) stripped = strip(cutNotes(line, spans));
+    }
+    const heading = section(line, stripped);
+    if (heading) {
+      found.push(heading);
     } else if (stripped[0] === VERSION_MARK || stripped[0] === PICKED_MARK) {
       let rest = stripped.slice(1);
       const off = rest.startsWith(OFF_MARK);
@@ -626,13 +696,14 @@ export function glossary(lines, groups, seed, turn = 0) {
  * @param {Map<string, string>} [terms] - Terms from elsewhere, such as another list; the text's own
  *   replace them.
  * @param {number} [turn] - How many turns on each line whose versions take turns stands.
+ * @param {boolean} [notes] - Cut notes out of the lines they are written in, as `classify` does.
  * @returns {Array<{kind: string, text: string, line: number}>} In order, `kind` one of `PROMPT`,
  *   `SECTION`, `NOTE` and `BLANK`, a heading giving its name, and `line` the index of the line it
  *   came from. A prompt in mode `ALL` gives each of its versions. A switched-off heading gives
  *   nothing, nor do the lines under it.
  */
-export function resolve(text, seed = 0, terms = null, turn = 0) {
-  const lines = classify(text);
+export function resolve(text, seed = 0, terms = null, turn = 0, notes = true) {
+  const lines = classify(text, notes);
   const groups = groupLines(lines);
   const known = new Map([...(terms ?? new Map()), ...glossary(lines, groups, seed, turn)]);
   const hidden = hiddenLines(lines);
@@ -680,13 +751,13 @@ export function handedOn(kind, skipBlankLines, skipCommentLines) {
  *
  * @param {string} text - The text, one part per line.
  * @param {boolean} [skipBlankLines] - Leave out empty lines.
- * @param {boolean} [skipCommentLines] - Leave out notes.
+ * @param {boolean} [skipCommentLines] - Leave out notes, the ones inside a line included.
  * @param {number} [seed] - What the choices draw from.
  * @returns {string[]} The kept lines in order. Terms, versions not in use and lines switched off
  *   are never kept.
  */
 export function keptLines(text, skipBlankLines = true, skipCommentLines = true, seed = 0) {
-  return resolve(text, seed)
+  return resolve(text, seed, null, 0, skipCommentLines)
     .filter(({ kind }) => handedOn(kind, skipBlankLines, skipCommentLines))
     .map(({ text: line }) => line);
 }
@@ -826,11 +897,11 @@ export function listEntries(lists, seed = 0, skipBlankLines = true, skipCommentL
     .filter(({ entry }) => entry.on);
   const terms = new Map();
   for (const { entry, own } of texts) {
-    const lines = classify(entry.lines);
+    const lines = classify(entry.lines, skipCommentLines);
     for (const [name, value] of glossary(lines, groupLines(lines), own, turn)) terms.set(name, value);
   }
   return texts.map(({ entry, index, own }) => {
-    const candidates = resolve(entry.lines, own, terms, turn)
+    const candidates = resolve(entry.lines, own, terms, turn, skipCommentLines)
       .filter((item) => handedOn(item.kind, skipBlankLines, skipCommentLines))
       .map((item) => ({ text: strip(item.text), line: item.line }));
     let entries = candidates.map((item) => item.text);

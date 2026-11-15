@@ -1,0 +1,678 @@
+{
+  "id": "c59ba972-b0f3-4be4-9d63-e6abbf7d000c",
+  "revision": 0,
+  "last_node_id": 5,
+  "last_link_id": 4,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        120
+      ],
+      "size": [
+        340,
+        440
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1,
+            2
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "example.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "example.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "WASImageDrawText",
+      "pos": [
+        420,
+        120
+      ],
+      "size": [
+        360,
+        894
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "font_size",
+          "name": "font_size",
+          "type": "INT",
+          "widget": {
+            "name": "font_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "text_color",
+          "name": "text_color",
+          "type": "STRING",
+          "widget": {
+            "name": "text_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position",
+          "name": "position",
+          "type": "COMBO",
+          "widget": {
+            "name": "position"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "align",
+          "name": "align",
+          "type": "COMBO",
+          "widget": {
+            "name": "align"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "offset_x",
+          "name": "offset_x",
+          "type": "INT",
+          "widget": {
+            "name": "offset_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "offset_y",
+          "name": "offset_y",
+          "type": "INT",
+          "widget": {
+            "name": "offset_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "margin",
+          "name": "margin",
+          "type": "INT",
+          "widget": {
+            "name": "margin"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "line_spacing",
+          "name": "line_spacing",
+          "type": "FLOAT",
+          "widget": {
+            "name": "line_spacing"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "wrap_width",
+          "name": "wrap_width",
+          "type": "INT",
+          "widget": {
+            "name": "wrap_width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "stroke_width",
+          "name": "stroke_width",
+          "type": "INT",
+          "widget": {
+            "name": "stroke_width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "stroke_color",
+          "name": "stroke_color",
+          "type": "STRING",
+          "widget": {
+            "name": "stroke_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "background_color",
+          "name": "background_color",
+          "type": "STRING",
+          "widget": {
+            "name": "background_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "background_padding",
+          "name": "background_padding",
+          "type": "INT",
+          "widget": {
+            "name": "background_padding"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "opacity",
+          "name": "opacity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "opacity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "font",
+          "name": "font",
+          "shape": 7,
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "font"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            3
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASImageDrawText"
+      },
+      "widgets_values": [
+        "مرحبا بالعالم\nعام 2024 سعيد (Hello) world!\nשלום עולם",
+        40,
+        "#FFFFFF",
+        "bottom center",
+        "right",
+        0,
+        0,
+        16,
+        1,
+        0,
+        0,
+        "#000000",
+        "#000000B4",
+        10,
+        1,
+        "DejaVu Sans"
+      ],
+      "widgets_values_named": {
+        "text": "مرحبا بالعالم\nعام 2024 سعيد (Hello) world!\nשלום עולם",
+        "font_size": 40,
+        "text_color": "#FFFFFF",
+        "position": "bottom center",
+        "align": "right",
+        "offset_x": 0,
+        "offset_y": 0,
+        "margin": 16,
+        "line_spacing": 1,
+        "wrap_width": 0,
+        "stroke_width": 0,
+        "stroke_color": "#000000",
+        "background_color": "#000000B4",
+        "background_padding": 10,
+        "opacity": 1,
+        "font": "DejaVu Sans"
+      }
+    },
+    {
+      "id": 3,
+      "type": "WASImageDrawText",
+      "pos": [
+        420,
+        1324
+      ],
+      "size": [
+        360,
+        894
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "font_size",
+          "name": "font_size",
+          "type": "INT",
+          "widget": {
+            "name": "font_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "text_color",
+          "name": "text_color",
+          "type": "STRING",
+          "widget": {
+            "name": "text_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position",
+          "name": "position",
+          "type": "COMBO",
+          "widget": {
+            "name": "position"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "align",
+          "name": "align",
+          "type": "COMBO",
+          "widget": {
+            "name": "align"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "offset_x",
+          "name": "offset_x",
+          "type": "INT",
+          "widget": {
+            "name": "offset_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "offset_y",
+          "name": "offset_y",
+          "type": "INT",
+          "widget": {
+            "name": "offset_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "margin",
+          "name": "margin",
+          "type": "INT",
+          "widget": {
+            "name": "margin"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "line_spacing",
+          "name": "line_spacing",
+          "type": "FLOAT",
+          "widget": {
+            "name": "line_spacing"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "wrap_width",
+          "name": "wrap_width",
+          "type": "INT",
+          "widget": {
+            "name": "wrap_width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "stroke_width",
+          "name": "stroke_width",
+          "type": "INT",
+          "widget": {
+            "name": "stroke_width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "stroke_color",
+          "name": "stroke_color",
+          "type": "STRING",
+          "widget": {
+            "name": "stroke_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "background_color",
+          "name": "background_color",
+          "type": "STRING",
+          "widget": {
+            "name": "background_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "background_padding",
+          "name": "background_padding",
+          "type": "INT",
+          "widget": {
+            "name": "background_padding"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "opacity",
+          "name": "opacity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "opacity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "font",
+          "name": "font",
+          "shape": 7,
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "font"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASImageDrawText"
+      },
+      "widgets_values": [
+        "شُكْرًا لَكَ على هذا النص الطويل الذي يلتف على عدة أسطر",
+        40,
+        "#FFFFFF",
+        "top center",
+        "right",
+        0,
+        0,
+        16,
+        1,
+        520,
+        2,
+        "#000000",
+        "",
+        8,
+        1,
+        "Liberation Sans"
+      ],
+      "widgets_values_named": {
+        "text": "شُكْرًا لَكَ على هذا النص الطويل الذي يلتف على عدة أسطر",
+        "font_size": 40,
+        "text_color": "#FFFFFF",
+        "position": "top center",
+        "align": "right",
+        "offset_x": 0,
+        "offset_y": 0,
+        "margin": 16,
+        "line_spacing": 1,
+        "wrap_width": 520,
+        "stroke_width": 2,
+        "stroke_color": "#000000",
+        "background_color": "",
+        "background_padding": 8,
+        "opacity": 1,
+        "font": "Liberation Sans"
+      }
+    },
+    {
+      "id": 4,
+      "type": "PreviewImage",
+      "pos": [
+        860,
+        120
+      ],
+      "size": [
+        460,
+        420
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 5,
+      "type": "PreviewImage",
+      "pos": [
+        860,
+        1324
+      ],
+      "size": [
+        460,
+        420
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "PreviewImage"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      1,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      2,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      3,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 3,
+      "title": "Arabic and Hebrew captions in DejaVu Sans",
+      "bounding": [
+        -40,
+        0,
+        1400,
+        1084
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Arabic caption with Liberation Sans picked",
+      "bounding": [
+        -40,
+        1204,
+        1400,
+        1084
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 1,
+      "offset": [
+        -380,
+        -40
+      ]
+    }
+  },
+  "version": 0.4
+}

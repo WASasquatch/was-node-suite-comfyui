@@ -746,6 +746,14 @@ def _font(size: int):
         return ImageFont.load_default()
 
 
+def _length(draw, line: str, font) -> float:
+    """How wide a line draws, Arabic and Hebrew joined and ordered."""
+    from .draw import shown_line
+
+    shown, face = shown_line(line, font)
+    return draw.textlength(shown, font=face)
+
+
 def _wrap(draw, text: str, font, width: float) -> list[str]:
     """Text broken into lines no wider than ``width``, paragraphs kept."""
     lines = []
@@ -753,7 +761,7 @@ def _wrap(draw, text: str, font, width: float) -> list[str]:
         line = ""
         for word in paragraph.split():
             trial = word if not line else line + " " + word
-            if line and draw.textlength(trial, font=font) > width:
+            if line and _length(draw, trial, font) > width:
                 lines.append(line)
                 line = word
             else:
@@ -790,6 +798,8 @@ def render_preview(boxes, size, image=None):
     import numpy as np
     import torch
     from PIL import ImageDraw
+
+    from .draw import shown_line
 
     width, height = size
     scale = min(1.0, PREVIEW_LONG_EDGE / (max(width, height) or 1))
@@ -841,13 +851,14 @@ def render_preview(boxes, size, image=None):
             lines.append(line)
         if not lines:
             continue
-        widest = max(draw.textlength(line, font=font) for line in lines)
+        widest = max(_length(draw, line, font) for line in lines)
         draw.rectangle(
             [x0 + 2, text_top - 2, min(x1 - 1, x0 + 2 + widest + 8), text_top + len(lines) * line_height],
             fill=CAPTION_PLATE,
         )
         for row, line in enumerate(lines):
-            draw.text((x0 + 6, text_top + row * line_height), line, fill=CAPTION_INK, font=font)
+            shown, face = shown_line(line, font)
+            draw.text((x0 + 6, text_top + row * line_height), shown, fill=CAPTION_INK, font=face)
 
     array = np.asarray(picture, dtype=np.float32) / 255.0
     return torch.from_numpy(array.copy()).unsqueeze(0)

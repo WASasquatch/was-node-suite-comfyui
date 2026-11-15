@@ -9,10 +9,41 @@ import { app } from "../../scripts/app.js";
 
 const EXT_NAME = "WASNodeSuite.DynamicPrompts";
 
+// The core extension that resolves a widget declaring `dynamicPrompts`.
+const CORE_EXT_NAME = "Comfy.DynamicPrompts";
+
 // Node id -> the text widget the switch beside it governs.
 const GOVERNED = {
   "Text Multiline": { text: "text", toggle: "dynamic_prompts" },
 };
+
+let coreResolve;
+
+/**
+ * Core's resolver for a `{a|b}` text, taken from its extension through a stand-in widget.
+ *
+ * @returns {((text: string) => Promise<string>)|null} The resolver, or null where this frontend
+ *   has none.
+ */
+function coreResolver() {
+  if (coreResolve !== undefined) return coreResolve;
+  coreResolve = null;
+  try {
+    const core = (app.extensions ?? []).find((extension) => extension?.name === CORE_EXT_NAME);
+    const stand = { name: "text", value: "", dynamicPrompts: true };
+    core?.nodeCreated?.({ widgets: [stand] });
+    const serialize = stand.serializeValue;
+    if (typeof serialize === "function") {
+      coreResolve = async (text) => {
+        stand.value = text;
+        return serialize.call(stand, null, 0);
+      };
+    }
+  } catch (error) {
+    console.error(`[${EXT_NAME}] Failed to reach ${CORE_EXT_NAME}:`, error);
+  }
+  return coreResolve;
+}
 
 /**
  * Read a widget's value off a node.
@@ -35,21 +66,21 @@ app.registerExtension({
     if (!widget || widget.__was_dynamic_prompts) return;
     widget.__was_dynamic_prompts = true;
 
-    // Core's own extension has already wrapped this at `nodeCreated`, so the wrap below
-    // sits outside it and can hand back the raw value instead of calling it.
-    const resolved = widget.serializeValue?.bind(widget);
-    widget.serializeValue = (workflowNode, widgetIndex) => {
-      try {
-        if (widgetValue(node, governed.toggle) === false) {
-          if (workflowNode?.widgets_values) {
-            workflowNode.widgets_values[widgetIndex] = widget.value;
-          }
-          return widget.value;
-        }
-      } catch (error) {
-        console.error(`[${EXT_NAME}] Failed to read ${governed.toggle}:`, error);
+    // A serializer held behind a setter runs this one as its next step and is never called back.
+    const descriptor = Object.getOwnPropertyDescriptor(widget, "serializeValue");
+    const earlier = descriptor?.set ? null : widget.serializeValue?.bind(widget);
+
+    widget.serializeValue = async (workflowNode, widgetIndex) => {
+      const on = widgetValue(node, governed.toggle) !== false;
+      if (on && earlier) return earlier(workflowNode, widgetIndex);
+      const text = widget.value;
+      let prompt = text;
+      if (on && typeof text === "string") {
+        const resolve = coreResolver();
+        if (resolve) prompt = await resolve(text);
       }
-      return resolved ? resolved(workflowNode, widgetIndex) : widget.value;
+      if (workflowNode?.widgets_values) workflowNode.widgets_values[widgetIndex] = prompt;
+      return prompt;
     };
   },
 });

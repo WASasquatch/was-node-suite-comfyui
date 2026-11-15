@@ -1,7 +1,7 @@
 """Text and rectangle drawing onto transparent RGBA layers.
 
 Each drawing function renders onto a layer the size of the target image and returns it.
-:func:`composite` lays a layer over an image.
+:func:`composite` lays a layer over an image. Arabic and Hebrew lines are joined and ordered.
 """
 
 from __future__ import annotations
@@ -9,6 +9,7 @@ from __future__ import annotations
 from PIL import Image, ImageColor, ImageDraw, ImageFont
 
 from ..data import paths
+from . import rtl_text
 
 __all__ = [
     "ANCHORS",
@@ -23,6 +24,7 @@ __all__ = [
     "layer_mask",
     "load_font",
     "parse_color",
+    "shown_line",
     "text_block",
     "wrap_lines",
 ]
@@ -54,9 +56,19 @@ TRANSPARENT = (0, 0, 0, 0)
 BITMAP_LINE_HEIGHT = 11
 
 #: Bundled font used when none is named. DejaVu Sans of the bundled faces covers the most
-#: of what arbitrary text contains, Latin, Greek, Cyrillic, currency, and the em dashes
-#: and curly quotes ordinary prose is full of.
+#: of what arbitrary text contains, Latin, Greek, Cyrillic, Arabic, Hebrew, currency, and the
+#: em dashes and curly quotes ordinary prose is full of.
 DEFAULT_FONT = "DejaVu Sans"
+
+#: A character no face maps, whose glyph is the face's missing-glyph box.
+UNMAPPED = "\U0010fffd"
+
+#: Per face, whether each character checked has a glyph of its own, and under
+#: :data:`UNMAPPED` the face's missing-glyph box.
+_glyphs: dict[tuple, dict] = {}
+
+#: DejaVu Sans per size, for a right-to-left line the chosen face has no letters for.
+_stand_ins: dict[int, object] = {}
 
 
 def parse_color(text: str, default: tuple[int, int, int, int] = FALLBACK) -> tuple[int, int, int, int]:
@@ -121,9 +133,79 @@ def load_font(
     return ImageFont.load_default()
 
 
+def _glyph(font, character: str) -> tuple:
+    """A character rendered alone in a face: its mask's size and bytes."""
+    mask = font.getmask(character)
+    return mask.size, bytes(mask)
+
+
+def _covers(font, text: str) -> bool:
+    """Whether a face has a glyph of its own for every visible character of a text.
+
+    Args:
+        font: A PIL font.
+        text: The characters to draw.
+
+    Returns:
+        True when none of them draws as the face's missing-glyph box. A face that is not a
+        TrueType face is taken to cover everything.
+    """
+    if not isinstance(font, ImageFont.FreeTypeFont):
+        return True
+    path = font.path if isinstance(font.path, str) else font.getname()
+    known = _glyphs.setdefault((path, font.index, font.size), {})
+    try:
+        if UNMAPPED not in known:
+            known[UNMAPPED] = _glyph(font, UNMAPPED)
+        box = known[UNMAPPED]
+        for character in set(text) - set(known):
+            if not character.isspace():
+                known[character] = _glyph(font, character) != box
+    except (OSError, ValueError):
+        return True
+    return all(known.get(character, True) for character in set(text) if character != UNMAPPED)
+
+
+def _stand_in(font):
+    """DejaVu Sans at a face's size, or None when the face is DejaVu Sans or has no size."""
+    size = getattr(font, "size", None)
+    if not size:
+        return None
+    if size not in _stand_ins:
+        _stand_ins[size] = load_font(size, None, DEFAULT_FONT)
+    stand_in = _stand_ins[size]
+    if stand_in is font or getattr(stand_in, "path", None) == getattr(font, "path", None):
+        return None
+    return stand_in
+
+
+def shown_line(line: str, font) -> tuple[str, object]:
+    """The characters a line is drawn as, and the face it is drawn in.
+
+    Args:
+        line: One line, in typed order.
+        font: The face chosen for the text.
+
+    Returns:
+        ``(characters, face)``. A line holding Arabic or Hebrew is joined and put in drawing
+        order when the face lays text out a character at a time, and drawn in DejaVu Sans when
+        the face has no glyphs for it. Any other line is returned as it is, in ``font``.
+    """
+    if getattr(font, "layout_engine", ImageFont.Layout.BASIC) != ImageFont.Layout.BASIC:
+        return line, font
+    if not rtl_text.holds_rtl(line):
+        return line, font
+    shown = rtl_text.display_order(line)
+    if _covers(font, shown):
+        return shown, font
+    stand_in = _stand_in(font)
+    return shown, stand_in if stand_in is not None else font
+
+
 def _line_width(draw: ImageDraw.ImageDraw, line: str, font, stroke_width: int) -> float:
     """Rendered width of one line, stroke included."""
-    box = draw.textbbox((0, 0), line, font=font, stroke_width=stroke_width)
+    shown, face = shown_line(line, font)
+    box = draw.textbbox((0, 0), shown, font=face, stroke_width=stroke_width)
     return box[2] - box[0]
 
 
@@ -310,10 +392,11 @@ def draw_text_layer(
             x = origin_x + (block_width - width)
         else:
             x = origin_x
+        shown, face = shown_line(line, font)
         draw.text(
             (x, origin_y + index * line_height),
-            line,
-            font=font,
+            shown,
+            font=face,
             fill=color,
             stroke_width=stroke_width,
             stroke_fill=stroke_color if stroke_width else None,
@@ -361,10 +444,11 @@ def draw_boxes_layer(
         if thickness > 0:
             draw.rectangle(box, outline=color, width=thickness)
         if index < len(captions) and captions[index] and font is not None:
+            shown, face = shown_line(captions[index], font)
             draw.text(
                 (box[0] + thickness + 2, box[1] + thickness + 2),
-                captions[index],
-                font=font,
+                shown,
+                font=face,
                 fill=label_color,
                 stroke_width=1,
                 stroke_fill=(0, 0, 0, 255),

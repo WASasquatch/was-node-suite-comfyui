@@ -12435,9 +12435,9 @@ Write a prompt one part per line and hand on the kept lines as one text, joined 
 |---|---|---|---|---|---|
 | `lines` | `STRING` | Yes |  |  | One part per line. `~` switches a line off, `#` starts a note, `== name` a heading, `\| text` a version of the line above, `$name = value` a term; `{a\|b}` draws one option. Ignored while a STRING is wired into text. |
 | `skip_blank_lines` | `BOOLEAN` | Yes | False |  | `off` = empty lines stay as paragraph breaks when joined by line breaks; `on` = they are left out. Joined by spaces or commas, empty lines are always left out. |
-| `skip_comment_lines` | `BOOLEAN` | Yes | True |  | `on` = notes (#, // and /* */ lines) are left out; `off` = each note line is kept as written, marker included. |
+| `skip_comment_lines` | `BOOLEAN` | Yes | True |  | `on` = notes are left out: lines starting #, // or /*, and a note after text, `a fox // red` giving `a fox`; `off` = notes are kept as written, marker included. |
 | `join_with` | `COMBO` | Yes | line break | `line break`, `space`, `comma` | `line break` = lines as written, indents kept; `space` = one line of text; `comma` = a tag prompt, `red fox,` and `snow` giving `red fox, snow`. |
-| `seed` | `INT` | Yes | 0 |  | Which option each `{a\|b}` choice draws: the same seed and lines give the same text. The control starts `fixed`; `randomize` draws again after each run while a line holds a choice. |
+| `seed` | `INT` | Yes | 0 |  | Which option each `{a\|b}` choice draws: the same seed and lines give the same text. The control starts on `randomize`, drawing again after each run while a line holds a choice; `fixed` keeps the draw. |
 | `text` | `STRING` | No |  |  | A STRING to use instead of the typed lines, such as `a fox\na heron`, read the same way. Unwired, the typed lines are used. |
 
 **Outputs**
@@ -12991,8 +12991,8 @@ Type one prompt per line and hand them on as a STRING list, so everything downst
 |---|---|---|---|---|---|
 | `lines` | `STRING` | Yes |  |  | One entry per line: `~` switches a line off, `#` starts a note, `\| text` adds a version, `$name = value` a term, `{a\|b}` one option. Several lists are kept as JSON. Ignored while text is wired. |
 | `skip_blank_lines` | `BOOLEAN` | Yes | True |  | `on` = empty lines are left out; `off` = each empty line is an empty entry, for a list whose positions have to line up with another list's. |
-| `skip_comment_lines` | `BOOLEAN` | Yes | True |  | `on` = notes (#, // and /* */ lines) are left out; `off` = each note line is handed on as written, marker included. |
-| `seed` | `INT` | Yes | 0 |  | Which option each `{a\|b}` choice draws: the same seed and lines give the same entries. The control starts `fixed`; `randomize` draws again after each run while a line holds a choice. |
+| `skip_comment_lines` | `BOOLEAN` | Yes | True |  | `on` = notes are left out: lines starting #, // or /*, and a note after text, `a fox // red` giving `a fox`; `off` = notes are handed on as written, marker included. |
+| `seed` | `INT` | Yes | 0 |  | Which option each `{a\|b}` choice draws: the same seed and lines give the same entries. The control starts on `randomize`, drawing again after each run while a line holds a choice; `fixed` keeps the draw. |
 | `combine` | `COMBO` | Yes | concatenate | `concatenate`, `precompile`, `every combination` | `concatenate` = one entry per line, the lists one after another; `precompile` = every line joined into one string, `num_items` of them; `every combination` = each line joined with every line of the other lists, up to `10000`. |
 | `join_with` | `COMBO` | Yes | comma | `comma`, `space`, `line break` | How `precompile` and `every combination` join lines: `comma` = `watercolour, a fox, snow`; `space` = one line with spaces; `line break` = one line each. |
 | `num_items` | `INT` | Yes | 1 |  | With `precompile`, how many strings to make, as a list: `10` = ten strings, each a turn on, so stepped and random lists and `{a\|b}` choices change between them. |

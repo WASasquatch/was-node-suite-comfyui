@@ -41,6 +41,7 @@ __all__ = [
     "Line",
     "classify",
     "combine",
+    "cut_notes",
     "draw",
     "expand",
     "glossary",
@@ -53,6 +54,7 @@ __all__ = [
     "list_entries",
     "list_lines",
     "list_seed",
+    "note_spans",
     "parse_choices",
     "read_lists",
     "resolve",
@@ -110,6 +112,9 @@ LINE_NOTES = ("#", "//")
 #: What opens and closes a note running over several lines.
 BLOCK_OPEN = "/*"
 BLOCK_CLOSE = "*/"
+
+#: What a ``//`` note inside a line follows: the start of the line or a space.
+NOTE_LEAD = " \t"
 
 #: A line break as a text box writes one.
 BREAKS = re.compile(r"\r\n|\r|\n")
@@ -281,11 +286,62 @@ def _section(line: str, stripped: str) -> Line | None:
     return Line(SECTION, line, rest.strip("=").strip(), off)
 
 
-def classify(text: str) -> list[Line]:
+def note_spans(line: str) -> tuple[list[tuple[int, int]], bool]:
+    """Find the notes written inside a line.
+
+    Args:
+        line: One line.
+
+    Returns:
+        ``(start, end)`` per note in order, and True when the last is a ``/*`` left open. A ``//``
+        counts at the start of the line or after a space, so ``https://`` is text.
+    """
+    spans = []
+    index = 0
+    while index < len(line):
+        if line.startswith(BLOCK_OPEN, index):
+            close = line.find(BLOCK_CLOSE, index + len(BLOCK_OPEN))
+            if close < 0:
+                spans.append((index, len(line)))
+                return spans, True
+            spans.append((index, close + len(BLOCK_CLOSE)))
+            index = close + len(BLOCK_CLOSE)
+            continue
+        if line.startswith("//", index) and (index == 0 or line[index - 1] in NOTE_LEAD):
+            spans.append((index, len(line)))
+            return spans, False
+        index += 1
+    return spans, False
+
+
+def cut_notes(line: str, spans: list[tuple[int, int]]) -> str:
+    """A line with its notes cut out.
+
+    Args:
+        line: One line.
+        spans: From :func:`note_spans`.
+
+    Returns:
+        The line without them; a note with a space on both sides leaves one space.
+    """
+    out = ""
+    last = 0
+    for start, end in spans:
+        out += line[last:start]
+        last = end
+        if out[-1:] and out[-1] in NOTE_LEAD:
+            while last < len(line) and line[last] in NOTE_LEAD:
+                last += 1
+    return out + line[last:]
+
+
+def classify(text: str, notes: bool = True) -> list[Line]:
     """Name what each line is.
 
     Args:
         text: The text, one part per line.
+        notes: Cut ``//`` and ``/* */`` notes out of the lines they are written in, a ``/*``
+            left open making the lines after it notes up to its ``*/``.
 
     Returns:
         One :class:`Line` per line.
@@ -298,14 +354,22 @@ def classify(text: str) -> list[Line]:
             found.append(Line(NOTE, line, line, block=True))
             if BLOCK_CLOSE in line:
                 in_block = False
-        elif not stripped:
+            continue
+        if not stripped:
             found.append(Line(BLANK, line))
-        elif stripped.startswith(BLOCK_OPEN):
+            continue
+        if stripped.startswith(BLOCK_OPEN):
             found.append(Line(NOTE, line, line, block=True))
             in_block = BLOCK_CLOSE not in stripped[len(BLOCK_OPEN):]
-        elif stripped.startswith(LINE_NOTES):
+            continue
+        if stripped.startswith(LINE_NOTES):
             found.append(Line(NOTE, line, line))
-        elif (section := _section(line, stripped)) is not None:
+            continue
+        if notes:
+            spans, in_block = note_spans(line)
+            if spans:
+                stripped = cut_notes(line, spans).strip()
+        if (section := _section(line, stripped)) is not None:
             found.append(section)
         elif stripped[0] in (VERSION_MARK, PICKED_MARK):
             rest = stripped[1:]
@@ -764,7 +828,9 @@ def glossary(lines: list[Line], groups: list[Group], seed: int, turn: int = 0) -
     return terms
 
 
-def resolve(text: str, seed: int = 0, terms: dict | None = None, turn: int = 0) -> list[tuple[str, str]]:
+def resolve(
+    text: str, seed: int = 0, terms: dict | None = None, turn: int = 0, notes: bool = True
+) -> list[tuple[str, str]]:
     """Every line a node could hand on, finished, before blanks and notes are left out.
 
     Args:
@@ -772,13 +838,14 @@ def resolve(text: str, seed: int = 0, terms: dict | None = None, turn: int = 0) 
         seed: What the choices draw from.
         terms: Terms from elsewhere, such as another list; the text's own replace them.
         turn: How many turns on each line whose versions take turns stands.
+        notes: Cut notes out of the lines they are written in, as :func:`classify` does.
 
     Returns:
         ``(kind, text)`` in order, ``kind`` one of :data:`PROMPT`, :data:`SECTION`, :data:`NOTE`
         and :data:`BLANK`, a heading giving its name. A prompt in mode :data:`ALL` gives each of
         its versions. A switched-off heading gives nothing, nor do the lines under it.
     """
-    lines = classify(text)
+    lines = classify(text, notes)
     groups = group_lines(lines)
     known = {**(terms or {}), **glossary(lines, groups, seed, turn)}
     hidden = hidden_lines(lines)
@@ -833,14 +900,16 @@ def kept_lines(
     Args:
         text: The text, one part per line.
         skip_blank_lines: Leave out empty lines.
-        skip_comment_lines: Leave out notes.
+        skip_comment_lines: Leave out notes, the ones inside a line included.
         seed: What the choices draw from.
 
     Returns:
         The kept lines in order. Terms, versions not in use and lines switched off are never kept.
     """
     return [
-        line for kind, line in resolve(text, seed) if handed_on(kind, skip_blank_lines, skip_comment_lines)
+        line
+        for kind, line in resolve(text, seed, notes=skip_comment_lines)
+        if handed_on(kind, skip_blank_lines, skip_comment_lines)
     ]
 
 
@@ -1041,13 +1110,13 @@ def list_entries(
     ]
     terms: dict = {}
     for entry, own in texts:
-        lines = classify(entry["lines"])
+        lines = classify(entry["lines"], skip_comment_lines)
         terms.update(glossary(lines, group_lines(lines), own, turn))
     found = []
     for entry, own in texts:
         items = [
             line.strip()
-            for kind, line in resolve(entry["lines"], own, terms, turn)
+            for kind, line in resolve(entry["lines"], own, terms, turn, skip_comment_lines)
             if handed_on(kind, skip_blank_lines, skip_comment_lines)
         ]
         if entry["mode"] != ALL and items:
