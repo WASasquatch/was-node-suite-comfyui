@@ -49,11 +49,18 @@ def options() -> list[str]:
 
 
 def _named(label: str) -> str:
-    """The file a menu label names, or an empty string where none is chosen or found."""
+    """The file a menu label names, or an empty string where none is chosen or found.
+
+    Raises:
+        FileNotFoundError: A menu label names a clip that is no longer there.
+    """
     text = str(label or "").strip()
     if not text or text == NO_CLIPS:
         return ""
-    return file_listing.resolve(text, (h3_clip_file.EXTENSION,), file_listing.ROOTS, paths=True) or ""
+    found = file_listing.resolve(text, (h3_clip_file.EXTENSION,), file_listing.ROOTS, paths=True)
+    if found is None and file_listing.is_label(text):
+        raise file_listing.missing_label(text)
+    return found or ""
 
 
 class H3LoadClip(io.ComfyNode):

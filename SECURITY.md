@@ -211,9 +211,10 @@ it is read. The file listing and the pack's folder and file menus follow no syml
 junction out of the folder they list. A folder in `paths.allow_read` is listed, previewed and read by the routes below for
 any client that can reach ComfyUI, the same as `input/`.
 
-Three nodes write into ComfyUI's `input/` and the `paths.allow_read` folders, picked on their
-`root` menu: Image Save and Save Text File, which write files one at a time, and Save Dataset,
-which writes a whole dataset. Image Save writes pictures and their
+Four nodes write into ComfyUI's `input/` and the `paths.allow_read` folders.
+Image Save and Save Text File write files one at a time and Save Dataset writes a whole dataset,
+each picked on its `root` menu; and 3D Model Save, with `folder` on `input`, writes one model
+file and the textures it names beside it under a name it numbers, and never replaces a file. Image Save writes pictures and their
 `.txt` captions under names it numbers, and replaces an existing file only with
 `overwrite_mode` on. Save Text File writes text files under names it numbers, and replaces an
 existing file only at `filename_number_padding` 0, under the fixed name or each text's wired
@@ -411,6 +412,36 @@ A packed block is expanded with a byte ceiling, never past the size its header g
 deflate bomb yields no more than the block it claims to be. A file is read whole into memory, so
 the ceilings are what keep a small file from asking for a large allocation. The expansion figure
 sits above the 1032 bytes per byte deflate can produce, so it refuses no real picture.
+
+## 3D model readers
+
+3D Model Load, Three Load Model and the mesh and character nodes read glTF, GLB, VRM, FBX and OBJ
+with readers written here rather than taken from a library. A file past its size below is
+refused before it is read, and a model past any of the counts below is refused.
+
+| Ceiling | Value | What it bounds |
+|---|---|---|
+| Model file | 536870912 bytes | Any model file read |
+| JSON | 536870912 bytes | One glTF or VRM JSON document |
+| Files beside a model | 2147483648 bytes | Every buffer and image a glTF names beside itself, together |
+| File beside a model | 268435456 bytes | One of those files |
+| Vertices | 60000000 | One glTF, GLB or VRM model, every part together |
+| Triangles | 120000000 | The same |
+| Images | 512 | One glTF, GLB or VRM file |
+| Texture pixels | 67108864 | One texture |
+| Texture pixels, all maps | 268435456 | One model, every image together |
+| Decoded compressed data | 4294967296 bytes | Every compressed view of one glTF, GLB or VRM file |
+| Parts | 100000 | One model |
+| FBX file | 2147483648 bytes | One FBX file |
+| FBX decoded arrays | 3221225472 bytes | Every array of one FBX file, together |
+| FBX inflation | 1100 bytes per compressed byte | One zlib stream in an FBX file |
+| FBX records | 8000000 | One FBX file |
+| FBX nesting | 64 | Record depth in one FBX file |
+| FBX mesh elements | 100000000 | Control points or polygon corners of one FBX mesh |
+| OBJ lines | 80000000 | One OBJ file |
+| OBJ vertices | 40000000 | Positions, texture coordinates or normals of one OBJ file, each |
+| OBJ corners | 60000000 | Face corners of one OBJ file |
+| MTL library | 16777216 bytes | One material library |
 
 A Word document's property parts are read only when under 4 MB and holding no document type
 declaration. A latent VAEEncode (Bundle Latent) carries in a

@@ -29,11 +29,18 @@ def options() -> list[str]:
 
 
 def _named(cache: str) -> str:
-    """The manifest path a menu label names, or an empty string where none is chosen."""
+    """The manifest path a menu label names, or an empty string where none is chosen.
+
+    Raises:
+        FileNotFoundError: A menu label names a cache that is no longer there.
+    """
     label = str(cache or "").strip()
     if not label or label == NO_CACHES:
         return ""
-    return file_listing.resolve(label, (frame_cache.EXTENSION,), file_listing.ROOTS, paths=True) or label
+    found = file_listing.resolve(label, (frame_cache.EXTENSION,), file_listing.ROOTS, paths=True)
+    if found is None and file_listing.is_label(label):
+        raise file_listing.missing_label(label)
+    return found or label
 
 
 class LoadVideoCache(io.ComfyNode):

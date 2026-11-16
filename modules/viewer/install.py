@@ -68,17 +68,19 @@ LEDGER = NODES_DIR / "_installed_files.json"
 #: Most bytes one extension may install, counting every file it would write.
 MAX_EXTENSION_BYTES = 256 * 1024 * 1024
 
-#: View files the viewer ships itself, listed in ``view_manifest.js`` and loaded from
-#: there. They must not appear in the extension manifest as well, or each is imported
+#: Stems of the views the viewer ships itself, listed in ``view_manifest.mjs`` and loaded
+#: from there. They must not appear in the extension manifest as well, or each is imported
 #: twice.
 CORE_VIEWS = frozenset({
-    "ansi.js", "canvas.js", "code_scripts.js", "css.js", "csv.js", "html.js",
-    "javascript.js", "json.js", "markdown.js", "object.js", "python.js", "svg.js",
-    "text.js", "yaml.js",
+    "ansi", "canvas", "code_scripts", "css", "csv", "html", "javascript", "json",
+    "markdown", "object", "python", "svg", "text", "yaml",
 })
 
-#: Machinery in the views directory that is not a view.
-NOT_VIEWS = frozenset({"base_view.js", "view_loader.js", "view_manifest.js"})
+#: Stems of the machinery in the views directory that is not a view.
+NOT_VIEWS = frozenset({"base_view", "view_loader", "view_manifest"})
+
+#: Suffixes a view module may carry.
+VIEW_SUFFIXES = (".js", ".mjs")
 
 #: Written into the drop directory. The name is the instruction, so it reads as one in a
 #: file listing without being opened.
@@ -315,8 +317,10 @@ def write_manifest(pack_root: Path) -> list[str]:
     try:
         found = sorted(
             path.name
-            for path in views.glob("*.js")
-            if path.name not in CORE_VIEWS and path.name not in NOT_VIEWS
+            for path in views.iterdir()
+            if path.suffix in VIEW_SUFFIXES
+            and path.stem not in CORE_VIEWS
+            and path.stem not in NOT_VIEWS
         )
     except OSError as error:
         logger.debug("%s could not be listed (%s)", views, error)

@@ -47,50 +47,51 @@ SUFFIXES = {
 }
 
 #: Files copied out of the pack. The archive mirrors ``web/`` so the relative import inside
-#: ``runtime.js`` resolves in the unpacked folder exactly as it does in the pack.
+#: ``runtime.mjs`` resolves in the unpacked folder exactly as it does in the pack.
 CARRIED = (
-    "vendor/three/three.module.js",
-    "vendor/three/three.core.js",
+    "vendor/three/three.module.mjs",
+    "vendor/three/three.core.mjs",
     "vendor/three/LICENSE",
-    "vendor/three/loaders/GLTFLoader.js",
-    "vendor/three/loaders/OBJLoader.js",
-    "vendor/three/loaders/STLLoader.js",
-    "vendor/three/utils/BufferGeometryUtils.js",
-    "vendor/three/utils/SkeletonUtils.js",
-    "threejs/runtime.js",
+    "vendor/three/loaders/GLTFLoader.mjs",
+    "vendor/three/loaders/OBJLoader.mjs",
+    "vendor/three/loaders/STLLoader.mjs",
+    "vendor/three/utils/BufferGeometryUtils.mjs",
+    "vendor/three/utils/SkeletonUtils.mjs",
+    "threejs/runtime.mjs",
+    "threejs/springs.mjs",
 )
 
 #: Model suffix -> the further files its loader needs. Only the ones a scene actually uses
 #: are written, which keeps an archive holding one .glb from carrying every parser.
 BY_FORMAT = {
     "dae": (
-        "vendor/three/loaders/ColladaLoader.js",
-        "vendor/three/loaders/TGALoader.js",
-        "vendor/three/loaders/collada/ColladaParser.js",
-        "vendor/three/loaders/collada/ColladaComposer.js",
+        "vendor/three/loaders/ColladaLoader.mjs",
+        "vendor/three/loaders/TGALoader.mjs",
+        "vendor/three/loaders/collada/ColladaParser.mjs",
+        "vendor/three/loaders/collada/ColladaComposer.mjs",
     ),
     "fbx": (
-        "vendor/three/loaders/FBXLoader.js",
-        "vendor/three/libs/fflate.module.js",
-        "vendor/three/curves/NURBSCurve.js",
-        "vendor/three/curves/NURBSUtils.js",
+        "vendor/three/loaders/FBXLoader.mjs",
+        "vendor/three/libs/fflate.module.mjs",
+        "vendor/three/curves/NURBSCurve.mjs",
+        "vendor/three/curves/NURBSUtils.mjs",
     ),
-    "ply": ("vendor/three/loaders/PLYLoader.js",),
-    "obj": ("vendor/three/loaders/MTLLoader.js",),
+    "ply": ("vendor/three/loaders/PLYLoader.mjs",),
+    "obj": ("vendor/three/loaders/MTLLoader.mjs",),
     "3mf": (
-        "vendor/three/loaders/3MFLoader.js",
-        "vendor/three/libs/fflate.module.js",
+        "vendor/three/loaders/3MFLoader.mjs",
+        "vendor/three/libs/fflate.module.mjs",
     ),
 }
 
 #: Geometry decoder -> the files it needs, written only for a model compressed with it.
 BY_DECODER = {
     "meshopt": (
-        "vendor/three/libs/meshopt_decoder.module.js",
+        "vendor/three/libs/meshopt_decoder.module.mjs",
         "vendor/three/libs/meshopt_decoder.LICENSE.md",
     ),
     "draco": (
-        "vendor/three/loaders/DRACOLoader.js",
+        "vendor/three/loaders/DRACOLoader.mjs",
         "vendor/three/libs/draco/gltf/draco_wasm_wrapper.txt",
         "vendor/three/libs/draco/gltf/draco_decoder.wasm",
         "vendor/three/libs/draco/LICENSE",
@@ -99,42 +100,42 @@ BY_DECODER = {
 
 #: Files every effect chain needs, and then the ones each kind of effect needs on top.
 EFFECT_BASE = (
-    "vendor/three/postprocessing/EffectComposer.js",
-    "vendor/three/postprocessing/Pass.js",
-    "vendor/three/postprocessing/MaskPass.js",
-    "vendor/three/postprocessing/ShaderPass.js",
-    "vendor/three/postprocessing/RenderPass.js",
-    "vendor/three/postprocessing/OutputPass.js",
-    "vendor/three/shaders/CopyShader.js",
-    "vendor/three/shaders/OutputShader.js",
+    "vendor/three/postprocessing/EffectComposer.mjs",
+    "vendor/three/postprocessing/Pass.mjs",
+    "vendor/three/postprocessing/MaskPass.mjs",
+    "vendor/three/postprocessing/ShaderPass.mjs",
+    "vendor/three/postprocessing/RenderPass.mjs",
+    "vendor/three/postprocessing/OutputPass.mjs",
+    "vendor/three/shaders/CopyShader.mjs",
+    "vendor/three/shaders/OutputShader.mjs",
 )
 
 #: Environment source -> the file its loader needs. An environment read from a picture off the
 #: wire needs nothing beyond three itself.
 #: What an area light is shaded from. Large, so only a scene holding one carries them.
 AREA_LIGHT = (
-    "vendor/three/lights/RectAreaLightUniformsLib.js",
-    "vendor/three/lights/RectAreaLightTexturesLib.js",
+    "vendor/three/lights/RectAreaLightUniformsLib.mjs",
+    "vendor/three/lights/RectAreaLightTexturesLib.mjs",
 )
 
 BY_ENVIRONMENT = {
-    "studio room": ("vendor/three/environments/RoomEnvironment.js",),
-    "hdr": ("vendor/three/loaders/HDRLoader.js",),
-    "exr": ("vendor/three/loaders/EXRLoader.js",),
+    "studio room": ("vendor/three/environments/RoomEnvironment.mjs",),
+    "hdr": ("vendor/three/loaders/HDRLoader.mjs",),
+    "exr": ("vendor/three/loaders/EXRLoader.mjs",),
 }
 
 BY_EFFECT = {
     "Bloom": (
-        "vendor/three/postprocessing/UnrealBloomPass.js",
-        "vendor/three/shaders/LuminosityHighPassShader.js",
+        "vendor/three/postprocessing/UnrealBloomPass.mjs",
+        "vendor/three/shaders/LuminosityHighPassShader.mjs",
     ),
     "DepthOfField": (
-        "vendor/three/postprocessing/BokehPass.js",
-        "vendor/three/shaders/BokehShader.js",
+        "vendor/three/postprocessing/BokehPass.mjs",
+        "vendor/three/shaders/BokehShader.mjs",
     ),
     "Antialias": (
-        "vendor/three/postprocessing/SMAAPass.js",
-        "vendor/three/shaders/SMAAShader.js",
+        "vendor/three/postprocessing/SMAAPass.mjs",
+        "vendor/three/shaders/SMAAShader.mjs",
     ),
 }
 
@@ -156,8 +157,8 @@ PAGE = """<!DOCTYPE html>
 <body>
 <canvas id="stage"></canvas>
 <script type="module">
-import * as THREE from "./vendor/three/three.module.js";
-import {{ createOrbitControls, createRuntime, toneMappingConstant }} from "./threejs/runtime.js";
+import * as THREE from "./vendor/three/three.module.mjs";
+import {{ createOrbitControls, createRuntime, toneMappingConstant }} from "./threejs/runtime.mjs";
 
 const app = await (await fetch("./scene.json")).json();
 const canvas = document.getElementById("stage");

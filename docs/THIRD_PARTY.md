@@ -29,15 +29,18 @@ runs.
 | [Mermaid](https://mermaid.js.org/) 10.9.5 | MIT, Knut Sveidqvist and contributors | Diagrams in the viewer's Markdown view | [`markdown_scripts/LICENSE`](../web/viewer/views/markdown_scripts/LICENSE) |
 | ⤷ [DOMPurify](https://github.com/cure53/DOMPurify) 3.2.4, bundled into `mermaid.min.txt` | MPL-2.0 **or** Apache-2.0, Dr.-Ing. Mario Heiderich, Cure53 and other contributors | Mermaid's own sanitising of the SVG it builds | [`LICENSE-MPL-2.0.txt`](../web/viewer/views/markdown_scripts/LICENSE-MPL-2.0.txt), [`LICENSE-APACHE-2.0.txt`](../web/viewer/views/markdown_scripts/LICENSE-APACHE-2.0.txt) |
 | [ZenTrainer](https://github.com/Nynxz/ZenTrainer) | MIT, Nynxz | The picture flags, near-duplicate pairs, health scores and caption phrase counts **Dataset Health** and **Caption Statistics** measure, ported into [`modules/dataset/health.py`](../modules/dataset/health.py) and [`modules/prompt/caption_stats.py`](../modules/prompt/caption_stats.py), and the score radar and phrase bars their panels draw | [`LICENSE.zentrainer`](../modules/dataset/LICENSE.zentrainer) |
+| [meshoptimizer](https://github.com/zeux/meshoptimizer) decoders | MIT, Arseny Kapoulkine | The vertex, index and filter decoders of `EXT_meshopt_compression` that **3D Model Load** and the other 3D nodes read compressed glTF and VRM files with, ported into [`modules/model3d/gltf.py`](../modules/model3d/gltf.py) | [`LICENSE.meshoptimizer`](../modules/model3d/LICENSE.meshoptimizer) |
+| [MikkTSpace](https://github.com/mmikk/MikkTSpace) | zlib, Morten S. Mikkelsen | The tangent frames **Mesh Bake Textures** bakes normal maps in, ported into [`modules/mesh/tangents.py`](../modules/mesh/tangents.py), which says so in its first line | [`LICENSE.mikktspace`](../modules/mesh/LICENSE.mikktspace) |
+| [three-vrm](https://github.com/pixiv/three-vrm) | MIT, pixiv Inc. | The VRM 0.x to VRM 1.0 conversions **3D Model Load** applies to a VRM 0.x avatar, its MToon shading factors among them, ported into [`modules/model3d/vrm.py`](../modules/model3d/vrm.py) | [`LICENSE.three-vrm`](../modules/model3d/LICENSE.three-vrm) |
 | [KaTeX fonts](https://katex.org/) | SIL Open Font License 1.1, Design Science, Inc. and Khan Academy | The six `.woff2` faces KaTeX sets maths in, in [`web/viewer/fonts/`](../web/viewer/fonts/) | [`fonts/LICENSE`](../web/viewer/fonts/LICENSE) |
 | [DejaVu](https://github.com/dejavu-fonts/dejavu-fonts) 2.37 | Bitstream Vera and Arev, Bitstream Inc. and Tavmjong Bah, with the DejaVu changes in the public domain | Four faces **Image Draw Text** renders with, in [`modules/data/fonts/dejavu/`](../modules/data/fonts/dejavu/) | [`dejavu/LICENSE`](../modules/data/fonts/dejavu/LICENSE), [`AUTHORS`](../modules/data/fonts/dejavu/AUTHORS) |
 | [Liberation](https://github.com/liberationfonts/liberation-fonts) 2.1.5 | SIL Open Font License 1.1, Red Hat, Inc., with digitized data copyright Google Corporation | Four faces metric-compatible with Arial, Times New Roman and Courier New, in [`modules/data/fonts/liberation/`](../modules/data/fonts/liberation/) | [`liberation/LICENSE`](../modules/data/fonts/liberation/LICENSE), [`AUTHORS`](../modules/data/fonts/liberation/AUTHORS) |
 | [Aileron](https://www.dotcolon.net/font/aileron) 1.102 | CC0 1.0, public domain, Sora Sagano (dot colon) | The first font **Text Encode Fibo 2** draws a caption's text with where Pillow's built-in font lacks a character, as Fibo 2.0's training did, in [`modules/data/fibo2/`](../modules/data/fibo2/) | [`LICENSE-Aileron.txt`](../modules/data/fibo2/LICENSE-Aileron.txt) |
 | [DejaVu Sans](https://github.com/dejavu-fonts/dejavu-fonts), Bria's copy | Bitstream Vera and Arev, Bitstream Inc. and Tavmjong Bah, with the DejaVu changes in the public domain | The second font it draws with, the file Bria publishes beside Fibo 2.0, in [`modules/data/fibo2/`](../modules/data/fibo2/) | [`LICENSE-DejaVu.txt`](../modules/data/fibo2/LICENSE-DejaVu.txt) |
 
-Fourteen of the components are MIT in their own code, and two of those compile in a copy of
+Fifteen of the components are MIT in their own code, and two of those compile in a copy of
 DOMPurify, which is dual licensed `MPL-2.0 OR Apache-2.0`. Of the rest, four are Apache-2.0, one
-is BSD-3-Clause, two are under the SIL Open Font License, two are Bitstream Vera with Arev, one
+is BSD-3-Clause, one is zlib, two are under the SIL Open Font License, two are Bitstream Vera with Arev, one
 is public domain under CC0, and one is Open RAIL++-M.
 All of those permit redistribution. MPL-2.0 is the only copyleft licence here and its conditions
 are file level, reaching the two files DOMPurify is compiled into and nothing beside them;
@@ -49,8 +52,9 @@ Liberation names against modified copies. These are unmodified.
 
 Counting every file rather than every component, the pack carries 172 third-party files, 27.8 MB
 of the repository: browser libraries, fonts, the eight face cascades, three sets of weights and
-five networks. ZenTrainer is not among them: its measurements are ported into the pack's own
-modules, and its licence ships beside them.
+five networks. ZenTrainer, the meshoptimizer decoders, MikkTSpace and the three-vrm conversions
+are not among them: they are ported into the pack's own modules, and their licences ship beside
+them.
 
 ## Verifying a copy
 

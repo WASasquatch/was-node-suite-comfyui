@@ -1186,6 +1186,25 @@ def resolve_write(value: str | os.PathLike) -> Path:
     return _resolve(value, write_roots(), "paths.allow_write", WRITE)
 
 
+def resolve_read_file(directory: str | os.PathLike, name: str | os.PathLike) -> Path:
+    """Resolve a file named from inside another file, such as a texture a model references.
+
+    Args:
+        directory: The folder holding the file that names it.
+        name: The name as written. Sub-directories are allowed; a drive, a leading root and
+            a ``..`` segment are not.
+
+    Returns:
+        The resolved absolute file path, inside the resolved directory and so inside a
+        permitted read root. It need not exist.
+
+    Raises:
+        PathNotAllowed: The directory resolved outside every permitted read root, or the
+            name names somewhere other than inside it.
+    """
+    return _join(resolve_read(directory), name, READ)
+
+
 def resolve_write_file(directory: str | os.PathLike, name: str | os.PathLike) -> Path:
     """Resolve a directory a node writes into and the file name it writes there, together.
 

@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **699** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **723** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-613 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+637 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 455 |
+| [Always loaded](#always-loaded) | always on | 479 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,8 +41,11 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-455 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+479 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
+- [WAS Suite/3D/Character](#was-suite3dcharacter) (4)
+- [WAS Suite/3D/Mesh](#was-suite3dmesh) (13)
+- [WAS Suite/3D/Model](#was-suite3dmodel) (6)
 - [WAS Suite/Animation](#was-suiteanimation) (24)
 - [WAS Suite/Archive](#was-suitearchive) (9)
 - [WAS Suite/Conditioning](#was-suiteconditioning) (3)
@@ -52,7 +55,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/History](#was-suitehistory) (2)
 - [WAS Suite/IO](#was-suiteio) (19)
 - [WAS Suite/Image](#was-suiteimage) (12)
-- [WAS Suite/Image/Adjustment](#was-suiteimageadjustment) (10)
+- [WAS Suite/Image/Adjustment](#was-suiteimageadjustment) (11)
 - [WAS Suite/Image/Analyze](#was-suiteimageanalyze) (5)
 - [WAS Suite/Image/Bound](#was-suiteimagebound) (17)
 - [WAS Suite/Image/Edit](#was-suiteimageedit) (3)
@@ -89,6 +92,819 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Text/Tokens](#was-suitetexttokens) (3)
 - [WAS Suite/Utilities](#was-suiteutilities) (11)
 - [WAS Suite/Workflow](#was-suiteworkflow) (1)
+
+### WAS Suite/3D/Character
+
+<a id="node-wascharacterassemble"></a>
+<details>
+<summary><b>Character Assemble</b></summary>
+
+Put a head made separately on a body, with optional hair and one extra piece, as one model whose parts are labelled body, head and hair. The body is turned to face forward and stood on the floor, and the head is fitted over the body's own head and its neck joined into the body's.
+
+| | |
+|---|---|
+| Node id | `WASCharacterAssemble` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `body` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The body: a full figure, or one without a head. A character already assembled may be wired again to add more parts. |
+| `target_height` | `FLOAT` | Yes | 1.6 |  | Height of the finished character in metres. 1.6 = an adult; 0 = keep the body's own size. |
+| `facing` | `COMBO` | Yes | auto | `auto`, `+Z`, `-Z`, `+X`, `-X` | Which way the body faces as loaded. `auto` = read from a skeleton, or from the feet; `+Z`, `-Z`, `+X`, `-X` = that direction. The character always ends facing +Z. |
+| `remove_body_head` | `COMBO` | Yes | auto | `auto`, `yes`, `no` | Cut away a head the body already has, at its neck, when a head is wired. `auto` = only when the body has one; `yes` = always cut at the neck; `no` = never. |
+| `clear_body_hair` | `COMBO` | Yes | auto | `auto`, `off` | Remove the body's own hair hanging below the neck when its head is cut away, matched by the colour of its crown, and close the opening. `auto` = do it; `off` = keep it. |
+| `head_fit` | `COMBO` | Yes | auto | `auto`, `body's head`, `neck width`, `keep` | `auto` = fitted over the body's own head, or sized by the neck when the body has none; `body's head` and `neck width` = always that; `keep` = move the head as the body moved, for parts made together. |
+| `head_scale` | `FLOAT` | Yes | 1.0 |  | Multiplies the fitted head size. 1.0 = as measured by `head_fit`; 0.9 = a tenth smaller. |
+| `head_turn` | `FLOAT` | Yes | 0.0 |  | Degrees the head turns about its up axis before fitting, for a head made facing a different way from the body. 90 = a quarter turn to the left. |
+| `hair_follows_head` | `BOOLEAN` | Yes | True |  | `true` = hair moves, turns and scales with the head; `false` = with the body. |
+| `feet_on_ground` | `BOOLEAN` | Yes | True |  | `true` = stand the character on the floor at Y = 0, centred; `false` = keep where it is. |
+| `extra_label` | `STRING` | Yes | extra |  | Label of the extra piece's parts, such as `hat`, `glasses` or `tail`. |
+| `extra_follows` | `COMBO` | Yes | head | `head`, `body` | `head` = the extra moves with the head, like a hat; `body` = with the body, like a tail. |
+| `placement` | `STRING` | Yes |  |  | Fine adjustments after the automatic fit, per part, as JSON: {"head": {"offset": [0, 0.01, 0], "rotate": [0, 10, 0], "scale": 1.05}}. Offsets in metres, rotations in degrees. Empty = none. |
+| `skin_match` | `COMBO` | Yes | head to body | `head to body`, `off` | `head to body` = tone the new head's skin to the body's, leaving hair, eyes and brows, and blend the two necks' colours at the seam; `off` = keep both skins as generated. |
+| `head` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | No |  |  | A head made on its own, ending at the neck. Its size and position are fitted to the body's neck. |
+| `hair` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | No |  |  | Hair made together with the head, in the head's own position. Labelled hair. |
+| `extra` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | No |  |  | One more piece, such as a hat or a tail, labelled with extra_label and moved with the head or the body as extra_follows says. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+
+</details>
+
+<a id="node-wascharacterneckjoin"></a>
+<details>
+<summary><b>Character Neck Join</b></summary>
+
+Join a head that Character Assemble set on a body into one continuous surface at the neck, so the seam cannot open, crease or crack in a render or an animation. Both necks share one ring of vertices with one shading, and one set of skin weights when the model is rigged.
+
+| | |
+|---|---|
+| Node id | `WASCharacterNeckJoin` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The character from Character Assemble, rigged or not. After Character Rig it also matches the skin weights across the seam, so place it after the rig; a second pass keeps the shape and matches the weights again. |
+| `band` | `FLOAT` | Yes | 0.5 |  | Height above and below the seam, in neck radii, over which shape, shading and skin weights ease into the shared ring. 0 = the ring only; 0.5 = a soft blend; 1.5 for necks that met at an angle. |
+| `merge_parts` | `BOOLEAN` | Yes | False |  | `true` = head and body parts drawn with the same material become one part; `false` = keep them apart. Merge only after Character Rig and Character Springs, which find the head by its label. |
+| `head_parts` | `STRING` | Yes | head |  | Parts above the seam, by label or name, wildcards allowed, such as `head` or `tripo_node_0a7f*`. `head` = the parts Character Assemble labelled head. |
+| `body_parts` | `STRING` | Yes | body |  | Parts below the seam, by label or name, wildcards allowed, such as `body` or `tripo_node_dd15*`. `body` = the parts Character Assemble labelled body. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+
+</details>
+
+<a id="node-wascharacterrig"></a>
+<details>
+<summary><b>Character Rig</b></summary>
+
+Rig a standing character with a VRM humanoid skeleton and skin weights, ready to save as a VRM avatar or pose. Joints, fingers and eyes are fitted to the body's own shape, and the arms can be turned level into the T-pose VRM expects.
+
+| | |
+|---|---|
+| Node id | `WASCharacterRig` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The character to rig: a full figure standing upright, arms held away from the body, legs apart. A skeleton it already has is replaced. |
+| `rest_pose` | `COMBO` | Yes | T-pose | `T-pose`, `as modelled` | `T-pose` = turn sloping arms level, as VRM avatars expect; `as modelled` = keep the pose the mesh was made in. |
+| `detail` | `INT` | Yes | 60000 |  | Triangles of the reduced copy the body's joints are fitted to and its weights are worked out on. 60000 suits most characters; more follows thin parts closer and takes longer. Fingers are always fitted on the full model. |
+| `facing` | `COMBO` | Yes | auto | `auto`, `+Z`, `-Z`, `+X`, `-X` | Which way the character faces as loaded. `auto` = as Character Assemble left it, else read from a skeleton or the feet; `+Z`, `-Z`, `+X`, `-X` = that direction. The character always ends facing +Z. |
+| `fingers` | `BOOLEAN` | Yes | True |  | `true` = fit thumb and finger bones to each hand and share the hand's weights with them, so the fingers can curl; joined or mitten fingers get evenly spaced bones. `false` = the hand moves as one piece. |
+| `eyes` | `BOOLEAN` | Yes | True |  | `true` = place eye bones and a VRM look-at. Eyeball parts turn with the bones; painted or sculpted eyes stay still and the bones set the gaze origin. `false` = no eye bones. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+
+</details>
+
+<a id="node-wascharactersprings"></a>
+<details>
+<summary><b>Character Springs</b></summary>
+
+Give a rigged character's hanging hair, such as a ponytail, braids or long locks, and any skirt or cape part chains of spring bones, with colliders on the body, so they swing and settle in VRM viewers and games. Hair on the scalp keeps moving with the head.
+
+| | |
+|---|---|
+| Node id | `WASCharacterSprings` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The rigged character: a humanoid skeleton and skin, from Character Rig or a VRM. Hair below the head joint is what swings. |
+| `hair` | `COMBO` | Yes | auto | `auto`, `hair parts`, `off` | `auto` = hair found by colour on the head, plus any part labelled `hair`; `hair parts` = only parts labelled `hair`; `off` = no chains, colliders only. |
+| `joints_per_chain` | `INT` | Yes | 4 |  | Segments in each strand's chain. 4 = smooth swing; 8 for long hair that curls as it moves. |
+| `max_chains` | `INT` | Yes | 16 |  | Most strands given chains; the largest are kept. 16 suits braids and a ponytail. |
+| `stiffness` | `FLOAT` | Yes | 0.8 |  | Pull back to the rest shape. 0.8 = soft hair; 2.0 = stiff, as for a tight braid. |
+| `drag` | `FLOAT` | Yes | 0.4 |  | Share of its speed a strand loses each step. 0.4 = settles quickly; 0.1 = keeps swinging. |
+| `gravity` | `FLOAT` | Yes | 0.25 |  | Strength of gravity on each strand. 0 = hangs as modelled; 0.5 = falls noticeably when the head tilts. |
+| `colliders` | `BOOLEAN` | Yes | True |  | `true` = colliders on the head, neck, chest, upper arms, hips and upper legs, so hair and cloth rest on the body instead of passing through it. |
+| `cloth` | `STRING` | Yes | skirt, cape |  | Parts that swing like cloth, by name or label, wildcards allowed, such as `skirt, cape`. Each gets chains round the torso bone it hangs from. Empty = none. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+
+</details>
+
+### WAS Suite/3D/Mesh
+
+<a id="node-wasmeshbaketextures"></a>
+<details>
+<summary><b>Mesh Bake Textures</b></summary>
+
+Bake a detailed model's colour, surface detail, metal, roughness, glow and shadowed creases into the texture layout of a lighter version, so a decimated or retopologised model keeps the original's look. Without a source, it redraws the textures a model had before Mesh UV Unwrap.
+
+| | |
+|---|---|
+| Node id | `WASMeshBakeTextures` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `resolution` | `INT` | Yes | 2048 |  | Width and height of every baked texture, in pixels. 2048 suits a game character; 4096 a close-up hero asset. |
+| `base_color` | `BOOLEAN` | Yes | True |  | `true` = bake the colour map, with transparency where the source has it. |
+| `normal` | `BOOLEAN` | Yes | True |  | `true` = bake a normal map holding the source's surface detail, in the target's tangent space, +Y up as glTF and Blender expect. |
+| `metallic_roughness` | `BOOLEAN` | Yes | True |  | `true` = bake roughness into green and metalness into blue; red holds occlusion when that is baked too. |
+| `emissive` | `BOOLEAN` | Yes | True |  | `true` = bake the glow map; a source with no glow leaves the material unlit by it. |
+| `occlusion` | `BOOLEAN` | Yes | False |  | `true` = bake ambient occlusion: darkening in creases, traced with ao_rays rays per texel. The slowest map; minutes on a CPU at 2048. |
+| `cage` | `FLOAT` | Yes | 0.02 |  | How far from the target's surface the source is searched along each normal, as a share of the model's size. 0.02 = 2 cm on a 1 m model; raise it for gaps, lower it where thin parts pick up the wrong side. |
+| `samples` | `INT` | Yes | 1 |  | Samples along each side of a texel: 1 = one per texel; 2 = four, smoother edges and fine detail at four times the time; 4 = sixteen. |
+| `padding` | `INT` | Yes | 8 |  | Pixels each chart's colours are grown into the empty space around it, hiding seams when the texture is filtered or shrunk. 8 = usual; 16 for small mipmaps. |
+| `ao_rays` | `INT` | Yes | 16 |  | Occlusion rays per texel when occlusion is on. 16 = quick and slightly grainy; 64 = smooth; time grows in step. |
+| `ao_distance` | `FLOAT` | Yes | 0.1 |  | Farthest surface that darkens a texel, as a share of the model's size. 0.1 = nearby folds and limbs; 0.02 = only tight creases. |
+| `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+| `source` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | No |  |  | The detailed model the look comes from, such as the high poly before decimation, lying where the target lies. Unwired = the target's own textures from before its Mesh UV Unwrap. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+| `base_color` | `IMAGE` | The baked colour map, as the picture an image node can edit or save. |
+| `normal` | `IMAGE` | The baked normal map, flat blue (0.5, 0.5, 1) where the surfaces match. |
+| `metallic_roughness` | `IMAGE` | The baked map with occlusion in red, roughness in green and metalness in blue. |
+| `emissive` | `IMAGE` | The baked glow map, black where nothing glows. |
+| `occlusion` | `IMAGE` | The baked ambient occlusion, white where open and dark in creases. |
+| `report` | `STRING` | Maps baked, texels filled, the share of samples that found the source and the time each stage took. |
+
+</details>
+
+<a id="node-wasmeshclean"></a>
+<details>
+<summary><b>Mesh Clean</b></summary>
+
+Repair a model so it exports clean: weld split vertices, remove broken faces and stray floating pieces, fix non-manifold spots, turn faces outward and fill small holes. Textures, skin and shape keys carry through, and the report lists what each step changed.
+
+| | |
+|---|---|
+| Node id | `WASMeshClean` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `weld` | `BOOLEAN` | Yes | True |  | `true` = merge vertices within weld_distance whose texture coordinates, colours, normals and skin agree; texture seams stay split. `false` = leave vertices as they are. |
+| `weld_distance` | `FLOAT` | Yes | 1e-05 |  | Largest gap between merged vertices, in metres. 0 = exact duplicates only; 0.00001 = a hundredth of a millimetre, closing rounding cracks; 0.001 = also hairline gaps between pieces, collapsing any smaller triangles. |
+| `remove_degenerate` | `BOOLEAN` | Yes | True |  | `true` = remove faces collapsed to a line or a point, and faces repeating another face's corners. |
+| `remove_small_shells` | `BOOLEAN` | Yes | True |  | `true` = remove loose pieces with fewer faces than shell_min_faces or less surface than shell_min_area, such as the floaters 3D generators leave. The largest piece always stays. |
+| `fix_non_manifold` | `BOOLEAN` | Yes | True |  | `true` = remove small loose flaps hanging off edges, then split edges shared by more than two faces and vertices where separate fans of faces touch. |
+| `orient_faces` | `BOOLEAN` | Yes | True |  | `true` = wind every face like its neighbours and turn each piece to face outward. `false` = keep the winding as loaded. |
+| `fill_holes` | `BOOLEAN` | Yes | True |  | `true` = close holes up to max_hole_edges with new faces curved to follow the surface around them, textured from the border. |
+| `max_hole_edges` | `INT` | Yes | 100 |  | Longest hole filled, counted in border edges. 100 = the gaps generators leave; 1000 = also large openings such as a neck or a sleeve. |
+| `self_intersections` | `COMBO` | Yes | off | `off`, `count`, `remove small shells` | `off` = skip. `count` = count faces crossing another face, in the report. `remove small shells` = also remove crossing pieces smaller than intersecting_max_area, such as shapes buried inside the body. |
+| `recompute_normals` | `BOOLEAN` | Yes | False |  | `true` = rebuild normals from the faces, smooth across edges flatter than crease_angle and sharp at steeper ones. `false` = keep the model's normals. |
+| `crease_angle` | `FLOAT` | Yes | 60.0 |  | Angle between faces, in degrees, at which recompute_normals keeps an edge sharp. 30 = hard surface; 60 = most models; 180 = smooth everywhere. |
+| `shell_min_faces` | `INT` | Yes | 8 |  | Loose pieces, and flaps hanging off edges, with fewer faces are removed. 0 = judge by area only. |
+| `shell_min_area` | `FLOAT` | Yes | 0.0001 |  | Loose pieces and flaps with less than this share of the part's surface are removed. 0.0001 = one hundredth of a percent; 0 = judge by face count only. |
+| `intersecting_max_area` | `FLOAT` | Yes | 0.05 |  | With self_intersections at `remove small shells`, crossing pieces under this share of the part's surface are removed. 0.05 = 5%. The largest piece always stays. |
+| `remove_unreferenced` | `BOOLEAN` | Yes | True |  | `true` = drop vertices no face uses. `false` = keep them. |
+| `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+| `report` | `STRING` | What each step changed, part by part, ending with whether the result is watertight and what still keeps it open. |
+
+</details>
+
+<a id="node-wasmeshcut"></a>
+<details>
+<summary><b>Mesh Cut</b></summary>
+
+Cut a model with a flat plane, such as taking a head off at the neck or halving a model for printing. Keep the part above, below or both as separate parts, with the cut closed by flat caps or left open; skin and shape keys carry through.
+
+| | |
+|---|---|
+| Node id | `WASMeshCut` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `axis` | `COMBO` | Yes | Y | `X`, `Y`, `Z`, `custom` | Axis the plane is square to. `Y` = a level cut, above is up; `X` = left from right, above is the character's left; `Z` = front from back; `custom` = the plane through point_x, y, z facing normal_x, y, z. |
+| `position` | `FLOAT` | Yes | 0.5 |  | Where the plane crosses the axis. As a share of size: 0 = lowest point, 0.5 = middle, 1 = highest. In metres: the coordinate, such as 1.45 for a neck at 1.45 m. Unused with `custom`. |
+| `position_mode` | `COMBO` | Yes | share of size | `share of size`, `metres` | `share of size` = position runs 0 to 1 across the chosen parts' extent along the axis. `metres` = position is a coordinate. |
+| `keep` | `COMBO` | Yes | both | `both`, `above`, `below` | `both` = each cut part becomes <name>_above and <name>_below. `above` = keep the side the axis points to. `below` = keep the other side. |
+| `cap` | `BOOLEAN` | Yes | True |  | `true` = close each opening the cut leaves with flat faces, so a closed model stays closed. `false` = leave the cut open. |
+| `cap_texture` | `COMBO` | Yes | edge colour | `edge colour`, `whole texture` | Texture coordinates of the caps. `edge colour` = each cap takes the texture colour at its cut edge. `whole texture` = a flat projection across the whole texture, ready for a new unwrap or bake. |
+| `point_x` | `FLOAT` | Yes | 0.0 |  | With axis `custom`: X of a point on the plane, in metres. |
+| `point_y` | `FLOAT` | Yes | 0.0 |  | With axis `custom`: Y of a point on the plane, in metres. |
+| `point_z` | `FLOAT` | Yes | 0.0 |  | With axis `custom`: Z of a point on the plane, in metres. |
+| `normal_x` | `FLOAT` | Yes | 0.0 |  | With axis `custom`: X of the direction the plane faces, towards the side kept as above. Normalised; 0, 1, 0 = a level cut. |
+| `normal_y` | `FLOAT` | Yes | 1.0 |  | With axis `custom`: Y of the direction the plane faces. 0.7 with normal_z 0.7 = a cut sloping up towards the front. |
+| `normal_z` | `FLOAT` | Yes | 0.0 |  | With axis `custom`: Z of the direction the plane faces. |
+| `snap_distance` | `FLOAT` | Yes | 1e-05 |  | Vertices this close to the plane, in metres, move onto it so the cut makes no sliver faces. 0 = exact; 0.00001 = a hundredth of a millimetre. |
+| `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+
+</details>
+
+<a id="node-wasmeshdecimate"></a>
+<details>
+<summary><b>Mesh Decimate</b></summary>
+
+Cut a model's triangle count while keeping its shape, textures, normals, skin weights and shape keys, so a dense scan or generated model becomes light enough for games, VRM avatars or the web. Texture seams and open edges stay where they are unless set otherwise.
+
+| | |
+|---|---|
+| Node id | `WASMeshDecimate` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `target` | `COMBO` | Yes | ratio | `ratio`, `triangles`, `error` | `ratio` = keep that share of the triangles; `triangles` = stop at that count; `error` = reduce until any further step would move the surface more than max_error. |
+| `ratio` | `FLOAT` | Yes | 0.25 |  | Share of the triangles kept when target is `ratio`. 0.5 = half; 0.25 = a quarter; 1.0 = unchanged. |
+| `triangles` | `INT` | Yes | 20000 |  | Triangles kept across the chosen parts when target is `triangles`. 20000 suits a game character; 5000 a background prop. |
+| `max_error` | `FLOAT` | Yes | 0.01 |  | Largest change to the surface when target is `error`, as a share of the model's size. 0.01 = 1 cm on a 1 m model; 0.001 = 1 mm. `ratio` and `triangles` reach their count whatever the change. |
+| `placement` | `COMBO` | Yes | auto | `auto`, `optimal`, `keep vertices` | Where merged vertices go. `optimal` = where they best fit the surface; `keep vertices` = on an original vertex, so skin and shape keys stay exact; `auto` = keep vertices on skinned or shape-keyed parts, optimal elsewhere. |
+| `borders` | `COMBO` | Yes | slide | `slide`, `lock` | Open edges, such as a neck opening or a cloak's rim. `slide` = simplified along themselves, keeping their outline; `lock` = never moved, so the part still meets whatever it is joined to. |
+| `seams` | `COMBO` | Yes | slide | `slide`, `lock`, `cross` | Where texture coordinates, hard normals or parts split the surface. `slide` = simplified only along themselves; `lock` = never moved; `cross` = may be collapsed across, texture stretch counted as error, for textures cut into many small islands. |
+| `symmetry` | `COMBO` | Yes | none | `none`, `x` | `x` = vertices mirrored across x = 0 are reduced together, so a symmetric model stays symmetric; `none` = no constraint. |
+| `method` | `COMBO` | Yes | edge collapse | `edge collapse`, `grid cluster` | `edge collapse` = careful reduction keeping seams, borders and the surface's topology; `grid cluster` = snaps vertices to a grid for extreme cuts such as distant LODs, fast but able to join nearby pieces. |
+| `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+| `report` | `STRING` | Triangles before and after, the largest surface change as a share of the model's size, and why the reduction stopped. |
+
+</details>
+
+<a id="node-wasmeshinspect"></a>
+<details>
+<summary><b>Mesh Inspect</b></summary>
+
+Check a model before export: counts, watertightness, non-manifold edges, holes, shells, self-intersections, triangle quality, texture coverage and overlaps, and skin weights. The model passes through unchanged, with a readable report and the key figures as outputs.
+
+| | |
+|---|---|
+| Node id | `WASMeshInspect` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `self_intersections` | `BOOLEAN` | Yes | True |  | `true` = count faces crossing another face of their part; about half a minute on two million triangles without a GPU. `false` = skip it. |
+| `uv_resolution` | `INT` | Yes | 1024 |  | Pixels per side of the grid texture coverage and overlap are measured on. 1024 = most textures; 4096 = finer, slower. Lowered on its own for very dense models. |
+| `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+| `report` | `STRING` | Every figure as readable text: counts, size, topology, triangle quality, texture coordinates and rig. |
+| `triangles` | `INT` | Triangles across the chosen parts. |
+| `vertices` | `INT` | Vertices across the chosen parts, counting split texture seams. |
+| `height` | `FLOAT` | Height of the chosen parts along Y, in metres. |
+| `watertight` | `BOOLEAN` | `true` when the chosen parts have triangles, no open border and no non-manifold edge or vertex. |
+
+</details>
+
+<a id="node-wasmeshprojectviews"></a>
+<details>
+<summary><b>Mesh Project Views</b></summary>
+
+Project pictures rendered by Mesh Render Views, after any image model has enhanced, upscaled or repainted them, back into one of the model's maps: base colour, roughness, metallic, normal or occlusion. Each texel takes most from the pictures facing it squarely and keeps its old value where no picture sees it.
+
+| | |
+|---|---|
+| Node id | `WASMeshProjectViews` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `views` | `WAS_CAMERA_VIEWS` | Yes |  |  | The cameras from the Mesh Render Views that rendered the pictures. |
+| `images` | `IMAGE` | Yes |  |  | The edited pictures, one per camera in the order they were rendered. Any size of the same shape: upscaled pictures give a sharper texture. |
+| `texture_size` | `INT` | Yes | 0 |  | Width and height of the new map, in pixels. 0 = keep each map's size, or the colour map's for a new one; 4096 with upscaled pictures for a sharper texture. |
+| `falloff` | `FLOAT` | Yes | 4.0 |  | How strongly each texel favours the picture facing it most squarely. 4 = soft blends between views; 16 = nearly one picture per texel, sharper where views disagree. |
+| `strength` | `FLOAT` | Yes | 1.0 |  | How fully the pictures replace the old values where they see well. 1.0 = replace; 0.5 = half and half; 0.0 = no change. |
+| `edge_fade` | `FLOAT` | Yes | 0.05 |  | Share of each picture's size at its borders over which it fades out. 0.05 = a thin band; 0 = none. |
+| `outline_fade` | `FLOAT` | Yes | 0.01 |  | Fade in from the model's outline and from every edge where one surface passes in front of another, as a share of each picture's size. 0.01 = 10 pixels at 1024; 0 = none. |
+| `depth_tolerance` | `FLOAT` | Yes | 0.004 |  | How far behind the nearest surface a point still counts as seen, as a share of the model's size. 0.004 = 4 mm on a 1 m model; raise it where thin surfaces miss, lower it where colour bleeds through. |
+| `padding` | `INT` | Yes | 8 |  | Pixels each chart's colours are grown into the empty space around it, hiding seams when the texture is filtered or shrunk. 8 = usual. |
+| `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+| `map` | `COMBO` | Yes | base colour | `base colour`, `roughness`, `metallic`, `normal`, `occlusion` | Which map the pictures are written into. `base colour` = colour pictures; `roughness`, `metallic`, `occlusion` = greyscale pictures; `normal` = camera-space normal pictures as Mesh Render Views and Power Preprocessor draw them. |
+| `encoding` | `COMBO` | Yes | gamma 2.2 | `gamma 2.2`, `linear` | How greyscale pictures hold their values. `gamma 2.2` = raised to 1/2.2 for showing, as Power Preprocessor's roughness and metallicity are; `linear` = the value itself. Read by `roughness`, `metallic` and `occlusion` only. |
+| `masks` | `MASK` | No |  |  | How much of each picture to use: 1 = use, 0 = ignore. One per picture, or one for all. Unwired = all of every picture. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+| `texture` | `IMAGE` | The first map written, as stored: colours for `base colour`; roughness in green and metallic in blue for those two; the tangent-space normal map; occlusion in red. |
+| `coverage` | `MASK` | How fully each texel of that map took the pictures' values: 1 = fully, 0 = kept its own. |
+
+</details>
+
+<a id="node-wasmeshremesh"></a>
+<details>
+<summary><b>Mesh Remesh</b></summary>
+
+Rebuild a model's surface with even, well shaped triangles of one size, or smaller ones where the surface bends sharply. Sharp edges, open borders and texture seams stay where they were, so the texture, skin and shape keys carry over onto the new triangles.
+
+| | |
+|---|---|
+| Node id | `WASMeshRemesh` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `mode` | `COMBO` | Yes | uniform | `uniform`, `adaptive` | `uniform` = every edge close to one length, for sculpting, simulation and clean wireframes; `adaptive` = shorter edges where the surface bends sharply and longer on flat areas, keeping detail for the same face count. |
+| `size_by` | `COMBO` | Yes | faces | `faces`, `edge length` | `faces` = aim for the faces count across the chosen parts, shared out by surface area; `edge length` = aim for edge_length on every part, so the count follows the model's size. |
+| `faces` | `INT` | Yes | 20000 |  | Triangles wanted across the chosen parts when size_by is `faces`; the result usually lands within a few percent. 20000 suits a game character; 100000 a close-up or sculpting base. |
+| `edge_length` | `FLOAT` | Yes | 0.01 |  | Edge length wanted when size_by is `edge length`, in the model's units, metres for most models. 0.01 = 1 cm edges; halving it gives about four times the faces. |
+| `adaptivity` | `FLOAT` | Yes | 0.5 |  | How far `adaptive` mode lets edge length follow curvature. 0 = uniform; 0.5 = up to 2.5 times shorter in tight curves; 1 = up to 4 times. Ignored in `uniform` mode. |
+| `feature_angle` | `FLOAT` | Yes | 45.0 |  | Edges where the surface folds by more than this many degrees are kept as sharp lines the new triangles follow. 45 = clear creases; 30 keeps softer ones; 180 = only open borders and seams. Lines shorter than two edges are ignored. |
+| `keep_uv_seams` | `BOOLEAN` | Yes | True |  | `true` = texture seams stay as edges and each new triangle takes its texture from one side, so textures still fit. `false` = remesh across seams; texture coordinates and textures are dropped, so follow with Mesh UV Unwrap and Mesh Bake Textures. |
+| `iterations` | `INT` | Yes | 8 |  | Passes of split, collapse, flip, relax and project. 8 = settled triangles; 4 = faster and a little rougher; more rarely helps. |
+| `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+| `report` | `STRING` | Faces before and after, the edge length used, the sharp lines and held vertices found, and the time, part by part. |
+
+</details>
+
+<a id="node-wasmeshrenderviews"></a>
+<details>
+<summary><b>Mesh Render Views</b></summary>
+
+Render a model's colour, depth and normals from cameras set round it, as pictures any image model can enhance, upscale or repaint. Mesh Project Views takes the edited pictures and these views and projects them back into the model's texture.
+
+| | |
+|---|---|
+| Node id | `WASMeshRenderViews` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `views` | `COMBO` | Yes | six sides | `six sides`, `around`, `around, top and bottom`, `front and back`, `front` | `six sides` = front, left, back, right, top and bottom; `around` = `around` cameras circling the model; `around, top and bottom` adds those two; `front and back`; `front` alone. |
+| `resolution` | `INT` | Yes | 1024 |  | Width and height of every picture, in pixels. 1024 suits most image models; render at 1024 and upscale the pictures for a sharper texture. |
+| `projection` | `COMBO` | Yes | orthographic | `orthographic`, `perspective` | `orthographic` = flat views with no perspective, each fitted to the model's outline from its side, which project back most evenly; `perspective` = views as a camera sees them, through `fov`, all framing the whole model. |
+| `around` | `INT` | Yes | 8 |  | Cameras in an `around` set, evenly spaced from the front. 8 = every 45 degrees. |
+| `elevation` | `FLOAT` | Yes | 15.0 |  | Degrees an `around` set looks down on the model from. 0 = level; 30 = from above. |
+| `lighting` | `FLOAT` | Yes | 0.0 |  | 0 = the colour map as it is, the right input for projecting back; 1 = shaded by a soft light from the upper left, which some image models read shape from. |
+| `background` | `FLOAT` | Yes | 1.0 |  | Grey behind the model. 1.0 = white; 0.5 = mid grey; 0.0 = black. |
+| `fov` | `FLOAT` | Yes | 35.0 |  | Vertical field of view of a `perspective` camera, in degrees. 35 = a portrait lens; 60 = wide. |
+| `margin` | `FLOAT` | Yes | 0.05 |  | Room left round the model in every picture, as a share of what the picture frames. 0.05 = a close frame. |
+| `antialias` | `BOOLEAN` | Yes | True |  | `true` = render at twice the size and average down, softening jagged edges. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | One colour picture per camera, in the order Mesh Project Views expects them back. |
+| `depth` | `IMAGE` | One depth picture per camera: white nearest, black farthest and behind the model. |
+| `normals` | `IMAGE` | One normal map per camera, facing the camera as (0.5, 0.5, 1), +X right and +Y up. |
+| `masks` | `MASK` | One mask per camera: 1 where the model covers the picture, 0 on the background. |
+| `views` | `WAS_CAMERA_VIEWS` | The cameras, for Mesh Project Views to project the edited pictures back through. |
+
+</details>
+
+<a id="node-wasmeshretopology"></a>
+<details>
+<summary><b>Mesh Retopology</b></summary>
+
+Rebuild a dense or messy model, such as a scan or a generated character, as an even grid of quads that follows its shape, creases and open edges. Skin weights and shape keys carry over, so the result can be rigged, animated, subdivided or unwrapped and baked.
+
+| | |
+|---|---|
+| Node id | `WASMeshRetopology` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `target_faces` | `INT` | Yes | 8000 |  | Faces wanted across the chosen parts, shared out by surface area. 2000 suits a distant prop; 8000 a game character; 30000 a close-up hero model. |
+| `output` | `COMBO` | Yes | quads | `quads`, `quad dominant`, `triangles` | `quads` = quads only, for subdivision and sculpting; `quad dominant` = mostly quads with a few triangles, closest to the requested count; `triangles` = the same layout cut into triangles, for engines. |
+| `crease_angle` | `FLOAT` | Yes | 0.0 |  | Edges folded at least this many degrees become lines the quads follow, with hard shading. 0 = off, for organic models; 30 to 45 for hard-surface models such as armour, furniture or vehicles. |
+| `symmetry` | `COMBO` | Yes | none | `none`, `x` | `x` = the layout on the -X half mirrors the +X half, joined along x = 0, for a character facing +Z centred on the origin; `none` = no mirroring. Parts off centre are left unmirrored. |
+| `adaptivity` | `FLOAT` | Yes | 0.0 |  | 0 = even quads everywhere; 0.5 = smaller quads where the surface curves tightly or is thin, such as fingers and ears; 1.0 = down to a quarter the size there. |
+| `uvs` | `COMBO` | Yes | drop | `drop`, `transfer` | `drop` = no texture coordinates or textures, ready for an unwrap and a bake from the original; `transfer` = each face keeps its texture from the original, with seams where the original's texture pieces meet. |
+| `keep_borders` | `BOOLEAN` | Yes | True |  | `true` = open edges, such as a neck opening or a sleeve end, stay exactly where they are, with a row of quads along them; `false` = the layout may round them off. |
+| `smoothing` | `INT` | Yes | 3 |  | Passes evening out quad sizes along the surface, creases held. 0 = as extracted; 3 = even; 10 = very even, slightly rounder on tight curves. |
+| `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+| `report` | `STRING` | Faces before and after, the share of quads, irregular vertices, how far corner angles stray from 90 degrees and any duplicate, folded or non-manifold faces left, per part when there are several. |
+
+</details>
+
+<a id="node-wasmeshsmooth"></a>
+<details>
+<summary><b>Mesh Smooth</b></summary>
+
+Smooth a model's surface to take out noise, lumps and faceting. Borders and sharp edges can be held and the volume restored so it does not shrink, while texture coordinates, skin and shape keys stay as they were.
+
+| | |
+|---|---|
+| Node id | `WASMeshSmooth` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `method` | `COMBO` | Yes | taubin | `laplacian`, `taubin`, `hc`, `implicit`, `bilateral` | `laplacian` = average each vertex with its neighbours, shrinks; `taubin` = smooth without shrinking; `hc` = smooth while pulled back to the original shape; `implicit` = strong, stable smoothing in few steps; `bilateral` = remove scan noise, keep sharp edges. |
+| `iterations` | `INT` | Yes | 10 |  | Smoothing steps. 0 = no change; 10 = light; 50 or more flattens detail. `implicit` needs only 1 to 3. |
+| `strength` | `FLOAT` | Yes | 0.5 |  | Size of each step. 0 = no change; 0.5 = moderate; 1 = strongest. For `bilateral`, higher also lets bigger bumps count as noise. |
+| `keep_borders` | `BOOLEAN` | Yes | True |  | `true` = vertices on open borders stay where they are, so a cut neck or sleeve keeps its outline and still meets the part beside it. `false` = borders smooth too. |
+| `keep_features` | `BOOLEAN` | Yes | True |  | `true` = edges sharper than feature_angle stay sharp; vertices slide along them or hold still. `false` = everything smooths alike. |
+| `keep_volume` | `BOOLEAN` | Yes | False |  | `true` = afterwards, push each closed piece in or out along its normals until it holds its earlier volume. Open pieces are left as smoothed. |
+| `feature_angle` | `FLOAT` | Yes | 45.0 |  | Degrees of fold from which keep_features treats an edge as sharp. 45 = clear creases; 30 keeps softer ones; 180 = none. |
+| `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+| `report` | `STRING` | How far vertices moved on average and at most, the volume before and after, and the vertices held still, part by part. |
+
+</details>
+
+<a id="node-wasmeshsubdivide"></a>
+<details>
+<summary><b>Mesh Subdivide</b></summary>
+
+Split every face into four to add resolution or round off a low poly model. The smooth schemes round the surface, one of them turning it into quads; midpoint keeps the shape exactly. Texture coordinates, colours, skin and shape keys follow the new faces.
+
+| | |
+|---|---|
+| Node id | `WASMeshSubdivide` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `scheme` | `COMBO` | Yes | loop | `loop`, `catmull-clark`, `midpoint` | `loop` = smooth, keeps triangles; `catmull-clark` = smooth, every face becomes quads, the usual choice before sculpting or retopology; `midpoint` = more faces on exactly the same shape, for displacement or finer skin weights. |
+| `levels` | `INT` | Yes | 1 |  | Times to subdivide. Each level gives four times the faces: 1 = x4; 2 = x16; 3 = x64. |
+| `crease_angle` | `FLOAT` | Yes | 180.0 |  | Edges where the surface folds by more than this many degrees stay sharp. 180 = only open borders stay sharp; 60 keeps the hard edges of machines and furniture. |
+| `smooth_uvs` | `BOOLEAN` | Yes | False |  | `false` = texture coordinates stay where they were on every face, so the texture does not shift. `true` = smooth them inside each texture island, borders held, which suits large hand-made islands. |
+| `max_faces` | `INT` | Yes | 4000000 |  | Most triangles the chosen parts may have afterwards, such as 4000000; the node stops with a message before building more. Lower levels or choose fewer parts to stay under it. |
+| `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+| `report` | `STRING` | Faces before and after, quads made, and the time, part by part. |
+
+</details>
+
+<a id="node-wasmeshsymmetrize"></a>
+<details>
+<summary><b>Mesh Symmetrize</b></summary>
+
+Make a model mirror-symmetric: find its mirror plane, then replace one side with the mirror image of the other, welded at the centre. Textures keep their places, and a rigged model's skin, joints and left and right shape keys are mirrored by name.
+
+| | |
+|---|---|
+| Node id | `WASMeshSymmetrize` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `axis` | `COMBO` | Yes | auto | `X`, `Y`, `Z`, `auto` | Axis the mirror plane is square to. `auto` = the best of X, Y, Z and the shape's own directions; `X` = left and right of a character facing +Z; `Z` = of one facing +X; `Y` = top and bottom. |
+| `keep` | `COMBO` | Yes | positive | `positive`, `negative` | Side copied onto the other. `positive` = the side the axis points to, for X the character's left; `negative` = the other side. |
+| `plane` | `COMBO` | Yes | fit | `fit`, `centre`, `origin` | Where the plane sits. `fit` = starts through the middle of the surface, then turns and moves until both halves match best; `centre` = through the middle, square to the axis; `origin` = through 0, square to the axis. |
+| `symmetrize_skeleton` | `BOOLEAN` | Yes | True |  | `true` = move joints on the replaced side to mirror their partners and centre unpaired joints near the plane, so both sides bend alike. `false` = leave the skeleton. Skin is mirrored by joint names either way. |
+| `seam_distance` | `FLOAT` | Yes | 0.0001 |  | Vertices this close to the plane, in metres, move onto it and are shared by both halves. 0.0001 = a tenth of a millimetre; raise it if the centre line shows a crack. |
+| `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+
+</details>
+
+<a id="node-wasmeshunwrap"></a>
+<details>
+<summary><b>Mesh UV Unwrap</b></summary>
+
+Give a model new texture coordinates: its surface is cut into flat charts along hidden seams and packed into one square texture with even detail everywhere. Use it after decimating or retopologising, then bake the old look onto the new layout.
+
+| | |
+|---|---|
+| Node id | `WASMeshUnwrap` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `chart_angle` | `FLOAT` | Yes | 60.0 |  | Degrees a face may turn from its chart's main direction. 30 = many small, nearly flat charts with almost no stretch; 60 = balanced; 85 = few large charts, more stretch. |
+| `resolution` | `INT` | Yes | 2048 |  | Size of the texture the layout is packed for, in pixels. Padding is measured at this size; 2048 suits a game character, 4096 a hero asset. |
+| `padding` | `INT` | Yes | 4 |  | Pixels kept empty between charts at that resolution, so colours do not bleed across seams when the texture is shrunk. 4 = usual; 8 = safer for small mipmaps. |
+| `quality` | `COMBO` | Yes | balanced | `fast`, `balanced`, `best` | `fast` = quick flattening; `balanced` = tighter solve; `best` = also relaxes each chart towards true triangle shapes, lowest stretch, slowest. |
+| `keep_textures` | `BOOLEAN` | Yes | True |  | `true` = the textures the parts had are redrawn onto the new layout, so the model keeps its look; `false` = textures are removed and the colours left for Mesh Bake Textures to fill. |
+| `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+| `layout` | `IMAGE` | The new atlas drawn as a picture, one colour per chart, at most 1024 pixels wide. Grey is unused texture space. |
+| `report` | `STRING` | Charts made, share of the atlas used, how much the layout stretches the surface and how many vertices were split along the new seams. |
+
+</details>
+
+### WAS Suite/3D/Model
+
+<a id="node-wasmodel3dload"></a>
+<details>
+<summary><b>3D Model Load</b></summary>
+
+Read a GLB, glTF, VRM, FBX or OBJ file with its materials, skeleton, skin, shape keys and animations, ready for the mesh and character nodes. It can stand the model on the floor, scale it to a height and turn a rigged character to face forward.
+
+| | |
+|---|---|
+| Node id | `WASModel3DLoad` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `file` | `COMBO,STRING` | Yes |  |  | Which model to read. The menu lists the newest .glb, .gltf, .vrm, .fbx and .obj files in ComfyUI's input, output and temp folders and in any folder under paths.allow_read. A wired path, such as `E:\images\cat.png`, works too. |
+| `origin` | `COMBO` | Yes | as saved | `as saved`, `base`, `centre` | Where the model sits. `as saved` = the file's own coordinates; `base` = centred and standing on the floor at height 0; `centre` = the middle of its box at the origin. |
+| `scale_to_height` | `FLOAT` | Yes | 0.0 |  | 0 = keep the file's size; 1.7 = scaled evenly, about its feet, until it stands 1.7 metres tall. Generators deliver models at any size. |
+| `face_forward` | `BOOLEAN` | Yes | False |  | `true` = turn a rigged humanoid about its hips until it faces +Z, as VRM and the character nodes expect; `false` = keep the file's facing. A model without a skeleton is never turned. |
+| `model_3d` | `FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | No |  |  | A 3D file from Load 3D or a 3D generator such as Tripo. Wired, it is read instead of the menu's file. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+
+</details>
+
+<a id="node-wasmodel3dmaterial"></a>
+<details>
+<summary><b>3D Model Material</b></summary>
+
+Correct how a model's parts take light: scale metalness down and give every surface a minimum roughness, for hair, skin or cloth a 3D generator made look like polished metal.
+
+| | |
+|---|---|
+| Node id | `WASModel3DMaterial` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `metalness` | `FLOAT` | Yes | 0.2 |  | Multiplies the chosen parts' metalness. 0 = no metal at all; 0.2 = a fifth; 1.0 = unchanged. |
+| `min_roughness` | `FLOAT` | Yes | 0.5 |  | Every texel of the chosen parts is at least this rough. 0.5 = satin, no mirror highlights; 0.8 = matte; 0 = unchanged. |
+| `double_sided` | `COMBO` | Yes | keep | `keep`, `on`, `off` | `on` = draw back faces too, for single-layer cloth and hair cards; `off` = front faces only; `keep` = as the material says. |
+| `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+
+</details>
+
+<a id="node-wasmodel3dmeta"></a>
+<details>
+<summary><b>3D Model Meta</b></summary>
+
+Set the avatar details a VRM file carries: its title, authors, licence terms and thumbnail. Empty text and keep leave what the model already has. A GLB or glTF save carries the same fields, without the thumbnail, in its file information.
+
+| | |
+|---|---|
+| Node id | `WASModel3DMeta` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `name` | `STRING` | Yes |  |  | The avatar's title, such as `Drow Ranger`. Empty keeps the model's own. |
+| `authors` | `STRING` | Yes |  |  | Who made it, comma-separated, such as `Ada, Grace`. Empty keeps the model's own; VRM needs at least one. |
+| `version` | `STRING` | Yes |  |  | The avatar's version, such as `1.0`. Empty keeps the model's own. |
+| `avatar_permission` | `COMBO` | Yes | keep | `keep`, `onlyAuthor`, `onlySeparatelyLicensedPerson`, `everyone` | Who may act as this avatar. `onlyAuthor` = the authors alone; `onlySeparatelyLicensedPerson` = people the authors license; `everyone` = anyone. `keep` = the model's own, onlyAuthor when it has none. |
+| `commercial_usage` | `COMBO` | Yes | keep | `keep`, `personalNonProfit`, `personalProfit`, `corporation` | Commercial use allowed. `personalNonProfit` = personal, no profit; `personalProfit` = individuals may profit; `corporation` = companies too. `keep` = the model's own, personalNonProfit when it has none. |
+| `credit_notation` | `COMBO` | Yes | keep | `keep`, `required`, `unnecessary` | `required` = users must credit the authors; `unnecessary` = no credit needed. `keep` = the model's own, required when it has none. |
+| `modification` | `COMBO` | Yes | keep | `keep`, `prohibited`, `allowModification`, `allowModificationRedistribution` | `prohibited` = no edits; `allowModification` = edits for own use; `allowModificationRedistribution` = edited copies may be shared. `keep` = the model's own, prohibited when it has none. |
+| `allow_redistribution` | `COMBO` | Yes | keep | `keep`, `false`, `true` | `true` = others may share the unmodified file; `false` = they may not. `keep` = the model's own setting, `false` when it has none. |
+| `copyright_information` | `STRING` | Yes |  |  | Copyright line, such as `(c) 2026 Ada`. Empty keeps the model's own. |
+| `contact_information` | `STRING` | Yes |  |  | How to reach the authors, such as `ada@example.com` or a profile page. Empty keeps the model's own. |
+| `references` | `STRING` | Yes |  |  | Works the avatar is based on, comma-separated, such as `https://example.com/sheet`. Empty keeps the model's own. |
+| `third_party_licenses` | `STRING` | Yes |  |  | Licences of third-party material inside the avatar, such as `Font: SIL OFL 1.1`. Empty keeps the model's own. |
+| `other_license_url` | `STRING` | Yes |  |  | The address of a further licence document that applies, such as `https://example.com/licence`. Empty keeps the model's own. |
+| `allow_excessively_violent_usage` | `COMBO` | Yes | keep | `keep`, `false`, `true` | `true` = the avatar may appear in excessively violent content. `keep` = the model's own setting, `false` when it has none. |
+| `allow_excessively_sexual_usage` | `COMBO` | Yes | keep | `keep`, `false`, `true` | `true` = the avatar may appear in excessively sexual content. `keep` = the model's own setting, `false` when it has none. |
+| `allow_political_or_religious_usage` | `COMBO` | Yes | keep | `keep`, `false`, `true` | `true` = the avatar may be used for political or religious messages. `keep` = the model's own setting, `false` when it has none. |
+| `allow_antisocial_or_hate_usage` | `COMBO` | Yes | keep | `keep`, `false`, `true` | `true` = the avatar may be used in antisocial or hateful content. `keep` = the model's own setting, `false` when it has none. |
+| `thumbnail` | `IMAGE` | No |  |  | A picture shown for the avatar in VRM apps, ideally a square portrait. Reduced to 1024 pixels on its longest side; unwired keeps the model's own. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+
+</details>
+
+<a id="node-wasmodel3dparts"></a>
+<details>
+<summary><b>3D Model Parts</b></summary>
+
+Edit which parts a model is made of: keep or drop parts by name, merge parts that share a material, split parts into their separate pieces, rename and label them, and add the parts of a second model, joining skeletons by joint name.
+
+| | |
+|---|---|
+| Node id | `WASModel3DParts` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `keep` | `STRING` | Yes |  |  | Parts of model_3d to keep: comma-separated names or labels, wildcards allowed, such as `body, head*`. Empty keeps every part. |
+| `drop` | `STRING` | Yes |  |  | Parts of model_3d to remove after keep, written the same way, such as `*eyelash*, cape`. Empty removes none. |
+| `merge_by_material` | `BOOLEAN` | Yes | False |  | `true` = parts drawn with the same material become one part, skinned and static parts kept apart; `false` = parts stay as they are. |
+| `split_shells` | `BOOLEAN` | Yes | False |  | `true` = each part becomes one part per separate piece, largest first, named name_1, name_2; `false` = no split. Runs after the merge. |
+| `rename` | `STRING` | Yes |  |  | pattern = new name pairs, comma-separated, such as `tripo_node_* = body`. Several matches are numbered body, body_2. Runs after the split. |
+| `labels` | `STRING` | Yes |  |  | pattern = label pairs giving parts a role the character nodes read, such as `*hair* = hair, body = body`. Runs last. |
+| `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+| `max_shells` | `INT` | Yes | 256 |  | Most parts one part splits into. 256 = the 255 largest pieces apart and every smaller one together in name_rest. |
+| `add_model` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | No |  |  | A second model whose parts are added after keep and drop. Both rigged: joints of the same name become one. Only this one rigged: its skeleton is taken. Otherwise its parts stay static. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+
+</details>
+
+<a id="node-wasmodel3dsave"></a>
+<details>
+<summary><b>3D Model Save</b></summary>
+
+Write a 3D model to ComfyUI's output or input folder as GLB, VRM avatar, FBX, OBJ or glTF, keeping its skeleton, skin, shape keys and animations where the format holds them. A VRM is turned to face forward and its humanoid bones are mapped first.
+
+| | |
+|---|---|
+| Node id | `WASModel3DSave` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `format` | `COMBO` | Yes | glb | `glb`, `vrm`, `fbx`, `obj`, `gltf` | `glb` = one file with everything inside; `vrm` = a VRM 1.0 avatar, which needs a humanoid rig and holds no animation clips; `fbx` = for Blender, Unity and Unreal, without animation clips; `obj` = mesh and materials only; `gltf` = text glTF. |
+| `filename_prefix` | `STRING` | Yes | 3d/WAS |  | The file's name before its number, below the output folder, such as `3d/WAS` or `characters/hero`. Every file of one save shares it. |
+| `embed_textures` | `BOOLEAN` | Yes | True |  | `true` = textures inside the gltf or fbx file; `false` = beside it as image files. glb and vrm always hold their textures; obj always writes them beside. |
+| `texture_format` | `COMBO` | Yes | keep | `keep`, `png`, `jpeg` | `keep` = each texture as it came; `png` = lossless and larger; `jpeg` = smaller files. A texture with transparency stays png. |
+| `folder` | `COMBO` | Yes | output | `output`, `input` | `output` = ComfyUI's output folder; `input` = its input folder, where file menus such as Tripo's Import model list it. Those menus show only files directly in input, so give a prefix with no folder, such as `hero`. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `file_3d` | `FILE_3D` | The saved model file, for core's 3D preview and save nodes or another 3D Model Load. |
+| `filename` | `*` | The saved file's name as ComfyUI's file menus write it, such as hero_00001_.glb, on a wire a dropdown accepts. Connect it to a model menu such as Tripo's Import model. |
+
+</details>
+
+<a id="node-wasmodel3dtransform"></a>
+<details>
+<summary><b>3D Model Transform</b></summary>
+
+Move, rotate and scale a whole model, or turn a rigged character to face forward, size it to a height and stand it on the floor. The skeleton, skin, animations and spring bones move with the mesh, so a rigged model still poses correctly.
+
+| | |
+|---|---|
+| Node id | `WASModel3DTransform` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model_3d` | `WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ` | Yes |  |  | The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo. |
+| `move_x` | `FLOAT` | Yes | 0.0 |  | Metres to move along X, the character's left, applied last. 0 = no move. |
+| `move_y` | `FLOAT` | Yes | 0.0 |  | Metres to move along Y, up, applied last. 0 = no move. |
+| `move_z` | `FLOAT` | Yes | 0.0 |  | Metres to move along Z, forward, applied last. 0 = no move. |
+| `rotate_x` | `FLOAT` | Yes | 0.0 |  | Degrees to turn about X through the origin; 90 tips the top towards +Z. Turns run X, then Y, then Z. |
+| `rotate_y` | `FLOAT` | Yes | 0.0 |  | Degrees to turn about the up axis through the origin; 180 turns a model facing -Z to face +Z. |
+| `rotate_z` | `FLOAT` | Yes | 0.0 |  | Degrees to turn about Z through the origin, rolling the model sideways; 90 lays a standing model on its side. |
+| `scale` | `FLOAT` | Yes | 1.0 |  | Uniform size factor about the origin, after the turns. 1.0 = unchanged; 0.01 brings a model made in centimetres to metres. |
+| `face_forward` | `BOOLEAN` | Yes | False |  | `true` = first turn a rigged humanoid about its hips until it faces +Z; `false` = leave its facing. A model without a skeleton is never turned. |
+| `scale_to_height` | `FLOAT` | Yes | 0.0 |  | 0 = keep the size; 1.7 = after scale, resized evenly about its feet to stand 1.7 metres tall. |
+| `origin` | `COMBO` | Yes | as is | `as is`, `base`, `centre` | Where the model sits before the move. `as is` = where the turns and scaling left it; `base` = centred, standing at height 0; `centre` = the middle of its box at the origin. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model_3d` | `WAS_MODEL_3D` | The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries. |
+| `mesh` | `MESH` | The same model as one mesh for core's mesh nodes and Save 3D Model. Parts are merged, their textures packed into one atlas, and the skeleton left out. |
+
+</details>
 
 ### WAS Suite/Animation
 
@@ -2991,6 +3807,36 @@ Photoshop-style curves for contrast and colour. Drag control points on the node 
 | Name | Type | What it is |
 |---|---|---|
 | `<output0>` | `IMAGE` | The image with the curves applied. |
+
+</details>
+
+<a id="node-wasimagedelight"></a>
+<details>
+<summary><b>Image Delight</b></summary>
+
+Take the lighting out of full-size pictures by dividing out the shading an albedo estimate reveals, smoothed so the pictures' own fine detail stays. Highlights and shadows go, turning enhanced views of a model into flat colour for Mesh Project Views.
+
+| | |
+|---|---|
+| Node id | `WASImageDelight` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `image` | `IMAGE` | Yes |  |  | The pictures to delight, at full size, such as 4096 pixel enhanced views. A whole batch is processed. |
+| `albedo` | `IMAGE` | Yes |  |  | The same pictures' albedo from Power Preprocessor, any size of the same shape, such as 1024. One per picture, or one for all. |
+| `detail` | `FLOAT` | Yes | 16.0 |  | Radius the shading is smoothed over, in pixels of `image`. 0 = the albedo sets everything coarser than its own pixels; 16 = suits 4096 views; 64 = keeps more of the picture's own texture, and soft fold shading with it. |
+| `strength` | `FLOAT` | Yes | 1.0 |  | How much of the shading is divided out. 1.0 = all; 0.5 = half; 0.0 = the picture unchanged. |
+| `colour` | `COMBO` | Yes | albedo | `albedo`, `image` | `albedo` = colour comes from the albedo, removing tinted light too; `image` = only brightness is divided out, keeping the picture's own colours. |
+| `mask` | `MASK` | No |  |  | Where the subject is: 1 = subject, 0 = background left unchanged, such as Mesh Render Views' masks. Shading is smoothed inside it only. Unwired = whole picture. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `albedo` | `IMAGE` | The pictures with their lighting divided out, at the size of `image`, for Mesh Project Views or any colour map. |
+| `shading` | `IMAGE` | The shading divided out, raised to 1/2.2 for showing: white = lit as bright as the albedo, darker = shadow. Highlights clip at white. |
 
 </details>
 
@@ -21157,7 +22003,7 @@ One light, wired into a group or straight into the scene; a standard or physical
 <details>
 <summary><b>Three Load Model</b></summary>
 
-Put a model into the scene as an object, so a mesh made elsewhere, such as a Tripo or Hunyuan3D generation, can be lit, animated and rendered here. Reads .glb, .gltf, .dae, .fbx, .obj, .3mf, .stl and .ply, compressed glTF included, and reports what the file holds.
+Put a model into the scene as an object, so a mesh made elsewhere, such as a Tripo or Hunyuan3D generation, can be lit, animated and rendered here. Reads .glb, .gltf, .vrm, .dae, .fbx, .obj, .3mf, .stl and .ply, compressed glTF included, and reports what the file holds.
 
 | | |
 |---|---|
@@ -21168,13 +22014,13 @@ Put a model into the scene as an object, so a mesh made elsewhere, such as a Tri
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `file` | `COMBO,STRING` | Yes |  |  | Which model to place. The menu lists the newest `.glb`, `.gltf`, `.dae`, `.fbx`, `.obj`, `.3mf`, `.stl` and `.ply` files in ComfyUI's input, output and temp folders and in any folder under paths.allow_read. A wired path, such as `E:\images\cat.png`, works too. |
+| `file` | `COMBO,STRING` | Yes |  |  | Which model to place. The menu lists the newest `.glb`, `.gltf`, `.vrm`, `.dae`, `.fbx`, `.obj`, `.3mf`, `.stl` and `.ply` files in ComfyUI's input, output and temp folders and in any folder under paths.allow_read. A wired path, such as `E:\images\cat.png`, works too. |
 | `scale` | `FLOAT` | Yes | 1.0 |  | Multiplies the model's size, after fit_size where that is set. 1.0 leaves it, 0.01 suits a model authored in centimetres. |
 | `origin` | `COMBO` | Yes | centre | `centre`, `base`, `as saved` | Which point of the model lands on the scene's origin. centre = its middle; base = the middle of its underside, so it stands on a floor at height 0; as saved = the coordinates in the file. |
 | `cast_shadow` | `BOOLEAN` | Yes | True |  | `true` lets every mesh in the model throw and receive shadows, `false` neither. |
 | `path` | `STRING` | No |  |  | A model somewhere else, as a full path. Wire ComfyUI-Tripo's model_file or Load 3D's mesh_path here. Filled in, it is used instead of the menu. |
 | `fit_size` | `FLOAT` | No | 0.0 |  | 0.0 = the model's own size; 2.0 = resized so its longest side is 2 units. Generated models arrive at any size, so this frames each one the same. |
-| `model_3d` | `FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_PLY` | No |  |  | A model from a 3D generator or Load 3D, such as the GLB from Tripo, Hunyuan3D, Meshy or Rodin. Wired, it is used instead of path and the menu. |
+| `model_3d` | `WAS_MODEL_3D,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_PLY` | No |  |  | A model from a 3D generator or Load 3D, such as the GLB from Tripo, Hunyuan3D, Meshy or Rodin, or a model_3d from the 3D nodes; spring bones swing as it moves. Wired, it is used instead of path and the menu. |
 | `keep_as` | `STRING` | No |  |  | A name such as `tripo_assets/tent.glb` keeps a copy of the model that came in on path or model_3d in ComfyUI's input folder, replacing an older copy, so the menu still finds it with the generator bypassed. Empty keeps nothing. |
 | `metalness` | `FLOAT` | No | 1.0 |  | Multiplies how metallic every surface is. 1.0 keeps the file's metal; 0.3 turns hair or leather a generator marked as metal back into a plain surface while armour keeps a sheen; 0.0 makes nothing metal. |
 | `min_roughness` | `FLOAT` | No | 0.0 |  | The least roughness any surface keeps. 0.0 keeps the file's; 0.45 takes the mirror shine off surfaces a generator made glass smooth; 1.0 makes everything matt. |

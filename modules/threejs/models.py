@@ -23,6 +23,7 @@ logger = get_logger("threejs.models")
 FORMATS = {
     ".glb": "model/gltf-binary",
     ".gltf": "model/gltf+json",
+    ".vrm": "model/gltf-binary",
     ".obj": "text/plain",
     ".stl": "model/stl",
     ".dae": "model/vnd.collada+xml",
@@ -324,7 +325,7 @@ def carried(path: Path) -> Carried:
     suffix = checked_suffix(path.name, path.suffix, path.stat().st_size)
     body = path.read_bytes()
     key = three_asset.keep(body, FORMATS[suffix])
-    sidecars = _sidecars(path) if suffix not in (".glb", ".fbx", ".stl", ".3mf") else {}
+    sidecars = _sidecars(path) if suffix not in (".glb", ".vrm", ".fbx", ".stl", ".3mf") else {}
     logger.info(
         "%s is held for the browser as %s, %.1f KB, with %d file(s) beside it",
         path.name, key, len(body) / 1024.0, len(sidecars),

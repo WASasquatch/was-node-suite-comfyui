@@ -138,13 +138,19 @@ def _named(file: str) -> str:
         file: The menu label, such as ``report.wasdoc [input]``.
 
     Returns:
-        The path the label resolves to, the label itself where it does not resolve, and an
+        The path the label resolves to, typed text that is no label as it was given, and an
         empty string where nothing was chosen.
+
+    Raises:
+        FileNotFoundError: A menu label names a file that is no longer there.
     """
     label = str(file or "").strip()
     if not label or label == NO_DOCUMENTS:
         return ""
-    return file_listing.resolve(label, extensions(), file_listing.ROOTS, paths=True) or label
+    found = file_listing.resolve(label, extensions(), file_listing.ROOTS, paths=True)
+    if found is None and file_listing.is_label(label):
+        raise file_listing.missing_label(label)
+    return found or label
 
 
 def _require_export_group(extension: str) -> None:

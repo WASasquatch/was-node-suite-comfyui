@@ -13,6 +13,7 @@ __all__ = [
     "BEATS",
     "BLIP_MODEL",
     "BUS",
+    "CAMERA_VIEWS",
     "CLIPSEG_MODEL",
     "CONDITIONING_SEQ",
     "CROP_DATA",
@@ -54,6 +55,7 @@ __all__ = [
     "LORA_STACK",
     "LUT",
     "MIDAS_MODEL",
+    "MODEL_3D",
     "MOTION",
     "MOTION_MODEL",
     "NUMBER",
@@ -160,6 +162,15 @@ EMA_VFI_MODEL = io.Custom("EMA_VFI_MODEL")
 #: `modules.dataset.dataset.Dataset`, an immutable value: a node that changes it answers a new
 #: one, so one dataset may feed any number of nodes.
 DATASET = io.Custom("WAS_DATASET")
+
+#: A whole 3D model between the mesh, character and 3D model nodes: parts with their materials,
+#: a skeleton and skin, springs, animations and metadata. Carries a
+#: `modules.model3d.scene.Model3D`.
+MODEL_3D = io.Custom("WAS_MODEL_3D")
+
+#: The cameras `Mesh Render Views` rendered a model from, in picture order, for `Mesh Project Views`
+#: to project edited pictures back through. Carries a `modules.mesh.views.Views`.
+CAMERA_VIEWS = io.Custom("WAS_CAMERA_VIEWS")
 
 #: Core's 3D model file sockets, by the names core gives them: any format, then one per format.
 FILE_3D = io.Custom("FILE_3D")

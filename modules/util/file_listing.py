@@ -45,12 +45,14 @@ __all__ = [
     "defer_walks",
     "find",
     "folders",
+    "is_label",
     "label_of",
     "labels",
     "path_text",
     "linked",
     "listing",
     "menu_limit",
+    "missing_label",
     "release_walks",
     "resolve",
     "reuse_until",
@@ -623,11 +625,33 @@ def path_text(value) -> str | None:
         and a bare name with no folder in it.
     """
     text = str(value or "").strip().strip("\"'").strip()
-    if not text or (text.endswith("]") and " [" in text):
+    if not text or is_label(text):
         return None
     if "/" in text or "\\" in text or (len(text) > 1 and text[1] == ":"):
         return text
     return None
+
+
+def is_label(value) -> bool:
+    """Whether text is a tagged menu label, such as ``cat.png [output]``, rather than a path."""
+    text = str(value or "").strip().strip("\"'").strip()
+    return text.endswith("]") and " [" in text
+
+
+def missing_label(label: str) -> FileNotFoundError:
+    """The error for a tagged menu label that names no file now.
+
+    Args:
+        label: The label as the widget stored it.
+
+    Returns:
+        A ``FileNotFoundError`` naming the label and how to pick the file again.
+    """
+    return FileNotFoundError(
+        f"`{label}` is no longer there. The file was moved, renamed or deleted after the menu "
+        f"listed it, or the workflow was saved on a machine that has it.\n"
+        f"  Pick the file again from the menu, or wire its path in as text."
+    )
 
 
 def typed(

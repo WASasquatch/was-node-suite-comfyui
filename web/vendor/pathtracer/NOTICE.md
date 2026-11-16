@@ -19,13 +19,13 @@ with it.
 
 | File | Upstream path | Changed |
 |---|---|---|
-| `index.module.js` | `three-gpu-pathtracer@0.0.24/build/index.module.js` | import specifiers |
-| `mesh-bvh.js` | `three-mesh-bvh@0.9.14/build/index.module.js` | import specifiers |
+| `index.module.mjs` | `three-gpu-pathtracer@0.0.24/build/index.module.js` | renamed to `.mjs`, import specifiers |
+| `mesh-bvh.mjs` | `three-mesh-bvh@0.9.14/build/index.module.js` | renamed to `.mjs`, import specifiers |
 
-Both are the published single-file builds. Each imports the bare specifiers `three`,
-`three-mesh-bvh` and `three/examples/jsm/postprocessing/Pass.js`, and each of those is
-rewritten to the relative path of the copy in `web/vendor/`. Nothing else in either file is
-altered. Nothing is fetched over the network at runtime.
+Both are the published single-file builds, kept here as `.mjs`. Each imports the bare
+specifiers `three`, `three-mesh-bvh` and `three/examples/jsm/postprocessing/Pass.js`, and each
+of those is rewritten to the relative path of the `.mjs` copy in `web/vendor/`. Nothing else in
+either file is altered. Nothing is fetched over the network at runtime.
 
 `xatlas-web` is listed upstream as a peer dependency. Neither build imports it, and the
 lightmap baker that uses it is not taken, so it is not present.

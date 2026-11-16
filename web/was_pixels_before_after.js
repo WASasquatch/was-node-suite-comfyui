@@ -100,6 +100,7 @@ const NODES = [
   "WASImageAutoLevels",
   "WASImageColorBalance",
   "WASImageCompositeMasked",
+  "WASImageDelight",
   "WASImageDequantise",
   "WASImageDirectionalBlur",
   "WASImageEditCrop",

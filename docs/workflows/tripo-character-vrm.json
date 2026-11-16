@@ -1,0 +1,5771 @@
+{
+  "id": "f8d9e17e-cdde-462d-8711-e7c63ed7485c",
+  "revision": 0,
+  "last_node_id": 60,
+  "last_link_id": 44,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        50,
+        120
+      ],
+      "size": [
+        620,
+        640
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "# Tripo3D: a head and a body to a VRM avatar\nAn image model draws a head with a long bare neck, **Tripo** turns it and a described body into two models, and the **WAS Node Suite** 3D nodes put the head on the body's neck, rig the character and give its hair spring bones. The avatar is saved as VRM and GLB, all inside ComfyUI.\n\n## Setup, once\n1. **ComfyUI-Tripo**: in ComfyUI Manager open *Custom Nodes Manager*, search **Tripo for ComfyUI** and install it. It needs the `tripo3d` package; if Manager does not add it, run `pip install \"tripo3d>=1.0.0,<2.0.0\"` in the Python ComfyUI runs on.\n2. **WAS Node Suite v3**: clone it into `ComfyUI/custom_nodes`, or install it with Open Manager. Its 3D and Three nodes are on out of the box.\n3. **Tripo API key**: create one at [platform.tripo3d.ai](https://platform.tripo3d.ai/), then give it to ComfyUI in one of two ways and restart:\n    - set the environment variable `TRIPO_API_KEY=tsk_...` before ComfyUI starts, or\n    - save `{\"TRIPO_API_KEY\": \"tsk_...\"}` as `ComfyUI/custom_nodes/ComfyUI-Tripo/config.json`.\n4. **Z-Image Turbo** for the head picture: `z_image_turbo_bf16.safetensors` in `models/diffusion_models`, `qwen_3_4b.safetensors` in `models/text_encoders` and `ae.safetensors` in `models/vae`.\n\n> Leave the `apikey` box on the Tripo nodes empty. Whatever is typed there is saved in the workflow.\n\n## Use\nQueue, then follow the groups row by row; each has a note on what to set there.\n\n## Running it\n- A new character is four Tripo tasks: the body, the head, the import and the rig.\n- Queue again to change the fit, the size, the springs or the metadata. Tripo is not called again, and no credits are spent, until something feeding a Tripo node changes."
+      ],
+      "widgets_values_named": {
+        "text": "# Tripo3D: a head and a body to a VRM avatar\nAn image model draws a head with a long bare neck, **Tripo** turns it and a described body into two models, and the **WAS Node Suite** 3D nodes put the head on the body's neck, rig the character and give its hair spring bones. The avatar is saved as VRM and GLB, all inside ComfyUI.\n\n## Setup, once\n1. **ComfyUI-Tripo**: in ComfyUI Manager open *Custom Nodes Manager*, search **Tripo for ComfyUI** and install it. It needs the `tripo3d` package; if Manager does not add it, run `pip install \"tripo3d>=1.0.0,<2.0.0\"` in the Python ComfyUI runs on.\n2. **WAS Node Suite v3**: clone it into `ComfyUI/custom_nodes`, or install it with Open Manager. Its 3D and Three nodes are on out of the box.\n3. **Tripo API key**: create one at [platform.tripo3d.ai](https://platform.tripo3d.ai/), then give it to ComfyUI in one of two ways and restart:\n    - set the environment variable `TRIPO_API_KEY=tsk_...` before ComfyUI starts, or\n    - save `{\"TRIPO_API_KEY\": \"tsk_...\"}` as `ComfyUI/custom_nodes/ComfyUI-Tripo/config.json`.\n4. **Z-Image Turbo** for the head picture: `z_image_turbo_bf16.safetensors` in `models/diffusion_models`, `qwen_3_4b.safetensors` in `models/text_encoders` and `ae.safetensors` in `models/vae`.\n\n> Leave the `apikey` box on the Tripo nodes empty. Whatever is typed there is saved in the workflow.\n\n## Use\nQueue, then follow the groups row by row; each has a note on what to set there.\n\n## Running it\n- A new character is four Tripo tasks: the body, the head, the import and the rig.\n- Queue again to change the fit, the size, the springs or the metadata. Tripo is not called again, and no credits are spent, until something feeding a Tripo node changes."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 2,
+      "type": "TripoAPIDraft",
+      "pos": [
+        870,
+        120
+      ],
+      "size": [
+        400,
+        866
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "image_left",
+          "name": "image_left",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "image_back",
+          "name": "image_back",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "image_right",
+          "name": "image_right",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "mode",
+          "name": "mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "apikey",
+          "name": "apikey",
+          "type": "STRING",
+          "widget": {
+            "name": "apikey"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt",
+          "name": "prompt",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "negative_prompt",
+          "name": "negative_prompt",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "negative_prompt"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_version",
+          "name": "model_version",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_version"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture",
+          "name": "texture",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "texture"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pbr",
+          "name": "pbr",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "pbr"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "image_seed",
+          "name": "image_seed",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "image_seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_seed",
+          "name": "model_seed",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "model_seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture_seed",
+          "name": "texture_seed",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "texture_seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture_quality",
+          "name": "texture_quality",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "texture_quality"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "geometry_quality",
+          "name": "geometry_quality",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "geometry_quality"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture_alignment",
+          "name": "texture_alignment",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "texture_alignment"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "face_limit",
+          "name": "face_limit",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "face_limit"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "quad",
+          "name": "quad",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "quad"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "compress",
+          "name": "compress",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "compress"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "generate_parts",
+          "name": "generate_parts",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "generate_parts"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "smart_low_poly",
+          "name": "smart_low_poly",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "smart_low_poly"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "auto_size",
+          "name": "auto_size",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "auto_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "orientation",
+          "name": "orientation",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "orientation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "file_prefix",
+          "name": "file_prefix",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "file_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "output_directory",
+          "name": "output_directory",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "output_directory"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "export_orientation",
+          "name": "export_orientation",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "export_orientation"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_file",
+          "name": "model_file",
+          "type": "STRING",
+          "links": [
+            1
+          ]
+        },
+        {
+          "localized_name": "model_info",
+          "name": "model_info",
+          "type": "MODEL_INFO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TripoAPIDraft",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "text_to_model",
+        "",
+        "full body female elf ranger standing in A-pose, arms slightly away from the body, bald head with no hair, leather armor, short cloak, tall boots, stylized game character",
+        "",
+        "v3.1-20260211",
+        true,
+        true,
+        42,
+        42,
+        42,
+        "standard",
+        "standard",
+        "original_image",
+        -1,
+        false,
+        false,
+        false,
+        false,
+        false,
+        "default",
+        "avatar_body",
+        "",
+        "default"
+      ],
+      "widgets_values_named": {
+        "mode": "text_to_model",
+        "apikey": "",
+        "prompt": "full body female elf ranger standing in A-pose, arms slightly away from the body, bald head with no hair, leather armor, short cloak, tall boots, stylized game character",
+        "negative_prompt": "",
+        "model_version": "v3.1-20260211",
+        "texture": true,
+        "pbr": true,
+        "image_seed": 42,
+        "model_seed": 42,
+        "texture_seed": 42,
+        "texture_quality": "standard",
+        "geometry_quality": "standard",
+        "texture_alignment": "original_image",
+        "face_limit": -1,
+        "quad": false,
+        "compress": false,
+        "generate_parts": false,
+        "smart_low_poly": false,
+        "auto_size": false,
+        "orientation": "default",
+        "file_prefix": "avatar_body",
+        "output_directory": "",
+        "export_orientation": "default"
+      }
+    },
+    {
+      "id": 3,
+      "type": "TripoAPIDraft",
+      "pos": [
+        3094.9999775292868,
+        120
+      ],
+      "size": [
+        400,
+        867
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 33
+        },
+        {
+          "localized_name": "image_left",
+          "name": "image_left",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "image_back",
+          "name": "image_back",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "image_right",
+          "name": "image_right",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "mode",
+          "name": "mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "apikey",
+          "name": "apikey",
+          "type": "STRING",
+          "widget": {
+            "name": "apikey"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "prompt",
+          "name": "prompt",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "negative_prompt",
+          "name": "negative_prompt",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "negative_prompt"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_version",
+          "name": "model_version",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_version"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture",
+          "name": "texture",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "texture"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pbr",
+          "name": "pbr",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "pbr"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "image_seed",
+          "name": "image_seed",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "image_seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_seed",
+          "name": "model_seed",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "model_seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture_seed",
+          "name": "texture_seed",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "texture_seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture_quality",
+          "name": "texture_quality",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "texture_quality"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "geometry_quality",
+          "name": "geometry_quality",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "geometry_quality"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture_alignment",
+          "name": "texture_alignment",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "texture_alignment"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "face_limit",
+          "name": "face_limit",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "face_limit"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "quad",
+          "name": "quad",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "quad"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "compress",
+          "name": "compress",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "compress"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "generate_parts",
+          "name": "generate_parts",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "generate_parts"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "smart_low_poly",
+          "name": "smart_low_poly",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "smart_low_poly"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "auto_size",
+          "name": "auto_size",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "auto_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "orientation",
+          "name": "orientation",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "orientation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "file_prefix",
+          "name": "file_prefix",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "file_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "output_directory",
+          "name": "output_directory",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "output_directory"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "export_orientation",
+          "name": "export_orientation",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "export_orientation"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_file",
+          "name": "model_file",
+          "type": "STRING",
+          "links": [
+            2
+          ]
+        },
+        {
+          "localized_name": "model_info",
+          "name": "model_info",
+          "type": "MODEL_INFO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TripoAPIDraft",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "image_to_model",
+        "",
+        "head and long neck of a female elf ranger, pointed ears, silver hair braided and pinned up off the neck, bare neck down to the collarbones, stylized game character, no shoulders, no body",
+        "",
+        "v3.1-20260211",
+        true,
+        true,
+        42,
+        42,
+        42,
+        "standard",
+        "standard",
+        "original_image",
+        -1,
+        false,
+        false,
+        false,
+        false,
+        false,
+        "default",
+        "avatar_head",
+        "",
+        "default"
+      ],
+      "widgets_values_named": {
+        "mode": "image_to_model",
+        "apikey": "",
+        "prompt": "head and long neck of a female elf ranger, pointed ears, silver hair braided and pinned up off the neck, bare neck down to the collarbones, stylized game character, no shoulders, no body",
+        "negative_prompt": "",
+        "model_version": "v3.1-20260211",
+        "texture": true,
+        "pbr": true,
+        "image_seed": 42,
+        "model_seed": 42,
+        "texture_seed": 42,
+        "texture_quality": "standard",
+        "geometry_quality": "standard",
+        "texture_alignment": "original_image",
+        "face_limit": -1,
+        "quad": false,
+        "compress": false,
+        "generate_parts": false,
+        "smart_low_poly": false,
+        "auto_size": false,
+        "orientation": "default",
+        "file_prefix": "avatar_head",
+        "output_directory": "",
+        "export_orientation": "default"
+      }
+    },
+    {
+      "id": 4,
+      "type": "MarkdownNote",
+      "pos": [
+        870,
+        1106
+      ],
+      "size": [
+        420,
+        150
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "## Describe the body\nDescribe the whole figure in **Tripo: Generate model**. Keep it *bald* and in an *A-pose* with the arms clear of the body: the new head is fitted over its bald head, which is then cut away at the neck."
+      ],
+      "widgets_values_named": {
+        "text": "## Describe the body\nDescribe the whole figure in **Tripo: Generate model**. Keep it *bald* and in an *A-pose* with the arms clear of the body: the new head is fitted over its bald head, which is then cut away at the neck."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 5,
+      "type": "WASModel3DLoad",
+      "pos": [
+        50,
+        1587.0312167168822
+      ],
+      "size": [
+        390,
+        794
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "shape": 7,
+          "type": "FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": null
+        },
+        {
+          "localized_name": "file",
+          "name": "file",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "file"
+          },
+          "link": 1
+        },
+        {
+          "localized_name": "origin",
+          "name": "origin",
+          "type": "COMBO",
+          "widget": {
+            "name": "origin"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scale_to_height",
+          "name": "scale_to_height",
+          "type": "FLOAT",
+          "widget": {
+            "name": "scale_to_height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "face_forward",
+          "name": "face_forward",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "face_forward"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D",
+          "links": [
+            14
+          ]
+        },
+        {
+          "localized_name": "mesh",
+          "name": "mesh",
+          "type": "MESH",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASModel3DLoad",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "",
+        "as saved",
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "file": "",
+        "origin": "as saved",
+        "scale_to_height": 0,
+        "face_forward": false
+      }
+    },
+    {
+      "id": 6,
+      "type": "WASModel3DLoad",
+      "pos": [
+        50,
+        2501.031216716882
+      ],
+      "size": [
+        390,
+        794
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "shape": 7,
+          "type": "FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": null
+        },
+        {
+          "localized_name": "file",
+          "name": "file",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "file"
+          },
+          "link": 2
+        },
+        {
+          "localized_name": "origin",
+          "name": "origin",
+          "type": "COMBO",
+          "widget": {
+            "name": "origin"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scale_to_height",
+          "name": "scale_to_height",
+          "type": "FLOAT",
+          "widget": {
+            "name": "scale_to_height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "face_forward",
+          "name": "face_forward",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "face_forward"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D",
+          "links": [
+            15
+          ]
+        },
+        {
+          "localized_name": "mesh",
+          "name": "mesh",
+          "type": "MESH",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASModel3DLoad",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "",
+        "as saved",
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "file": "",
+        "origin": "as saved",
+        "scale_to_height": 0,
+        "face_forward": false
+      }
+    },
+    {
+      "id": 8,
+      "type": "WASMeshDecimate",
+      "pos": [
+        1580.0001191248393,
+        1587.0312167168822
+      ],
+      "size": [
+        390,
+        960
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": 17
+        },
+        {
+          "localized_name": "target",
+          "name": "target",
+          "type": "COMBO",
+          "widget": {
+            "name": "target"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ratio",
+          "name": "ratio",
+          "type": "FLOAT",
+          "widget": {
+            "name": "ratio"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "triangles",
+          "name": "triangles",
+          "type": "INT",
+          "widget": {
+            "name": "triangles"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_error",
+          "name": "max_error",
+          "type": "FLOAT",
+          "widget": {
+            "name": "max_error"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "placement",
+          "name": "placement",
+          "type": "COMBO",
+          "widget": {
+            "name": "placement"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "borders",
+          "name": "borders",
+          "type": "COMBO",
+          "widget": {
+            "name": "borders"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seams",
+          "name": "seams",
+          "type": "COMBO",
+          "widget": {
+            "name": "seams"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "symmetry",
+          "name": "symmetry",
+          "type": "COMBO",
+          "widget": {
+            "name": "symmetry"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "method",
+          "name": "method",
+          "type": "COMBO",
+          "widget": {
+            "name": "method"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "parts",
+          "name": "parts",
+          "type": "STRING",
+          "widget": {
+            "name": "parts"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D",
+          "links": [
+            6,
+            18
+          ]
+        },
+        {
+          "localized_name": "mesh",
+          "name": "mesh",
+          "type": "MESH",
+          "links": null
+        },
+        {
+          "localized_name": "report",
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASMeshDecimate",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "triangles",
+        0.25,
+        40000,
+        0.01,
+        "auto",
+        "slide",
+        "slide",
+        "none",
+        "edge collapse",
+        ""
+      ],
+      "widgets_values_named": {
+        "target": "triangles",
+        "ratio": 0.25,
+        "triangles": 40000,
+        "max_error": 0.01,
+        "placement": "auto",
+        "borders": "slide",
+        "seams": "slide",
+        "symmetry": "none",
+        "method": "edge collapse",
+        "parts": ""
+      }
+    },
+    {
+      "id": 9,
+      "type": "WASModel3DSave",
+      "pos": [
+        2080.0001191248393,
+        1587.0312167168822
+      ],
+      "size": [
+        390,
+        834
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": 6
+        },
+        {
+          "localized_name": "format",
+          "name": "format",
+          "type": "COMBO",
+          "widget": {
+            "name": "format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "embed_textures",
+          "name": "embed_textures",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "embed_textures"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture_format",
+          "name": "texture_format",
+          "type": "COMBO",
+          "widget": {
+            "name": "texture_format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "COMBO",
+          "widget": {
+            "name": "folder"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "file_3d",
+          "name": "file_3d",
+          "type": "FILE_3D",
+          "links": null
+        },
+        {
+          "localized_name": "filename",
+          "name": "filename",
+          "type": "*",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASModel3DSave",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "glb",
+        "avatar_for_rig",
+        true,
+        "keep",
+        "input"
+      ],
+      "widgets_values_named": {
+        "format": "glb",
+        "filename_prefix": "avatar_for_rig",
+        "embed_textures": true,
+        "texture_format": "keep",
+        "folder": "input"
+      }
+    },
+    {
+      "id": 10,
+      "type": "MarkdownNote",
+      "pos": [
+        550,
+        2715.031216716882
+      ],
+      "size": [
+        420,
+        190
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "## Assemble\n**Character Assemble** faces the body forward, fits the new head over the body's own head by matching the face, cuts the old head away at the neck while hoods and collars stay whole, joins the two necks and blends their skin, and stands the character `target_height` tall. A head made facing another way: `head_turn`. **3D Model Material** takes the shine off hair a generator made metallic. **Mesh Decimate** brings it to 40,000 triangles and **3D Model Save** puts it in the input folder, where Tripo's import reads it."
+      ],
+      "widgets_values_named": {
+        "text": "## Assemble\n**Character Assemble** faces the body forward, fits the new head over the body's own head by matching the face, cuts the old head away at the neck while hoods and collars stay whole, joins the two necks and blends their skin, and stands the character `target_height` tall. A head made facing another way: `head_turn`. **3D Model Material** takes the shine off hair a generator made metallic. **Mesh Decimate** brings it to 40,000 triangles and **3D Model Save** puts it in the input folder, where Tripo's import reads it."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 11,
+      "type": "TripoImportModel",
+      "pos": [
+        2670.0001939121285,
+        1587.0312167168822
+      ],
+      "size": [
+        270,
+        254
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "apikey",
+          "name": "apikey",
+          "type": "STRING",
+          "widget": {
+            "name": "apikey"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_file",
+          "name": "model_file",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_file"
+          },
+          "link": 7
+        },
+        {
+          "localized_name": "model_url",
+          "name": "model_url",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "model_url"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "file_prefix",
+          "name": "file_prefix",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "file_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "output_directory",
+          "name": "output_directory",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "output_directory"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_info",
+          "name": "model_info",
+          "type": "MODEL_INFO",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TripoImportModel",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "",
+        "none",
+        "",
+        "avatar_import",
+        "",
+        "Upload Model File"
+      ],
+      "widgets_values_named": {
+        "apikey": "",
+        "model_file": "none",
+        "model_url": "",
+        "file_prefix": "avatar_import",
+        "output_directory": "",
+        "upload_model": "Upload Model File"
+      }
+    },
+    {
+      "id": 12,
+      "type": "TripoAnimateRigNode",
+      "pos": [
+        3050.0001939121285,
+        1587.0312167168822
+      ],
+      "size": [
+        270,
+        190
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_info",
+          "name": "model_info",
+          "type": "MODEL_INFO",
+          "link": 8
+        },
+        {
+          "localized_name": "model_version",
+          "name": "model_version",
+          "type": "COMBO",
+          "widget": {
+            "name": "model_version"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "out_format",
+          "name": "out_format",
+          "type": "COMBO",
+          "widget": {
+            "name": "out_format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "spec",
+          "name": "spec",
+          "type": "COMBO",
+          "widget": {
+            "name": "spec"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rig_type",
+          "name": "rig_type",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "rig_type"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_file",
+          "name": "model_file",
+          "type": "STRING",
+          "links": [
+            9
+          ]
+        },
+        {
+          "localized_name": "model_info",
+          "name": "model_info",
+          "type": "MODEL_INFO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TripoAnimateRigNode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "v3.0-20260909",
+        "glb",
+        "vrm",
+        "biped"
+      ],
+      "widgets_values_named": {
+        "model_version": "v3.0-20260909",
+        "out_format": "glb",
+        "spec": "vrm",
+        "rig_type": "biped"
+      }
+    },
+    {
+      "id": 13,
+      "type": "WASModel3DLoad",
+      "pos": [
+        3430.0001939121285,
+        1587.0312167168822
+      ],
+      "size": [
+        390,
+        794
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "shape": 7,
+          "type": "FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": null
+        },
+        {
+          "localized_name": "file",
+          "name": "file",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "file"
+          },
+          "link": 9
+        },
+        {
+          "localized_name": "origin",
+          "name": "origin",
+          "type": "COMBO",
+          "widget": {
+            "name": "origin"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scale_to_height",
+          "name": "scale_to_height",
+          "type": "FLOAT",
+          "widget": {
+            "name": "scale_to_height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "face_forward",
+          "name": "face_forward",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "face_forward"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D",
+          "links": [
+            10
+          ]
+        },
+        {
+          "localized_name": "mesh",
+          "name": "mesh",
+          "type": "MESH",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASModel3DLoad",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "",
+        "base",
+        1.6,
+        true
+      ],
+      "widgets_values_named": {
+        "file": "",
+        "origin": "base",
+        "scale_to_height": 1.6,
+        "face_forward": true
+      }
+    },
+    {
+      "id": 14,
+      "type": "MarkdownNote",
+      "pos": [
+        3430.0001939121285,
+        2501.031216716882
+      ],
+      "size": [
+        420,
+        130
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "## Rig\n**Tripo: Rig model** with `spec` on `vrm` gives the VRM humanoid skeleton. Tripo returns the character 1 m tall; **3D Model Load** brings it back at 1.6 m, facing forward."
+      ],
+      "widgets_values_named": {
+        "text": "## Rig\n**Tripo: Rig model** with `spec` on `vrm` gives the VRM humanoid skeleton. Tripo returns the character 1 m tall; **3D Model Load** brings it back at 1.6 m, facing forward."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 15,
+      "type": "WASModel3DMeta",
+      "pos": [
+        4050.0001939121285,
+        1587.0312167168822
+      ],
+      "size": [
+        390,
+        964
+      ],
+      "flags": {},
+      "order": 39,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": 10
+        },
+        {
+          "localized_name": "thumbnail",
+          "name": "thumbnail",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "authors",
+          "name": "authors",
+          "type": "STRING",
+          "widget": {
+            "name": "authors"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "version",
+          "name": "version",
+          "type": "STRING",
+          "widget": {
+            "name": "version"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "avatar_permission",
+          "name": "avatar_permission",
+          "type": "COMBO",
+          "widget": {
+            "name": "avatar_permission"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "commercial_usage",
+          "name": "commercial_usage",
+          "type": "COMBO",
+          "widget": {
+            "name": "commercial_usage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "credit_notation",
+          "name": "credit_notation",
+          "type": "COMBO",
+          "widget": {
+            "name": "credit_notation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "modification",
+          "name": "modification",
+          "type": "COMBO",
+          "widget": {
+            "name": "modification"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "allow_redistribution",
+          "name": "allow_redistribution",
+          "type": "COMBO",
+          "widget": {
+            "name": "allow_redistribution"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "copyright_information",
+          "name": "copyright_information",
+          "type": "STRING",
+          "widget": {
+            "name": "copyright_information"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "contact_information",
+          "name": "contact_information",
+          "type": "STRING",
+          "widget": {
+            "name": "contact_information"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "references",
+          "name": "references",
+          "type": "STRING",
+          "widget": {
+            "name": "references"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "third_party_licenses",
+          "name": "third_party_licenses",
+          "type": "STRING",
+          "widget": {
+            "name": "third_party_licenses"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "other_license_url",
+          "name": "other_license_url",
+          "type": "STRING",
+          "widget": {
+            "name": "other_license_url"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "allow_excessively_violent_usage",
+          "name": "allow_excessively_violent_usage",
+          "type": "COMBO",
+          "widget": {
+            "name": "allow_excessively_violent_usage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "allow_excessively_sexual_usage",
+          "name": "allow_excessively_sexual_usage",
+          "type": "COMBO",
+          "widget": {
+            "name": "allow_excessively_sexual_usage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "allow_political_or_religious_usage",
+          "name": "allow_political_or_religious_usage",
+          "type": "COMBO",
+          "widget": {
+            "name": "allow_political_or_religious_usage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "allow_antisocial_or_hate_usage",
+          "name": "allow_antisocial_or_hate_usage",
+          "type": "COMBO",
+          "widget": {
+            "name": "allow_antisocial_or_hate_usage"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D",
+          "links": [
+            11,
+            12
+          ]
+        },
+        {
+          "localized_name": "mesh",
+          "name": "mesh",
+          "type": "MESH",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASModel3DMeta",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "Elf Ranger",
+        "WAS Node Suite demo",
+        "",
+        "keep",
+        "keep",
+        "keep",
+        "keep",
+        "keep",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "keep",
+        "keep",
+        "keep",
+        "keep"
+      ],
+      "widgets_values_named": {
+        "name": "Elf Ranger",
+        "authors": "WAS Node Suite demo",
+        "version": "",
+        "avatar_permission": "keep",
+        "commercial_usage": "keep",
+        "credit_notation": "keep",
+        "modification": "keep",
+        "allow_redistribution": "keep",
+        "copyright_information": "",
+        "contact_information": "",
+        "references": "",
+        "third_party_licenses": "",
+        "other_license_url": "",
+        "allow_excessively_violent_usage": "keep",
+        "allow_excessively_sexual_usage": "keep",
+        "allow_political_or_religious_usage": "keep",
+        "allow_antisocial_or_hate_usage": "keep"
+      }
+    },
+    {
+      "id": 16,
+      "type": "WASModel3DSave",
+      "pos": [
+        4550.000193912128,
+        1587.0312167168822
+      ],
+      "size": [
+        390,
+        834
+      ],
+      "flags": {},
+      "order": 42,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": 11
+        },
+        {
+          "localized_name": "format",
+          "name": "format",
+          "type": "COMBO",
+          "widget": {
+            "name": "format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "embed_textures",
+          "name": "embed_textures",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "embed_textures"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture_format",
+          "name": "texture_format",
+          "type": "COMBO",
+          "widget": {
+            "name": "texture_format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "COMBO",
+          "widget": {
+            "name": "folder"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "file_3d",
+          "name": "file_3d",
+          "type": "FILE_3D",
+          "links": null
+        },
+        {
+          "localized_name": "filename",
+          "name": "filename",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASModel3DSave",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "vrm",
+        "3d/avatar",
+        true,
+        "keep",
+        "output"
+      ],
+      "widgets_values_named": {
+        "format": "vrm",
+        "filename_prefix": "3d/avatar",
+        "embed_textures": true,
+        "texture_format": "keep",
+        "folder": "output"
+      }
+    },
+    {
+      "id": 17,
+      "type": "WASModel3DSave",
+      "pos": [
+        4550.000193912128,
+        2541.031216716882
+      ],
+      "size": [
+        390,
+        834
+      ],
+      "flags": {},
+      "order": 43,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": 12
+        },
+        {
+          "localized_name": "format",
+          "name": "format",
+          "type": "COMBO",
+          "widget": {
+            "name": "format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "embed_textures",
+          "name": "embed_textures",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "embed_textures"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture_format",
+          "name": "texture_format",
+          "type": "COMBO",
+          "widget": {
+            "name": "texture_format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "COMBO",
+          "widget": {
+            "name": "folder"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "file_3d",
+          "name": "file_3d",
+          "type": "FILE_3D",
+          "links": [
+            13
+          ]
+        },
+        {
+          "localized_name": "filename",
+          "name": "filename",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASModel3DSave",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "glb",
+        "3d/avatar",
+        true,
+        "keep",
+        "output"
+      ],
+      "widgets_values_named": {
+        "format": "glb",
+        "filename_prefix": "3d/avatar",
+        "embed_textures": true,
+        "texture_format": "keep",
+        "folder": "output"
+      }
+    },
+    {
+      "id": 18,
+      "type": "Preview3D",
+      "pos": [
+        5050.000193912128,
+        1587.0312167168822
+      ],
+      "size": [
+        1051,
+        1062
+      ],
+      "flags": {},
+      "order": 45,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "camera_info",
+          "name": "camera_info",
+          "shape": 7,
+          "type": "LOAD3D_CAMERA",
+          "link": null
+        },
+        {
+          "localized_name": "bg_image",
+          "name": "bg_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "model_file",
+          "name": "model_file",
+          "type": "STRING,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
+          "widget": {
+            "name": "model_file"
+          },
+          "link": 13
+        },
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "PREVIEW_3D",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "Preview3D",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        },
+        "Last Time Model File": "preview3d_f16eaa13e90c463aacd94aeb7506ce2c.glb",
+        "Camera Config": {
+          "cameraType": "perspective",
+          "fov": 35,
+          "hasCustomUp": false,
+          "state": {
+            "position": {
+              "x": -4.135354477051262,
+              "y": 2.7944782707082663,
+              "z": 0.2385457432432561
+            },
+            "target": {
+              "x": -2.1778799375038463e-08,
+              "y": 0.8000000427607781,
+              "z": -2.1074454042979696e-08
+            },
+            "zoom": 1,
+            "cameraType": "perspective",
+            "quaternion": {
+              "x": -0.1617915071758626,
+              "y": -0.6692383030082286,
+              "z": -0.1527276054812224,
+              "w": 0.7089554855676069
+            },
+            "fov": 35,
+            "aspect": 1.1723744292237444,
+            "near": 0.01,
+            "far": 10000,
+            "frustum": {
+              "left": -5,
+              "right": 5,
+              "top": 5,
+              "bottom": -5
+            }
+          }
+        },
+        "Light Config": {
+          "intensity": 3,
+          "hdri": {
+            "enabled": false,
+            "hdriPath": "",
+            "showAsBackground": false,
+            "intensity": 1
+          }
+        },
+        "Scene Config": {
+          "showGrid": true,
+          "backgroundColor": "#282828",
+          "backgroundImage": "",
+          "backgroundRenderMode": "tiled",
+          "models": [
+            {
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "quaternion": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          ]
+        }
+      },
+      "widgets_values": [
+        "preview3d_f16eaa13e90c463aacd94aeb7506ce2c.glb",
+        ""
+      ],
+      "widgets_values_named": {
+        "model_file": "preview3d_f16eaa13e90c463aacd94aeb7506ce2c.glb",
+        "image": ""
+      }
+    },
+    {
+      "id": 19,
+      "type": "MarkdownNote",
+      "pos": [
+        5050.000193912128,
+        2769.031216716882
+      ],
+      "size": [
+        380,
+        110
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "## Results\nThe avatar as `.vrm` and `.glb` in `ComfyUI/output/3d`, named `avatar_` and a number, rigged by Tripo; `avatar_local_` beside it, rigged by Character Rig. Set the name, authors and licence on **3D Model Meta**."
+      ],
+      "widgets_values_named": {
+        "text": "## Results\nThe avatar as `.vrm` and `.glb` in `ComfyUI/output/3d`, named `avatar_` and a number, rigged by Tripo; `avatar_local_` beside it, rigged by Character Rig. Set the name, authors and licence on **3D Model Meta**."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 20,
+      "type": "WASCharacterAssemble",
+      "pos": [
+        550,
+        1587.0312167168822
+      ],
+      "size": [
+        390,
+        1008
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "body",
+          "name": "body",
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": 14
+        },
+        {
+          "localized_name": "head",
+          "name": "head",
+          "shape": 7,
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": 15
+        },
+        {
+          "localized_name": "hair",
+          "name": "hair",
+          "shape": 7,
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": null
+        },
+        {
+          "localized_name": "extra",
+          "name": "extra",
+          "shape": 7,
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": null
+        },
+        {
+          "localized_name": "target_height",
+          "name": "target_height",
+          "type": "FLOAT",
+          "widget": {
+            "name": "target_height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "facing",
+          "name": "facing",
+          "type": "COMBO",
+          "widget": {
+            "name": "facing"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "remove_body_head",
+          "name": "remove_body_head",
+          "type": "COMBO",
+          "widget": {
+            "name": "remove_body_head"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "clear_body_hair",
+          "name": "clear_body_hair",
+          "type": "COMBO",
+          "widget": {
+            "name": "clear_body_hair"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "head_fit",
+          "name": "head_fit",
+          "type": "COMBO",
+          "widget": {
+            "name": "head_fit"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "head_scale",
+          "name": "head_scale",
+          "type": "FLOAT",
+          "widget": {
+            "name": "head_scale"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "head_turn",
+          "name": "head_turn",
+          "type": "FLOAT",
+          "widget": {
+            "name": "head_turn"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hair_follows_head",
+          "name": "hair_follows_head",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "hair_follows_head"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "feet_on_ground",
+          "name": "feet_on_ground",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "feet_on_ground"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "extra_label",
+          "name": "extra_label",
+          "type": "STRING",
+          "widget": {
+            "name": "extra_label"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "extra_follows",
+          "name": "extra_follows",
+          "type": "COMBO",
+          "widget": {
+            "name": "extra_follows"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "placement",
+          "name": "placement",
+          "type": "STRING",
+          "widget": {
+            "name": "placement"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "skin_match",
+          "name": "skin_match",
+          "type": "COMBO",
+          "widget": {
+            "name": "skin_match"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D",
+          "links": [
+            16
+          ]
+        },
+        {
+          "localized_name": "mesh",
+          "name": "mesh",
+          "type": "MESH",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASCharacterAssemble",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        1.6,
+        "auto",
+        "auto",
+        "auto",
+        "auto",
+        1,
+        0,
+        true,
+        true,
+        "extra",
+        "head",
+        "",
+        "head to body"
+      ],
+      "widgets_values_named": {
+        "target_height": 1.6,
+        "facing": "auto",
+        "remove_body_head": "auto",
+        "clear_body_hair": "auto",
+        "head_fit": "auto",
+        "head_scale": 1,
+        "head_turn": 0,
+        "hair_follows_head": true,
+        "feet_on_ground": true,
+        "extra_label": "extra",
+        "extra_follows": "head",
+        "placement": "",
+        "skin_match": "head to body"
+      }
+    },
+    {
+      "id": 21,
+      "type": "WASModel3DMaterial",
+      "pos": [
+        1080.0000443375502,
+        1587.0312167168822
+      ],
+      "size": [
+        390,
+        502
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": 16
+        },
+        {
+          "localized_name": "metalness",
+          "name": "metalness",
+          "type": "FLOAT",
+          "widget": {
+            "name": "metalness"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "min_roughness",
+          "name": "min_roughness",
+          "type": "FLOAT",
+          "widget": {
+            "name": "min_roughness"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "double_sided",
+          "name": "double_sided",
+          "type": "COMBO",
+          "widget": {
+            "name": "double_sided"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "parts",
+          "name": "parts",
+          "type": "STRING",
+          "widget": {
+            "name": "parts"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D",
+          "links": [
+            17
+          ]
+        },
+        {
+          "localized_name": "mesh",
+          "name": "mesh",
+          "type": "MESH",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASModel3DMaterial",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        0.2,
+        0.5,
+        "keep",
+        "head"
+      ],
+      "widgets_values_named": {
+        "metalness": 0.2,
+        "min_roughness": 0.5,
+        "double_sided": "keep",
+        "parts": "head"
+      }
+    },
+    {
+      "id": 23,
+      "type": "WASCharacterRig",
+      "pos": [
+        50,
+        3685.031216716882
+      ],
+      "size": [
+        390,
+        440
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": 18
+        },
+        {
+          "localized_name": "rest_pose",
+          "name": "rest_pose",
+          "type": "COMBO",
+          "widget": {
+            "name": "rest_pose"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "detail",
+          "name": "detail",
+          "type": "INT",
+          "widget": {
+            "name": "detail"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "facing",
+          "name": "facing",
+          "type": "COMBO",
+          "widget": {
+            "name": "facing"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D",
+          "links": [
+            34
+          ]
+        },
+        {
+          "localized_name": "mesh",
+          "name": "mesh",
+          "type": "MESH",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASCharacterRig",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "T-pose",
+        60000,
+        "auto"
+      ],
+      "widgets_values_named": {
+        "rest_pose": "T-pose",
+        "detail": 60000,
+        "facing": "auto"
+      }
+    },
+    {
+      "id": 24,
+      "type": "WASModel3DMeta",
+      "pos": [
+        960.0000789277713,
+        3685.031216716882
+      ],
+      "size": [
+        390,
+        964
+      ],
+      "flags": {},
+      "order": 33,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": 35
+        },
+        {
+          "localized_name": "thumbnail",
+          "name": "thumbnail",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "authors",
+          "name": "authors",
+          "type": "STRING",
+          "widget": {
+            "name": "authors"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "version",
+          "name": "version",
+          "type": "STRING",
+          "widget": {
+            "name": "version"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "avatar_permission",
+          "name": "avatar_permission",
+          "type": "COMBO",
+          "widget": {
+            "name": "avatar_permission"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "commercial_usage",
+          "name": "commercial_usage",
+          "type": "COMBO",
+          "widget": {
+            "name": "commercial_usage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "credit_notation",
+          "name": "credit_notation",
+          "type": "COMBO",
+          "widget": {
+            "name": "credit_notation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "modification",
+          "name": "modification",
+          "type": "COMBO",
+          "widget": {
+            "name": "modification"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "allow_redistribution",
+          "name": "allow_redistribution",
+          "type": "COMBO",
+          "widget": {
+            "name": "allow_redistribution"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "copyright_information",
+          "name": "copyright_information",
+          "type": "STRING",
+          "widget": {
+            "name": "copyright_information"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "contact_information",
+          "name": "contact_information",
+          "type": "STRING",
+          "widget": {
+            "name": "contact_information"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "references",
+          "name": "references",
+          "type": "STRING",
+          "widget": {
+            "name": "references"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "third_party_licenses",
+          "name": "third_party_licenses",
+          "type": "STRING",
+          "widget": {
+            "name": "third_party_licenses"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "other_license_url",
+          "name": "other_license_url",
+          "type": "STRING",
+          "widget": {
+            "name": "other_license_url"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "allow_excessively_violent_usage",
+          "name": "allow_excessively_violent_usage",
+          "type": "COMBO",
+          "widget": {
+            "name": "allow_excessively_violent_usage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "allow_excessively_sexual_usage",
+          "name": "allow_excessively_sexual_usage",
+          "type": "COMBO",
+          "widget": {
+            "name": "allow_excessively_sexual_usage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "allow_political_or_religious_usage",
+          "name": "allow_political_or_religious_usage",
+          "type": "COMBO",
+          "widget": {
+            "name": "allow_political_or_religious_usage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "allow_antisocial_or_hate_usage",
+          "name": "allow_antisocial_or_hate_usage",
+          "type": "COMBO",
+          "widget": {
+            "name": "allow_antisocial_or_hate_usage"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D",
+          "links": [
+            20,
+            21
+          ]
+        },
+        {
+          "localized_name": "mesh",
+          "name": "mesh",
+          "type": "MESH",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASModel3DMeta",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "Elf Ranger",
+        "WAS Node Suite demo",
+        "",
+        "keep",
+        "keep",
+        "keep",
+        "keep",
+        "keep",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "keep",
+        "keep",
+        "keep",
+        "keep"
+      ],
+      "widgets_values_named": {
+        "name": "Elf Ranger",
+        "authors": "WAS Node Suite demo",
+        "version": "",
+        "avatar_permission": "keep",
+        "commercial_usage": "keep",
+        "credit_notation": "keep",
+        "modification": "keep",
+        "allow_redistribution": "keep",
+        "copyright_information": "",
+        "contact_information": "",
+        "references": "",
+        "third_party_licenses": "",
+        "other_license_url": "",
+        "allow_excessively_violent_usage": "keep",
+        "allow_excessively_sexual_usage": "keep",
+        "allow_political_or_religious_usage": "keep",
+        "allow_antisocial_or_hate_usage": "keep"
+      }
+    },
+    {
+      "id": 25,
+      "type": "WASModel3DSave",
+      "pos": [
+        1460.0000789277713,
+        3685.031216716882
+      ],
+      "size": [
+        390,
+        834
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": 20
+        },
+        {
+          "localized_name": "format",
+          "name": "format",
+          "type": "COMBO",
+          "widget": {
+            "name": "format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "embed_textures",
+          "name": "embed_textures",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "embed_textures"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture_format",
+          "name": "texture_format",
+          "type": "COMBO",
+          "widget": {
+            "name": "texture_format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "COMBO",
+          "widget": {
+            "name": "folder"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "file_3d",
+          "name": "file_3d",
+          "type": "FILE_3D",
+          "links": null
+        },
+        {
+          "localized_name": "filename",
+          "name": "filename",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASModel3DSave",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "vrm",
+        "3d/avatar_local",
+        true,
+        "keep",
+        "output"
+      ],
+      "widgets_values_named": {
+        "format": "vrm",
+        "filename_prefix": "3d/avatar_local",
+        "embed_textures": true,
+        "texture_format": "keep",
+        "folder": "output"
+      }
+    },
+    {
+      "id": 26,
+      "type": "WASModel3DSave",
+      "pos": [
+        1460.0000789277713,
+        4639.031281032191
+      ],
+      "size": [
+        390,
+        834
+      ],
+      "flags": {},
+      "order": 37,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": 21
+        },
+        {
+          "localized_name": "format",
+          "name": "format",
+          "type": "COMBO",
+          "widget": {
+            "name": "format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "embed_textures",
+          "name": "embed_textures",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "embed_textures"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture_format",
+          "name": "texture_format",
+          "type": "COMBO",
+          "widget": {
+            "name": "texture_format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "folder",
+          "name": "folder",
+          "type": "COMBO",
+          "widget": {
+            "name": "folder"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "file_3d",
+          "name": "file_3d",
+          "type": "FILE_3D",
+          "links": [
+            22
+          ]
+        },
+        {
+          "localized_name": "filename",
+          "name": "filename",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASModel3DSave",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "glb",
+        "3d/avatar_local",
+        true,
+        "keep",
+        "output"
+      ],
+      "widgets_values_named": {
+        "format": "glb",
+        "filename_prefix": "3d/avatar_local",
+        "embed_textures": true,
+        "texture_format": "keep",
+        "folder": "output"
+      }
+    },
+    {
+      "id": 27,
+      "type": "Preview3D",
+      "pos": [
+        1960.0000789277713,
+        3685.031216716882
+      ],
+      "size": [
+        400,
+        550
+      ],
+      "flags": {},
+      "order": 40,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "camera_info",
+          "name": "camera_info",
+          "shape": 7,
+          "type": "LOAD3D_CAMERA",
+          "link": null
+        },
+        {
+          "localized_name": "bg_image",
+          "name": "bg_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "model_file",
+          "name": "model_file",
+          "type": "STRING,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
+          "widget": {
+            "name": "model_file"
+          },
+          "link": 22
+        },
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "PREVIEW_3D",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "Preview3D",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        },
+        "Last Time Model File": "preview3d_6c6aead217d14fe0a93a028c5c2695f7.glb",
+        "Camera Config": {
+          "cameraType": "perspective",
+          "fov": 35,
+          "hasCustomUp": false
+        },
+        "Light Config": {
+          "intensity": 3,
+          "hdri": {
+            "enabled": false,
+            "hdriPath": "",
+            "showAsBackground": false,
+            "intensity": 1
+          }
+        },
+        "Scene Config": {
+          "showGrid": true,
+          "backgroundColor": "#282828",
+          "backgroundImage": "",
+          "backgroundRenderMode": "tiled",
+          "models": [
+            {
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "quaternion": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          ]
+        }
+      },
+      "widgets_values": [
+        "preview3d_6c6aead217d14fe0a93a028c5c2695f7.glb",
+        ""
+      ],
+      "widgets_values_named": {
+        "model_file": "preview3d_6c6aead217d14fe0a93a028c5c2695f7.glb",
+        "image": ""
+      }
+    },
+    {
+      "id": 28,
+      "type": "MarkdownNote",
+      "pos": [
+        50,
+        4245.031216716882
+      ],
+      "size": [
+        420,
+        150
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "## Rig locally\n**Character Rig** fits a VRM humanoid skeleton to the character and skins it on this machine, with no credits, and turns sloping arms level for VRM. **Character Springs** gives the hanging hair chains of spring bones and the body colliders to rest on. The avatar is saved beside Tripo's as `avatar_local`, to compare."
+      ],
+      "widgets_values_named": {
+        "text": "## Rig locally\n**Character Rig** fits a VRM humanoid skeleton to the character and skins it on this machine, with no credits, and turns sloping arms level for VRM. **Character Springs** gives the hanging hair chains of spring bones and the body colliders to rest on. The avatar is saved beside Tripo's as `avatar_local`, to compare."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 39,
+      "type": "UNETLoader",
+      "pos": [
+        1490,
+        120
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "unet_name",
+          "name": "unet_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "unet_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "weight_dtype",
+          "name": "weight_dtype",
+          "type": "COMBO",
+          "widget": {
+            "name": "weight_dtype"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            23
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        },
+        "models": [
+          {
+            "name": "z_image_turbo_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "z_image_turbo_bf16.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "z_image_turbo_bf16.safetensors",
+        "weight_dtype": "default"
+      }
+    },
+    {
+      "id": 40,
+      "type": "CLIPLoader",
+      "pos": [
+        1490,
+        329.99993703028065
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip_name",
+          "name": "clip_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "clip_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "type",
+          "name": "type",
+          "type": "COMBO",
+          "widget": {
+            "name": "type"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "device",
+          "name": "device",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "device"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            25,
+            26
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        },
+        "models": [
+          {
+            "name": "qwen_3_4b.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "qwen_3_4b.safetensors",
+        "lumina2",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen_3_4b.safetensors",
+        "type": "lumina2",
+        "device": "default"
+      }
+    },
+    {
+      "id": 41,
+      "type": "VAELoader",
+      "pos": [
+        1490,
+        567.9999436895336
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "vae_name",
+          "name": "vae_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "vae_name"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "VAE",
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            31
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        },
+        "models": [
+          {
+            "name": "ae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/vae/ae.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "ae.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "ae.safetensors"
+      }
+    },
+    {
+      "id": 42,
+      "type": "ModelSamplingAuraFlow",
+      "pos": [
+        1870,
+        120
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 23
+        },
+        {
+          "localized_name": "shift",
+          "name": "shift",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shift"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sampling",
+          "name": "sampling",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sampling"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModelSamplingAuraFlow",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        3,
+        "flow"
+      ],
+      "widgets_values_named": {
+        "shift": 3,
+        "sampling": "flow"
+      }
+    },
+    {
+      "id": 43,
+      "type": "CLIPTextEncode",
+      "pos": [
+        1870,
+        329.99993703028065
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 25
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            27
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "Front view portrait of the head and long bare neck of a female elf ranger, pointed ears, silver hair braided and pinned up off the neck, calm expression, stylized 3D game character, soft even lighting, plain light grey background, the neck ends at the collarbones, no shoulders, no clothing, centered"
+      ],
+      "widgets_values_named": {
+        "text": "Front view portrait of the head and long bare neck of a female elf ranger, pointed ears, silver hair braided and pinned up off the neck, calm expression, stylized 3D game character, soft even lighting, plain light grey background, the neck ends at the collarbones, no shoulders, no clothing, centered"
+      }
+    },
+    {
+      "id": 44,
+      "type": "CLIPTextEncode",
+      "pos": [
+        1870,
+        649.9999370302806
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 26
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "text": ""
+      }
+    },
+    {
+      "id": 45,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        2380,
+        120
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "batch_size",
+          "name": "batch_size",
+          "type": "INT",
+          "widget": {
+            "name": "batch_size"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            29
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptySD3LatentImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ],
+      "widgets_values_named": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      }
+    },
+    {
+      "id": 46,
+      "type": "KSampler",
+      "pos": [
+        2380,
+        357.9999478300156
+      ],
+      "size": [
+        270,
+        262
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 24
+        },
+        {
+          "localized_name": "positive",
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 27
+        },
+        {
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 28
+        },
+        {
+          "localized_name": "latent_image",
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 29
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cfg",
+          "name": "cfg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "cfg"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sampler_name",
+          "name": "sampler_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "sampler_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scheduler",
+          "name": "scheduler",
+          "type": "COMBO",
+          "widget": {
+            "name": "scheduler"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "denoise",
+          "name": "denoise",
+          "type": "FLOAT",
+          "widget": {
+            "name": "denoise"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        20261115,
+        "fixed",
+        8,
+        1,
+        "res_multistep",
+        "simple",
+        1
+      ],
+      "widgets_values_named": {
+        "seed": 20261115,
+        "control_after_generate": "fixed",
+        "steps": 8,
+        "cfg": 1,
+        "sampler_name": "res_multistep",
+        "scheduler": "simple",
+        "denoise": 1
+      }
+    },
+    {
+      "id": 47,
+      "type": "VAEDecode",
+      "pos": [
+        2760,
+        120
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "samples",
+          "name": "samples",
+          "type": "LATENT",
+          "link": 30
+        },
+        {
+          "localized_name": "vae",
+          "name": "vae",
+          "type": "VAE",
+          "link": 31
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            32,
+            33
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      }
+    },
+    {
+      "id": 48,
+      "type": "PreviewImage",
+      "pos": [
+        2760,
+        293.99997356996766
+      ],
+      "size": [
+        140,
+        26
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 32
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      }
+    },
+    {
+      "id": 49,
+      "type": "WASCharacterSprings",
+      "pos": [
+        580,
+        3685.031216716882
+      ],
+      "size": [
+        270,
+        550
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D,MESH,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ",
+          "link": 34
+        },
+        {
+          "localized_name": "hair",
+          "name": "hair",
+          "type": "COMBO",
+          "widget": {
+            "name": "hair"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "joints_per_chain",
+          "name": "joints_per_chain",
+          "type": "INT",
+          "widget": {
+            "name": "joints_per_chain"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_chains",
+          "name": "max_chains",
+          "type": "INT",
+          "widget": {
+            "name": "max_chains"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "stiffness",
+          "name": "stiffness",
+          "type": "FLOAT",
+          "widget": {
+            "name": "stiffness"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "drag",
+          "name": "drag",
+          "type": "FLOAT",
+          "widget": {
+            "name": "drag"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "gravity",
+          "name": "gravity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "gravity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "colliders",
+          "name": "colliders",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "colliders"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cloth",
+          "name": "cloth",
+          "type": "STRING",
+          "widget": {
+            "name": "cloth"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "WAS_MODEL_3D",
+          "links": [
+            35,
+            36
+          ]
+        },
+        {
+          "localized_name": "mesh",
+          "name": "mesh",
+          "type": "MESH",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASCharacterSprings",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
+      },
+      "widgets_values": [
+        "auto",
+        4,
+        16,
+        0.8,
+        0.4,
+        0.25,
+        true,
+        "skirt, cape"
+      ],
+      "widgets_values_named": {
+        "hair": "auto",
+        "joints_per_chain": 4,
+        "max_chains": 16,
+        "stiffness": 0.8,
+        "drag": 0.4,
+        "gravity": 0.25,
+        "colliders": true,
+        "cloth": "skirt, cape"
+      }
+    },
+    {
+      "id": 50,
+      "type": "WASThreeLoadModel",
+      "pos": [
+        2560.000078927771,
+        3685.031216716882
+      ],
+      "size": [
+        270,
+        450
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "shape": 7,
+          "type": "WAS_MODEL_3D,FILE_3D,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_PLY",
+          "link": 36
+        },
+        {
+          "localized_name": "file",
+          "name": "file",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "file"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scale",
+          "name": "scale",
+          "type": "FLOAT",
+          "widget": {
+            "name": "scale"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "origin",
+          "name": "origin",
+          "type": "COMBO",
+          "widget": {
+            "name": "origin"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cast_shadow",
+          "name": "cast_shadow",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "cast_shadow"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "path",
+          "name": "path",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "path"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fit_size",
+          "name": "fit_size",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "fit_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "keep_as",
+          "name": "keep_as",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "keep_as"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "metalness",
+          "name": "metalness",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "metalness"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "min_roughness",
+          "name": "min_roughness",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "min_roughness"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "object",
+          "name": "object",
+          "type": "THREE_OBJECT",
+          "links": [
+            37
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASThreeLoadModel"
+      },
+      "widgets_values": [
+        "0a5e2939-8e98-42b2-ae09-0f3786689a71_model.glb [output]",
+        1,
+        "base",
+        true,
+        "",
+        0,
+        "",
+        1,
+        0
+      ],
+      "widgets_values_named": {
+        "file": "0a5e2939-8e98-42b2-ae09-0f3786689a71_model.glb [output]",
+        "scale": 1,
+        "origin": "base",
+        "cast_shadow": true,
+        "path": "",
+        "fit_size": 0,
+        "keep_as": "",
+        "metalness": 1,
+        "min_roughness": 0
+      }
+    },
+    {
+      "id": 51,
+      "type": "WASThreeAnimateTransform",
+      "pos": [
+        2940.000078927771,
+        3685.031216716882
+      ],
+      "size": [
+        270,
+        250
+      ],
+      "flags": {},
+      "order": 38,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "object",
+          "name": "object",
+          "type": "THREE_OBJECT",
+          "link": 37
+        },
+        {
+          "localized_name": "units",
+          "name": "units",
+          "type": "COMBO",
+          "widget": {
+            "name": "units"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rotate_x",
+          "name": "rotate_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "rotate_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rotate_y",
+          "name": "rotate_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "rotate_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "rotate_z",
+          "name": "rotate_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "rotate_z"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bob_amplitude",
+          "name": "bob_amplitude",
+          "type": "FLOAT",
+          "widget": {
+            "name": "bob_amplitude"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bob_frequency",
+          "name": "bob_frequency",
+          "type": "FLOAT",
+          "widget": {
+            "name": "bob_frequency"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pulse_amplitude",
+          "name": "pulse_amplitude",
+          "type": "FLOAT",
+          "widget": {
+            "name": "pulse_amplitude"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pulse_frequency",
+          "name": "pulse_frequency",
+          "type": "FLOAT",
+          "widget": {
+            "name": "pulse_frequency"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "phase",
+          "name": "phase",
+          "type": "FLOAT",
+          "widget": {
+            "name": "phase"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "animated",
+          "name": "animated",
+          "type": "THREE_OBJECT",
+          "links": [
+            38
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASThreeAnimateTransform"
+      },
+      "widgets_values": [
+        "per timeline",
+        0,
+        360,
+        0,
+        0.04,
+        1.5,
+        0,
+        1,
+        0
+      ],
+      "widgets_values_named": {
+        "units": "per timeline",
+        "rotate_x": 0,
+        "rotate_y": 360,
+        "rotate_z": 0,
+        "bob_amplitude": 0.04,
+        "bob_frequency": 1.5,
+        "pulse_amplitude": 0,
+        "pulse_frequency": 1,
+        "phase": 0
+      }
+    },
+    {
+      "id": 52,
+      "type": "WASThreeLight",
+      "pos": [
+        3320.000078927771,
+        3685.031216716882
+      ],
+      "size": [
+        270,
+        322
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "light_type",
+          "name": "light_type",
+          "type": "COMBO",
+          "widget": {
+            "name": "light_type"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color",
+          "name": "color",
+          "type": "STRING",
+          "widget": {
+            "name": "color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ground_color",
+          "name": "ground_color",
+          "type": "STRING",
+          "widget": {
+            "name": "ground_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "intensity",
+          "name": "intensity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "intensity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_x",
+          "name": "position_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_y",
+          "name": "position_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_z",
+          "name": "position_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_z"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "distance",
+          "name": "distance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "distance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "decay",
+          "name": "decay",
+          "type": "FLOAT",
+          "widget": {
+            "name": "decay"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "angle",
+          "name": "angle",
+          "type": "FLOAT",
+          "widget": {
+            "name": "angle"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "penumbra",
+          "name": "penumbra",
+          "type": "FLOAT",
+          "widget": {
+            "name": "penumbra"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cast_shadow",
+          "name": "cast_shadow",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "cast_shadow"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "light",
+          "name": "light",
+          "type": "THREE_OBJECT",
+          "links": [
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASThreeLight"
+      },
+      "widgets_values": [
+        "directional",
+        "#ffffff",
+        "#404040",
+        2.4,
+        2,
+        4,
+        4,
+        0,
+        2,
+        45,
+        0,
+        true
+      ],
+      "widgets_values_named": {
+        "light_type": "directional",
+        "color": "#ffffff",
+        "ground_color": "#404040",
+        "intensity": 2.4,
+        "position_x": 2,
+        "position_y": 4,
+        "position_z": 4,
+        "distance": 0,
+        "decay": 2,
+        "angle": 45,
+        "penumbra": 0,
+        "cast_shadow": true
+      }
+    },
+    {
+      "id": 53,
+      "type": "WASThreeLight",
+      "pos": [
+        3320.000078927771,
+        4215.03108387664
+      ],
+      "size": [
+        270,
+        322
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "light_type",
+          "name": "light_type",
+          "type": "COMBO",
+          "widget": {
+            "name": "light_type"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color",
+          "name": "color",
+          "type": "STRING",
+          "widget": {
+            "name": "color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ground_color",
+          "name": "ground_color",
+          "type": "STRING",
+          "widget": {
+            "name": "ground_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "intensity",
+          "name": "intensity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "intensity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_x",
+          "name": "position_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_y",
+          "name": "position_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_z",
+          "name": "position_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_z"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "distance",
+          "name": "distance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "distance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "decay",
+          "name": "decay",
+          "type": "FLOAT",
+          "widget": {
+            "name": "decay"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "angle",
+          "name": "angle",
+          "type": "FLOAT",
+          "widget": {
+            "name": "angle"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "penumbra",
+          "name": "penumbra",
+          "type": "FLOAT",
+          "widget": {
+            "name": "penumbra"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cast_shadow",
+          "name": "cast_shadow",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "cast_shadow"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "light",
+          "name": "light",
+          "type": "THREE_OBJECT",
+          "links": [
+            40
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASThreeLight"
+      },
+      "widgets_values": [
+        "hemisphere",
+        "#ffffff",
+        "#404040",
+        0.9,
+        3,
+        5,
+        4,
+        0,
+        2,
+        45,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "light_type": "hemisphere",
+        "color": "#ffffff",
+        "ground_color": "#404040",
+        "intensity": 0.9,
+        "position_x": 3,
+        "position_y": 5,
+        "position_z": 4,
+        "distance": 0,
+        "decay": 2,
+        "angle": 45,
+        "penumbra": 0,
+        "cast_shadow": false
+      }
+    },
+    {
+      "id": 54,
+      "type": "WASThreeGroup",
+      "pos": [
+        3700.000078927771,
+        3685.031216716882
+      ],
+      "size": [
+        270,
+        222
+      ],
+      "flags": {},
+      "order": 41,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "object_1",
+          "name": "object_1",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": 38
+        },
+        {
+          "localized_name": "object_2",
+          "name": "object_2",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": 39
+        },
+        {
+          "localized_name": "object_3",
+          "name": "object_3",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": 40
+        },
+        {
+          "localized_name": "object_4",
+          "name": "object_4",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": null
+        },
+        {
+          "localized_name": "object_5",
+          "name": "object_5",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": null
+        },
+        {
+          "localized_name": "object_6",
+          "name": "object_6",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": null
+        },
+        {
+          "localized_name": "object_7",
+          "name": "object_7",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": null
+        },
+        {
+          "localized_name": "object_8",
+          "name": "object_8",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": null
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "visible",
+          "name": "visible",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "visible"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "group",
+          "name": "group",
+          "type": "THREE_OBJECT",
+          "links": [
+            41
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASThreeGroup"
+      },
+      "widgets_values": [
+        "character",
+        true
+      ],
+      "widgets_values_named": {
+        "name": "character",
+        "visible": true
+      }
+    },
+    {
+      "id": 55,
+      "type": "WASThreeScene",
+      "pos": [
+        4080.000078927771,
+        3685.031216716882
+      ],
+      "size": [
+        270,
+        198
+      ],
+      "flags": {},
+      "order": 44,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "root",
+          "name": "root",
+          "shape": 7,
+          "type": "THREE_OBJECT",
+          "link": 41
+        },
+        {
+          "localized_name": "environment",
+          "name": "environment",
+          "shape": 7,
+          "type": "THREE_ENVIRONMENT",
+          "link": null
+        },
+        {
+          "localized_name": "background",
+          "name": "background",
+          "type": "STRING",
+          "widget": {
+            "name": "background"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "background_mode",
+          "name": "background_mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "background_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fog_enabled",
+          "name": "fog_enabled",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "fog_enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fog_color",
+          "name": "fog_color",
+          "type": "STRING",
+          "widget": {
+            "name": "fog_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fog_near",
+          "name": "fog_near",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fog_near"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fog_far",
+          "name": "fog_far",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fog_far"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "scene",
+          "name": "scene",
+          "type": "THREE_SCENE",
+          "links": [
+            42
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASThreeScene"
+      },
+      "widgets_values": [
+        "#202428",
+        "color",
+        false,
+        "#111111",
+        10,
+        100
+      ],
+      "widgets_values_named": {
+        "background": "#202428",
+        "background_mode": "color",
+        "fog_enabled": false,
+        "fog_color": "#111111",
+        "fog_near": 10,
+        "fog_far": 100
+      }
+    },
+    {
+      "id": 56,
+      "type": "WASThreePerspectiveCamera",
+      "pos": [
+        4080.000078927771,
+        4067.031077217387
+      ],
+      "size": [
+        276.2466796875,
+        250
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "track",
+          "name": "track",
+          "shape": 7,
+          "type": "THREE_TRACK",
+          "link": null
+        },
+        {
+          "localized_name": "fov",
+          "name": "fov",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fov"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "near",
+          "name": "near",
+          "type": "FLOAT",
+          "widget": {
+            "name": "near"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "far",
+          "name": "far",
+          "type": "FLOAT",
+          "widget": {
+            "name": "far"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_x",
+          "name": "position_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_y",
+          "name": "position_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position_z",
+          "name": "position_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "position_z"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_x",
+          "name": "target_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "target_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_y",
+          "name": "target_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "target_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_z",
+          "name": "target_z",
+          "type": "FLOAT",
+          "widget": {
+            "name": "target_z"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "camera",
+          "name": "camera",
+          "type": "THREE_CAMERA",
+          "links": [
+            43
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASThreePerspectiveCamera"
+      },
+      "widgets_values": [
+        30,
+        0.1,
+        1000,
+        1.4,
+        1.5,
+        3,
+        0,
+        1.25,
+        0
+      ],
+      "widgets_values_named": {
+        "fov": 30,
+        "near": 0.1,
+        "far": 1000,
+        "position_x": 1.4,
+        "position_y": 1.5,
+        "position_z": 3,
+        "target_x": 0,
+        "target_y": 1.25,
+        "target_z": 0
+      }
+    },
+    {
+      "id": 57,
+      "type": "WASThreeApp",
+      "pos": [
+        4466.246758615271,
+        3685.031216716882
+      ],
+      "size": [
+        270,
+        314
+      ],
+      "flags": {},
+      "order": 46,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "scene",
+          "name": "scene",
+          "type": "THREE_SCENE",
+          "link": 42
+        },
+        {
+          "localized_name": "camera",
+          "name": "camera",
+          "type": "THREE_CAMERA",
+          "link": 43
+        },
+        {
+          "localized_name": "effects",
+          "name": "effects",
+          "shape": 7,
+          "type": "THREE_EFFECT",
+          "link": null
+        },
+        {
+          "localized_name": "antialias",
+          "name": "antialias",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "antialias"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows",
+          "name": "shadows",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "shadows"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "orbit_controls",
+          "name": "orbit_controls",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "orbit_controls"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "auto_rotate",
+          "name": "auto_rotate",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "auto_rotate"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "auto_rotate_speed",
+          "name": "auto_rotate_speed",
+          "type": "FLOAT",
+          "widget": {
+            "name": "auto_rotate_speed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tone_mapping",
+          "name": "tone_mapping",
+          "type": "COMBO",
+          "widget": {
+            "name": "tone_mapping"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "exposure",
+          "name": "exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "loop_seconds",
+          "name": "loop_seconds",
+          "type": "FLOAT",
+          "widget": {
+            "name": "loop_seconds"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pixel_ratio_limit",
+          "name": "pixel_ratio_limit",
+          "type": "FLOAT",
+          "widget": {
+            "name": "pixel_ratio_limit"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadow_quality",
+          "name": "shadow_quality",
+          "type": "COMBO",
+          "widget": {
+            "name": "shadow_quality"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "app",
+          "name": "app",
+          "type": "THREE_APP",
+          "links": [
+            44
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASThreeApp"
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        false,
+        1,
+        "aces",
+        1,
+        8,
+        2,
+        "2048"
+      ],
+      "widgets_values_named": {
+        "antialias": true,
+        "shadows": true,
+        "orbit_controls": true,
+        "auto_rotate": false,
+        "auto_rotate_speed": 1,
+        "tone_mapping": "aces",
+        "exposure": 1,
+        "loop_seconds": 8,
+        "pixel_ratio_limit": 2,
+        "shadow_quality": "2048"
+      }
+    },
+    {
+      "id": 58,
+      "type": "WASThreeViewer",
+      "pos": [
+        4846.246778713805,
+        3685.031216716882
+      ],
+      "size": [
+        320,
+        478
+      ],
+      "flags": {},
+      "order": 47,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "app",
+          "name": "app",
+          "type": "THREE_APP",
+          "link": 44
+        },
+        {
+          "localized_name": "override",
+          "name": "override",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "override"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "view",
+          "name": "view",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "view"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "app",
+          "name": "app",
+          "type": "THREE_APP",
+          "links": null
+        },
+        {
+          "localized_name": "camera",
+          "name": "camera",
+          "type": "THREE_CAMERA",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "WASThreeViewer"
+      },
+      "widgets_values": [
+        false,
+        ""
+      ],
+      "widgets_values_named": {
+        "override": false,
+        "view": ""
+      }
+    },
+    {
+      "id": 59,
+      "type": "MarkdownNote",
+      "pos": [
+        2560.000078927771,
+        4331.031044576632
+      ],
+      "size": [
+        140,
+        60
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Springs in Three\n**Three Load Model** takes the rigged character whole, spring bones included. **Three Animate Transform** turns it and bobs it, and the hair swings in **Three Viewer**. Drag in the viewer to orbit."
+      ],
+      "widgets_values_named": {
+        "text": "## Springs in Three\n**Three Load Model** takes the rigged character whole, spring bones included. **Three Animate Transform** turns it and bobs it, and the hair swings in **Three Viewer**. Drag in the viewer to orbit."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 60,
+      "type": "MarkdownNote",
+      "pos": [
+        3094.9999775292868,
+        1107
+      ],
+      "size": [
+        140,
+        60
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Draw the head\n**Z-Image** draws a front view of the head and a long bare neck with no shoulders, on a plain background, and the bottom **Tripo: Generate model** turns that picture into the head. Give the head all the hair: it is kept whole, and long hair swings once the character has spring bones. Describe the head in the top **CLIP Text Encode**."
+      ],
+      "widgets_values_named": {
+        "text": "## Draw the head\n**Z-Image** draws a front view of the head and a long bare neck with no shoulders, on a plain background, and the bottom **Tripo: Generate model** turns that picture into the head. Give the head all the hair: it is kept whole, and long hair swings once the character has spring bones. Describe the head in the top **CLIP Text Encode**."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      5,
+      1,
+      "STRING"
+    ],
+    [
+      2,
+      3,
+      0,
+      6,
+      1,
+      "STRING"
+    ],
+    [
+      6,
+      8,
+      0,
+      9,
+      0,
+      "WAS_MODEL_3D"
+    ],
+    [
+      7,
+      9,
+      1,
+      11,
+      1,
+      "COMBO"
+    ],
+    [
+      8,
+      11,
+      0,
+      12,
+      0,
+      "MODEL_INFO"
+    ],
+    [
+      9,
+      12,
+      0,
+      13,
+      1,
+      "STRING"
+    ],
+    [
+      10,
+      13,
+      0,
+      15,
+      0,
+      "WAS_MODEL_3D"
+    ],
+    [
+      11,
+      15,
+      0,
+      16,
+      0,
+      "WAS_MODEL_3D"
+    ],
+    [
+      12,
+      15,
+      0,
+      17,
+      0,
+      "WAS_MODEL_3D"
+    ],
+    [
+      13,
+      17,
+      0,
+      18,
+      2,
+      "FILE_3D"
+    ],
+    [
+      14,
+      5,
+      0,
+      20,
+      0,
+      "WAS_MODEL_3D"
+    ],
+    [
+      15,
+      6,
+      0,
+      20,
+      1,
+      "WAS_MODEL_3D"
+    ],
+    [
+      16,
+      20,
+      0,
+      21,
+      0,
+      "WAS_MODEL_3D"
+    ],
+    [
+      17,
+      21,
+      0,
+      8,
+      0,
+      "WAS_MODEL_3D"
+    ],
+    [
+      18,
+      8,
+      0,
+      23,
+      0,
+      "WAS_MODEL_3D"
+    ],
+    [
+      20,
+      24,
+      0,
+      25,
+      0,
+      "WAS_MODEL_3D"
+    ],
+    [
+      21,
+      24,
+      0,
+      26,
+      0,
+      "WAS_MODEL_3D"
+    ],
+    [
+      22,
+      26,
+      0,
+      27,
+      2,
+      "FILE_3D"
+    ],
+    [
+      23,
+      39,
+      0,
+      42,
+      0,
+      "MODEL"
+    ],
+    [
+      24,
+      42,
+      0,
+      46,
+      0,
+      "MODEL"
+    ],
+    [
+      25,
+      40,
+      0,
+      43,
+      0,
+      "CLIP"
+    ],
+    [
+      26,
+      40,
+      0,
+      44,
+      0,
+      "CLIP"
+    ],
+    [
+      27,
+      43,
+      0,
+      46,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      28,
+      44,
+      0,
+      46,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      29,
+      45,
+      0,
+      46,
+      3,
+      "LATENT"
+    ],
+    [
+      30,
+      46,
+      0,
+      47,
+      0,
+      "LATENT"
+    ],
+    [
+      31,
+      41,
+      0,
+      47,
+      1,
+      "VAE"
+    ],
+    [
+      32,
+      47,
+      0,
+      48,
+      0,
+      "IMAGE"
+    ],
+    [
+      33,
+      47,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      34,
+      23,
+      0,
+      49,
+      0,
+      "WAS_MODEL_3D"
+    ],
+    [
+      35,
+      49,
+      0,
+      24,
+      0,
+      "WAS_MODEL_3D"
+    ],
+    [
+      36,
+      49,
+      0,
+      50,
+      0,
+      "WAS_MODEL_3D"
+    ],
+    [
+      37,
+      50,
+      0,
+      51,
+      0,
+      "THREE_OBJECT"
+    ],
+    [
+      38,
+      51,
+      0,
+      54,
+      0,
+      "THREE_OBJECT"
+    ],
+    [
+      39,
+      52,
+      0,
+      54,
+      1,
+      "THREE_OBJECT"
+    ],
+    [
+      40,
+      53,
+      0,
+      54,
+      2,
+      "THREE_OBJECT"
+    ],
+    [
+      41,
+      54,
+      0,
+      55,
+      0,
+      "THREE_OBJECT"
+    ],
+    [
+      42,
+      55,
+      0,
+      57,
+      0,
+      "THREE_SCENE"
+    ],
+    [
+      43,
+      56,
+      0,
+      57,
+      1,
+      "THREE_CAMERA"
+    ],
+    [
+      44,
+      57,
+      0,
+      58,
+      0,
+      "THREE_APP"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 37,
+      "title": "Read me: setup and use",
+      "bounding": [
+        0,
+        0,
+        720,
+        810
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 38,
+      "title": "Body: describe it for Tripo",
+      "bounding": [
+        820,
+        0,
+        520,
+        1306
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 39,
+      "title": "Head: a picture of the head and neck, then Tripo",
+      "bounding": [
+        1440,
+        0,
+        2104.9999775292868,
+        1327.0312167168822
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 40,
+      "title": "Assemble: the head on the body's neck, sized and reduced",
+      "bounding": [
+        0,
+        1467.0312167168822,
+        2520.0001939121285,
+        1878
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 41,
+      "title": "Tripo: rig it with the VRM skeleton",
+      "bounding": [
+        2620.0001939121285,
+        1467.0312167168822,
+        1280,
+        1214
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 42,
+      "title": "Results: Tripo rig, a VRM avatar and a GLB",
+      "bounding": [
+        4000.0001939121285,
+        1467.0312167168822,
+        2151,
+        1958
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 43,
+      "title": "Rig locally: Character Rig and Character Springs, no credits",
+      "bounding": [
+        0,
+        3565.031216716882,
+        2410.000078927771,
+        1958.0001286306178
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 44,
+      "title": "Springs in Three: the hair swinging as the character turns",
+      "bounding": [
+        2510.000078927771,
+        3565.031216716882,
+        2706.2466997860342,
+        1109.999969636465
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.2,
+      "offset": [
+        60,
+        120
+      ]
+    }
+  },
+  "version": 0.4,
+  "models": [
+    {
+      "name": "z_image_turbo_bf16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+      "directory": "diffusion_models"
+    },
+    {
+      "name": "qwen_3_4b.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors",
+      "directory": "text_encoders"
+    },
+    {
+      "name": "ae.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/vae/ae.safetensors",
+      "directory": "vae"
+    }
+  ]
+}

@@ -84,6 +84,9 @@ OPEN_TIMEOUT_MS = 1_000
 #: How many times the file is opened again after a lock refused the first attempt.
 OPEN_ATTEMPTS = 3
 
+#: How many connections stay open between statements. Any further one closes when returned.
+IDLE_CONNECTIONS = 4
+
 #: How many attempts a statement gets after sqlite reports the database locked.
 RETRIES = 8
 
@@ -404,6 +407,14 @@ def _rollback(connection: sqlite3.Connection) -> None:
         pass
 
 
+def _close(connection: sqlite3.Connection) -> None:
+    """Close a connection, ignoring one that is already closed or refuses."""
+    try:
+        connection.close()
+    except sqlite3.Error:
+        pass
+
+
 def _pause(delay: float) -> float:
     """Wait out one locked attempt and answer how long the next one waits."""
     time.sleep(delay * (1.0 + random.random()))
@@ -437,7 +448,6 @@ class StateStore:
 
     Attributes:
         path: The database file.
-        connections: Every connection opened against it, one per thread.
     """
 
     def __init__(self, path, busy_timeout_ms: int = BUSY_TIMEOUT_MS, retries: int = RETRIES):
@@ -449,11 +459,12 @@ class StateStore:
             retries: Attempts a statement gets after sqlite reports the database locked.
         """
         self.path = Path(path)
-        self.connections: list[sqlite3.Connection] = []
         self._busy_timeout_ms = int(busy_timeout_ms)
         self._retries = max(1, int(retries))
         self._local = threading.local()
         self._guard = threading.RLock()
+        self._idle: list[sqlite3.Connection] = []
+        self._generation = 0
         self._memory: sqlite3.Connection | None = None
         self._ready = False
         self._read_only = False
@@ -469,21 +480,15 @@ class StateStore:
         return self._read_only
 
     def close(self) -> None:
-        """Close every connection. A later call reopens on demand."""
+        """Close every connection, each one in use as it is returned. A later call reopens."""
         with self._guard:
-            for connection in self.connections:
-                try:
-                    connection.close()
-                except sqlite3.Error:
-                    pass
-            self.connections = []
+            self._generation += 1
+            idle, self._idle = self._idle, []
+            for connection in idle:
+                _close(connection)
             if self._memory is not None:
-                try:
-                    self._memory.close()
-                except sqlite3.Error:
-                    pass
+                _close(self._memory)
                 self._memory = None
-            self._local = threading.local()
             self._ready = False
             self._read_only = False
 
@@ -558,21 +563,57 @@ class StateStore:
 
     @contextlib.contextmanager
     def _session(self):
-        """Yield this thread's connection, serialising callers while held in memory."""
-        connection = self._handle()
-        if connection is self._memory:
-            with self._guard:
+        """Lend a connection for one statement, the held one to a nested call on this thread."""
+        held = getattr(self._local, "held", None)
+        if held is not None:
+            yield held
+            return
+        connection, generation = self._borrow()
+        self._local.held = connection
+        try:
+            if connection is self._memory:
+                with self._guard:
+                    yield connection
+            else:
                 yield connection
-        else:
-            yield connection
+        finally:
+            self._local.held = None
+            self._give_back(connection, generation)
 
-    def _handle(self) -> sqlite3.Connection:
-        """This thread's connection, opened and prepared on first use."""
-        existing = getattr(self._local, "connection", None)
-        if existing is not None:
-            return existing
-        if self._memory is not None:
-            return self._memory
+    def _borrow(self) -> tuple[sqlite3.Connection, int]:
+        """An idle connection, or a new one.
+
+        Returns:
+            ``(connection, generation)``, the generation being the one it was lent under.
+        """
+        with self._guard:
+            generation = self._generation
+            if self._idle:
+                return self._idle.pop(), generation
+            if self._memory is not None:
+                return self._memory, generation
+        return self._connect(), generation
+
+    def _give_back(self, connection: sqlite3.Connection, generation: int) -> None:
+        """Keep a lent connection for the next statement, or close it.
+
+        Args:
+            connection: What :meth:`_borrow` lent.
+            generation: The generation it was lent under. One from before a
+                :meth:`close` is closed.
+        """
+        if connection is self._memory:
+            return
+        if connection.in_transaction:
+            _rollback(connection)
+        with self._guard:
+            if generation == self._generation and len(self._idle) < IDLE_CONNECTIONS:
+                self._idle.append(connection)
+                return
+        _close(connection)
+
+    def _connect(self) -> sqlite3.Connection:
+        """A new connection to the file, read-only or in memory when it cannot be written."""
         connection = None
         failure: BaseException | None = None
         delay = RETRY_DELAY
@@ -588,9 +629,6 @@ class StateStore:
             connection = self._open_read_only(failure)
             if connection is None:
                 return self._fall_back(failure)
-        self._local.connection = connection
-        with self._guard:
-            self.connections.append(connection)
         return connection
 
     def _open(self) -> sqlite3.Connection:
@@ -599,6 +637,7 @@ class StateStore:
             self.path,
             timeout=OPEN_TIMEOUT_MS / 1000.0,
             isolation_level=None,
+            check_same_thread=False,
         )
         try:
             connection.execute(f"PRAGMA busy_timeout = {OPEN_TIMEOUT_MS}")
@@ -619,8 +658,8 @@ class StateStore:
 
     def optimize(self) -> None:
         """Bring the query statistics up to date with what the tables now hold."""
-        connection = self._handle()
-        _optimize(connection, self.path)
+        with self._session() as connection:
+            _optimize(connection, self.path)
 
     def _open_read_only(self, error: BaseException) -> sqlite3.Connection | None:
         """Connect to an existing file that cannot be written, for reading only.
@@ -641,6 +680,7 @@ class StateStore:
                     uri=True,
                     timeout=OPEN_TIMEOUT_MS / 1000.0,
                     isolation_level=None,
+                    check_same_thread=False,
                 )
             except sqlite3.Error:
                 continue
@@ -659,7 +699,7 @@ class StateStore:
                     return connection
             except sqlite3.Error:
                 pass
-            connection.close()
+            _close(connection)
         return None
 
     def _pragmas(self, connection: sqlite3.Connection) -> None:

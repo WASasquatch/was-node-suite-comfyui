@@ -5,7 +5,7 @@
  * `--was-*` custom properties, named by `themeVar`. `onThemeChange` reports a palette change.
  */
 
-import { getFullTheme } from "../viewer/utils/theme.js";
+import { getFullTheme } from "../viewer/utils/theme.mjs";
 
 const LOG_NAME = "WASNodeSuite.Theme";
 

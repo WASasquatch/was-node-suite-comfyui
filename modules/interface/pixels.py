@@ -82,6 +82,7 @@ FAMILY = frozenset({
     "WASImageAutoLevels",
     "WASImageColorBalance",
     "WASImageCompositeMasked",
+    "WASImageDelight",
     "WASImageDequantise",
     "WASImageDirectionalBlur",
     "WASImageEditCrop",

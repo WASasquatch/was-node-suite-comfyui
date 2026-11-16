@@ -84,6 +84,7 @@ LITERAL_INPUTS = {
     "WASLLMVectorStore": ("collection",),
     "WASLLMIndexNode": ("target",),
     "WASLLMToDocuments": ("title",),
+    "WASModel3DMeta": ("contact_information", "references", "other_license_url"),
 }
 
 

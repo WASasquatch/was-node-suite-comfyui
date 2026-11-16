@@ -304,9 +304,9 @@ def describe(body: bytes, suffix: str) -> dict:
     """
     suffix = str(suffix or "").lower().lstrip(".")
     found: dict = {"format": suffix, "bytes": len(body)}
-    if suffix not in ("glb", "gltf"):
+    if suffix not in ("glb", "gltf", "vrm"):
         return found
-    if suffix == "glb":
+    if suffix in ("glb", "vrm"):
         document, binary = _split_glb(body)
     else:
         document, binary = json.loads(body.decode("utf-8")), None

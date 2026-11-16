@@ -15,10 +15,13 @@ from ...modules.compat.types import (
     FILE_3D_OBJ,
     FILE_3D_PLY,
     FILE_3D_STL,
+    MODEL_3D,
     THREE_OBJECT,
 )
 from ...modules.interface import run_result
 from ...modules.log import get_logger
+from ...modules.model3d import gltf, vrm
+from ...modules.model3d.scene import Model3D
 from ...modules.threejs import model_report, models
 from ...modules.threejs.spec import create_spec
 from ...modules.util import file_listing, sandbox
@@ -64,7 +67,7 @@ class ThreeLoadModel(io.ComfyNode):
             description=(
                 "Put a model into the scene as an object, so a mesh made elsewhere, such as a "
                 "Tripo or Hunyuan3D generation, can be lit, animated and rendered here. Reads "
-                ".glb, .gltf, .dae, .fbx, .obj, .3mf, .stl and .ply, compressed glTF included, "
+                ".glb, .gltf, .vrm, .dae, .fbx, .obj, .3mf, .stl and .ply, compressed glTF included, "
                 "and reports what the file holds."
             ),
             inputs=[
@@ -72,7 +75,7 @@ class ThreeLoadModel(io.ComfyNode):
                     "file",
                     options=options(),
                     tooltip=(
-                        "Which model to place. The menu lists the newest `.glb`, `.gltf`, `.dae`, "
+                        "Which model to place. The menu lists the newest `.glb`, `.gltf`, `.vrm`, `.dae`, "
                         "`.fbx`, `.obj`, `.3mf`, `.stl` and `.ply` files in ComfyUI's "
                         "input, output and temp folders and in any folder under "
                         "paths.allow_read."
@@ -128,11 +131,13 @@ class ThreeLoadModel(io.ComfyNode):
                 ),
                 io.MultiType.Input(
                     "model_3d",
-                    types=[FILE_3D, FILE_3D_GLB, FILE_3D_GLTF, FILE_3D_FBX, FILE_3D_OBJ, FILE_3D_STL, FILE_3D_PLY],
+                    types=[MODEL_3D, FILE_3D, FILE_3D_GLB, FILE_3D_GLTF, FILE_3D_FBX, FILE_3D_OBJ, FILE_3D_STL,
+                           FILE_3D_PLY],
                     optional=True,
                     tooltip=(
                         "A model from a 3D generator or Load 3D, such as the GLB from Tripo, "
-                        "Hunyuan3D, Meshy or Rodin. Wired, it is used instead of path and the menu."
+                        "Hunyuan3D, Meshy or Rodin, or a model_3d from the 3D nodes; spring bones swing "
+                        "as it moves. Wired, it is used instead of path and the menu."
                     ),
                 ),
                 io.String.Input(
@@ -239,7 +244,7 @@ class ThreeLoadModel(io.ComfyNode):
         Args:
             file: The menu's entry.
             path: A wired or typed path, used before the menu.
-            model_3d: Core's 3D file, used before either.
+            model_3d: Core's 3D file or a model from the 3D nodes, used before either.
 
         Returns:
             ``(carried, name)``, the name being the file's stem or ``model_3d``.
@@ -248,6 +253,8 @@ class ThreeLoadModel(io.ComfyNode):
             ValueError: Nothing names a model, or its format has no loader.
             PathNotAllowed: A path resolved outside every permitted read root.
         """
+        if isinstance(model_3d, Model3D):
+            return models.carried_bytes(cls.encoded(model_3d), "glb", "the wired glb"), "model_3d"
         if model_3d is not None:
             fmt = str(getattr(model_3d, "format", "") or "").lower().lstrip(".")
             if getattr(model_3d, "is_disk_backed", False):
@@ -260,13 +267,37 @@ class ThreeLoadModel(io.ComfyNode):
         if not chosen:
             if not file or file == NO_MODELS:
                 raise ValueError(
-                    "Three Load Model has no model to place. Put a .glb, .gltf, .dae, .fbx, "
+                    "Three Load Model has no model to place. Put a .glb, .gltf, .vrm, .dae, .fbx, "
                     ".obj, .3mf, .stl or .ply in ComfyUI's input folder and pick it, wire a "
                     "3D generator's model into model_3d, or wire a path into path."
                 )
-            chosen = file_listing.resolve(file, models.SUFFIXES, file_listing.ROOTS, paths=True) or file
+            chosen = file_listing.resolve(file, models.SUFFIXES, file_listing.ROOTS, paths=True)
+            if chosen is None and file_listing.is_label(file):
+                raise file_listing.missing_label(file)
+            chosen = chosen or file
         resolved = sandbox.resolve_read(chosen)
         return models.carried(resolved), resolved.stem
+
+    @staticmethod
+    def encoded(model: Model3D) -> bytes:
+        """A model from the 3D nodes as GLB bytes, its spring bones written as VRMC_springBone.
+
+        Args:
+            model: The model.
+
+        Returns:
+            The ``.glb`` file's bytes.
+
+        Raises:
+            GltfError: The model holds data a glTF file cannot hold.
+        """
+        out = gltf.build(model, embed_images=True)
+        if model.springs is not None and model.springs.chains and model.skeleton is not None:
+            extension = vrm._write_springs(out, model, model.skeleton, model.skeleton)
+            if extension is not None:
+                out.json.setdefault("extensions", {})["VRMC_springBone"] = extension
+                out.add_extension_used("VRMC_springBone")
+        return out.to_glb()
 
     @staticmethod
     def keep(carried: models.Carried, name: str) -> str:

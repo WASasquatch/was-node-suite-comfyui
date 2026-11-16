@@ -7,19 +7,19 @@
 
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
-import * as THREE from "../vendor/three/three.module.js";
+import * as THREE from "../vendor/three/three.module.mjs";
 import {
     assertDescriptor,
     createOrbitControls,
     createRuntime,
     onRenderBusy,
     toneMappingConstant,
-} from "./runtime.js";
+} from "./runtime.mjs";
 import { captureWheel } from "../interface/pointer.js";
 import { surfaceRatio, watchSurfaceRatio } from "../interface/resolution.js";
 import { appendInterfaceWidget } from "../interface/widget.js";
 import { onNodeFinished } from "../interface/run_events.js";
-import { Viewport, createViewportBar, hideViewWidget } from "./viewport.js";
+import { Viewport, createViewportBar, hideViewWidget } from "./viewport.mjs";
 import {
     TilePacer,
     VIEW_LATENCY_MS,
@@ -29,7 +29,7 @@ import {
     prepareFrame,
     traceBatch,
     tracingStation,
-} from "./pathtrace.js";
+} from "./pathtrace.mjs";
 
 const VIEWER_NODE = "WASThreeViewer";
 const TRACE_VIEWER_NODE = "WASThreePathTraceViewer";
@@ -279,7 +279,7 @@ class ViewerController {
                 renderer.setPixelRatio(drawRatio());
                 renderer.setSize(width, height, false);
                 renderer.shadowMap.enabled = appSpec.params?.shadows !== false;
-                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                renderer.shadowMap.type = THREE.PCFShadowMap;
                 renderer.toneMapping = this.toneMapping;
                 renderer.toneMappingExposure = this.exposure;
                 renderer.outputColorSpace = THREE.SRGBColorSpace;

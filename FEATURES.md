@@ -5,17 +5,17 @@ What the pack does. Every entry names the nodes and what the area is for.
 
 | | |
 |---|---|
-| Nodes | **698** across **69** categories |
+| Nodes | **721** across **72** categories |
 | Deprecated | **28**, each naming its replacement |
 | Gated | Nine `legacy` groups and several feature groups in `config.yaml`. A workflow opened with one of their nodes turned off names the setting that loads it and any package it lacks, with the install command or a way into Open Manager: [`docs/CONFIG.md`](docs/CONFIG.md) |
-| Panels | 364 nodes draw their own readout, picture or editor on the canvas |
+| Panels | 386 nodes draw their own readout, picture or editor on the canvas |
 | Graphs | Runnable examples in [`docs/workflows/`](docs/workflows), linked per area below |
 
 ---
 
 ## Nodes that show their work
 
-195 nodes draw a panel on themselves rather than answering only through a socket: both sides of
+217 nodes draw a panel on themselves rather than answering only through a socket: both sides of
 a picture, a histogram, a waveform, what a loader read off disk, a colour ramp, a colour wheel,
 a 3D view, a text editor, a contact sheet that picks a look on click.
 
@@ -179,13 +179,16 @@ For tiled work and for fitting an image to a target without leaving the canvas.
 
 ## Colour, levels and LUTs
 
-15 nodes. **Image Levels Adjustment**, **Image Curves**, **Image Auto Levels**, **Image Color
+16 nodes. **Image Levels Adjustment**, **Image Curves**, **Image Auto Levels**, **Image Color
 Balance**, **Image White Balance**, **Image Shadows and Highlights** and **Image Rotate Hue**
 grade. **Image Color Match** matches one image to another and **Image Temporal Equalize**
 matches across a batch. **Load LUT**, **Apply LUT**, **LUT Blender**, **LUT from Reference**
-and **Save LUT (.cube)** carry a look as a file.
+and **Save LUT (.cube)** carry a look as a file. **Image Delight** takes the lighting out of a
+full-size picture, dividing out the shading an albedo estimate of it reveals and keeping the
+picture's own fine detail.
 
-For matching shots to each other, and for moving a grade between graphs as a `.cube`.
+For matching shots to each other, for moving a grade between graphs as a `.cube`, and for flat,
+unlit colour to paint a 3D model's texture with.
 
 [`NODES.md`](NODES.md) under **WAS Suite/Image/Adjustment** and **WAS Suite/Image/LUT**. Graph:
 [`image-optics-and-grade.json`](docs/workflows/image-optics-and-grade.json).
@@ -1169,7 +1172,8 @@ out.
 
 **Three Load Model** takes a model straight from a 3D generator: ComfyUI-Tripo's `model_file` on
 `path`, or the 3D file socket core's Tripo, Hunyuan3D, Meshy, Rodin and Load 3D nodes put out on
-`model_3d`. It reads glTF compressed with meshopt or Draco, resizes the model with `fit_size`,
+`model_3d`, where a model from the pack's 3D nodes also goes. It reads glTF compressed with meshopt
+or Draco, plays a VRM 0.x or 1.0 avatar's spring bones so hair and cloth swing as the model moves, resizes the model with `fit_size`,
 stands it on the floor with `origin`, and reports its triangles, textures, clips, bones and
 compression on the node. For lighting, animating and rendering a generated model the moment it
 arrives, without exporting it anywhere. With `keep_as`, it keeps a copy of the model in
@@ -1196,6 +1200,59 @@ on flat feet.
 The Tripo graphs need [ComfyUI-Tripo](https://github.com/VAST-AI-Research/ComfyUI-Tripo) and a
 Tripo API key, set up as [`docs/3D.md`](docs/3D.md#setup-for-the-tripo-graphs) lists.
 [`NODES.md`](NODES.md) under **WAS Suite/Three**.
+
+---
+
+## 3D models, meshes and characters
+
+23 nodes. **3D Model Load** reads GLB, glTF, VRM, FBX and OBJ into one model with its materials,
+skeleton, skin, shape keys and clips, and **3D Model Save** writes it as GLB, VRM 1.0 avatar, FBX,
+OBJ or glTF, to the output folder or to the input folder, where a generator's import menu lists
+it. **3D Model Meta** sets an avatar's name, authors and licence terms. **3D Model Parts** keeps,
+drops, merges, splits, renames and labels parts and adds another model. **3D Model Transform**
+moves, turns and sizes a model and faces a rigged one forward, skeleton included. **3D Model
+Material** tones down metalness and raises roughness on chosen parts, for hair or skin a generator
+made look like chrome.
+
+**Character Assemble** puts a separately generated head, hair and one extra piece on a body. It
+faces the body forward, fits the new head over the head the body already has, cuts that head away
+along with any hair hanging below the neck, seams the new head's neck into the body's with its hair
+kept whole, tones its skin to the body's and stands the character at a set height. **Character Neck
+Join** welds that head and body into one surface at the neck, so the seam cannot open, crease or
+crack when the head turns. **Character Rig** fits a VRM humanoid skeleton to a standing character
+from its own shape, fingers and eyes included, skins it, writes a VRM look-at and turns sloping
+arms level into a T-pose, with no rigging service. **Character Springs** gives hanging hair, and a skirt or cape split off as
+its own part, chains of spring bones and the body colliders to rest on, so they swing in VRM viewers,
+games and the Three viewer. For a VRM avatar
+made from a head and a body generated apart, without Blender.
+
+**Mesh Decimate** cuts the triangle count and keeps UV seams, normals, skin and shape keys.
+**Mesh Retopology** rebuilds a model as quads. **Mesh Remesh**, **Mesh Smooth** and **Mesh
+Subdivide** even out, smooth and refine a surface. **Mesh Clean** welds, removes floaters and
+broken faces and fills holes. **Mesh Symmetrize** mirrors one side onto the other, and **Mesh
+Cut** cuts by a plane and caps the opening. **Mesh UV Unwrap** lays out new texture coordinates,
+and **Mesh Bake Textures** bakes colour, normal, metallic-roughness, emissive and occlusion maps
+from the original onto them. **Mesh Inspect** reports what a modeller checks before export. For
+taking a generated model from millions of triangles to a light, clean asset with its look
+intact.
+
+**Mesh Render Views** renders a model's colour, depth and normals from cameras set round it, and
+**Mesh Project Views** projects those pictures back into its base colour, roughness, metallic,
+normal or occlusion map once any image model has enhanced, upscaled or repainted them, or Power
+Preprocessor has read roughness or surface direction off them. For a sharper, cleaner or restyled
+texture with matching surface maps on a generated model, from whatever image model suits the job.
+
+Each of the 23 draws a report of the model it made: parts, vertices, triangles, quads, joints,
+height and what it changed.
+
+| Graph | Makes |
+|---|---|
+| [`tripo-character-vrm.json`](docs/workflows/tripo-character-vrm.json) | A body and a head generated apart by Tripo, assembled, rigged with the VRM skeleton and saved as a VRM avatar and a GLB |
+| [`3d-upscale-textures.json`](docs/workflows/3d-upscale-textures.json) | A model's six projections each redrawn by MiniMax H3 Image at 67 megapixels from the projection itself and scaled to 4096, delit into flat colour, read for roughness and surface direction, recompiled into its base colour, roughness and normal maps with no metal, and shown in Preview 3D beside the original |
+
+[`NODES.md`](NODES.md) under **WAS Suite/3D/Model**, **WAS Suite/3D/Mesh** and **WAS
+Suite/3D/Character**. Formats, limits and troubleshooting:
+[`docs/3D.md`](docs/3D.md#3d-models-meshes-and-characters).
 
 ---
 

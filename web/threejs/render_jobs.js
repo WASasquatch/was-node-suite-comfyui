@@ -6,7 +6,7 @@
 
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
-import * as THREE from "../vendor/three/three.module.js";
+import * as THREE from "../vendor/three/three.module.mjs";
 
 import {
     TilePacer,
@@ -18,8 +18,8 @@ import {
     presentTrace,
     traceFrame,
     tracingStation,
-} from "./pathtrace.js";
-import { createRuntime, setRenderBusy, toneMappingConstant } from "./runtime.js";
+} from "./pathtrace.mjs";
+import { createRuntime, setRenderBusy, toneMappingConstant } from "./runtime.mjs";
 
 const ROUTE = "/was/threejs/api/render";
 
@@ -171,7 +171,7 @@ async function drawJob(job, onFrame, onProgress) {
                 preserveDrawingBuffer: true,
             });
             renderer.shadowMap.enabled = spec.params?.shadows !== false;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.shadowMap.type = THREE.PCFShadowMap;
             if (job.transparent) renderer.setClearAlpha(0);
         }
         const toneMapping = toneMappingConstant(spec.params?.toneMapping);

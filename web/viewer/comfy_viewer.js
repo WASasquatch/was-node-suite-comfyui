@@ -19,11 +19,11 @@ import {
   getDirectUrlSandbox,
   getViewContentMessage,
   getViewForMessageType
-} from "./views/view_loader.js";
-import { loadPrismScripts } from "./views/code_scripts.js";
-import { computeThemeTokens, getFullTheme, themeToCssVars } from "./utils/theme.js";
-import { createControlsBar, CONTROLS_HEIGHT, updateViewSelector, updateControlsForUI, updateTypeLabel } from "./controls/controls_bar.js";
-import { buildIframeContent, LIST_SEPARATOR } from "./iframe/iframe_builder.js";
+} from "./views/view_loader.mjs";
+import { loadPrismScripts } from "./views/code_scripts.mjs";
+import { computeThemeTokens, getFullTheme, themeToCssVars } from "./utils/theme.mjs";
+import { createControlsBar, CONTROLS_HEIGHT, updateViewSelector, updateControlsForUI, updateTypeLabel } from "./controls/controls_bar.mjs";
+import { buildIframeContent, LIST_SEPARATOR } from "./iframe/iframe_builder.mjs";
 import { appendInterfaceWidget } from "../interface/widget.js";
 import { foldedOnPlacing } from "../interface/node_preview.js";
 import { keepWidgetHidden } from "../interface/visibility.js";
