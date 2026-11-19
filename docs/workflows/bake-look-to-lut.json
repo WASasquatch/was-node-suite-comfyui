@@ -1,0 +1,1837 @@
+{
+  "id": "8df56285-0dad-471c-85a1-02257c100f9f",
+  "revision": 0,
+  "last_node_id": 14,
+  "last_link_id": 14,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "WASLUTLattice",
+      "pos": [
+        40,
+        120
+      ],
+      "size": [
+        300,
+        82
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "COMBO",
+          "widget": {
+            "name": "size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "probes",
+          "name": "probes",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "probes"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "lattice",
+          "name": "lattice",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLUTLattice",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "size": true,
+            "probes": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "64 steps",
+        true
+      ],
+      "widgets_values_named": {
+        "size": "64 steps",
+        "probes": true
+      }
+    },
+    {
+      "id": 2,
+      "type": "WASImageDevelop",
+      "pos": [
+        460,
+        120
+      ],
+      "size": [
+        300,
+        570
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "localized_name": "temperature",
+          "name": "temperature",
+          "type": "FLOAT",
+          "widget": {
+            "name": "temperature"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tint",
+          "name": "tint",
+          "type": "FLOAT",
+          "widget": {
+            "name": "tint"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "exposure",
+          "name": "exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "contrast",
+          "name": "contrast",
+          "type": "FLOAT",
+          "widget": {
+            "name": "contrast"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights",
+          "name": "highlights",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows",
+          "name": "shadows",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "whites",
+          "name": "whites",
+          "type": "FLOAT",
+          "widget": {
+            "name": "whites"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blacks",
+          "name": "blacks",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blacks"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture",
+          "name": "texture",
+          "type": "FLOAT",
+          "widget": {
+            "name": "texture"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "clarity",
+          "name": "clarity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "clarity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dehaze",
+          "name": "dehaze",
+          "type": "FLOAT",
+          "widget": {
+            "name": "dehaze"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "vibrance",
+          "name": "vibrance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "vibrance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "saturation",
+          "name": "saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "saturation"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageDevelop",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "temperature": true,
+            "tint": true,
+            "exposure": true,
+            "contrast": true,
+            "highlights": true,
+            "shadows": true,
+            "whites": true,
+            "blacks": true,
+            "texture": true,
+            "clarity": true,
+            "dehaze": true,
+            "vibrance": true,
+            "saturation": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        8,
+        0,
+        0.15,
+        15,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        15,
+        0
+      ],
+      "widgets_values_named": {
+        "temperature": 8,
+        "tint": 0,
+        "exposure": 0.15,
+        "contrast": 15,
+        "highlights": 0,
+        "shadows": 0,
+        "whites": 0,
+        "blacks": 0,
+        "texture": 0,
+        "clarity": 0,
+        "dehaze": 0,
+        "vibrance": 15,
+        "saturation": 0
+      }
+    },
+    {
+      "id": 3,
+      "type": "WASImageColorGrade",
+      "pos": [
+        840,
+        120
+      ],
+      "size": [
+        300,
+        716
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "localized_name": "shadows_hue",
+          "name": "shadows_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows_saturation",
+          "name": "shadows_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows_luminance",
+          "name": "shadows_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "midtones_hue",
+          "name": "midtones_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "midtones_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "midtones_saturation",
+          "name": "midtones_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "midtones_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "midtones_luminance",
+          "name": "midtones_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "midtones_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights_hue",
+          "name": "highlights_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights_saturation",
+          "name": "highlights_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights_luminance",
+          "name": "highlights_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "global_hue",
+          "name": "global_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "global_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "global_saturation",
+          "name": "global_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "global_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "global_luminance",
+          "name": "global_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "global_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blending",
+          "name": "blending",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blending"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "balance",
+          "name": "balance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "balance"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageColorGrade",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "shadows_hue": true,
+            "shadows_saturation": true,
+            "shadows_luminance": true,
+            "midtones_hue": true,
+            "midtones_saturation": true,
+            "midtones_luminance": true,
+            "highlights_hue": true,
+            "highlights_saturation": true,
+            "highlights_luminance": true,
+            "global_hue": true,
+            "global_saturation": true,
+            "global_luminance": true,
+            "blending": true,
+            "balance": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        200,
+        25,
+        0,
+        0,
+        0,
+        0,
+        40,
+        20,
+        0,
+        0,
+        0,
+        0,
+        50,
+        0
+      ],
+      "widgets_values_named": {
+        "shadows_hue": 200,
+        "shadows_saturation": 25,
+        "shadows_luminance": 0,
+        "midtones_hue": 0,
+        "midtones_saturation": 0,
+        "midtones_luminance": 0,
+        "highlights_hue": 40,
+        "highlights_saturation": 20,
+        "highlights_luminance": 0,
+        "global_hue": 0,
+        "global_saturation": 0,
+        "global_luminance": 0,
+        "blending": 50,
+        "balance": 0
+      }
+    },
+    {
+      "id": 4,
+      "type": "WASImageFilmStock",
+      "pos": [
+        1220,
+        120
+      ],
+      "size": [
+        300,
+        406
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "localized_name": "stock",
+          "name": "stock",
+          "type": "COMBO",
+          "widget": {
+            "name": "stock"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength",
+          "name": "strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "exposure",
+          "name": "exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "grain",
+          "name": "grain",
+          "type": "FLOAT",
+          "widget": {
+            "name": "grain"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "halation",
+          "name": "halation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "halation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageFilmStock",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "stock": true,
+            "strength": true,
+            "exposure": true,
+            "grain": true,
+            "halation": true,
+            "seed": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Color Negative: Kodak Portra 400",
+        1,
+        0,
+        0,
+        0,
+        0,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "stock": "Color Negative: Kodak Portra 400",
+        "strength": 1,
+        "exposure": 0,
+        "grain": 0,
+        "halation": 0,
+        "seed": 0,
+        "control_after_generate": "fixed"
+      }
+    },
+    {
+      "id": 5,
+      "type": "WASLUTFromLattice",
+      "pos": [
+        1600,
+        120
+      ],
+      "size": [
+        300,
+        276
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "lattice",
+          "name": "lattice",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "localized_name": "tolerance",
+          "name": "tolerance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "tolerance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "title",
+          "name": "title",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "title"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "lut",
+          "name": "lut",
+          "type": "LUT",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLUTFromLattice",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "tolerance": true,
+            "title": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0.5,
+        "Portra teal and warm"
+      ],
+      "widgets_values_named": {
+        "tolerance": 0.5,
+        "title": "Portra teal and warm"
+      }
+    },
+    {
+      "id": 6,
+      "type": "WASNSSaveLUT",
+      "pos": [
+        1980,
+        120
+      ],
+      "size": [
+        270,
+        154
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "lut",
+          "name": "lut",
+          "type": "LUT",
+          "link": 5
+        },
+        {
+          "localized_name": "filename",
+          "name": "filename",
+          "type": "STRING",
+          "widget": {
+            "name": "filename"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "output_size",
+          "name": "output_size",
+          "type": "INT",
+          "widget": {
+            "name": "output_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overwrite",
+          "name": "overwrite",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "overwrite"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "lut",
+          "name": "lut",
+          "type": "LUT",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASNSSaveLUT",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "filename": true,
+            "output_size": true,
+            "overwrite": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "was_portra_teal_warm",
+        64,
+        true
+      ],
+      "widgets_values_named": {
+        "filename": "was_portra_teal_warm",
+        "output_size": 64,
+        "overwrite": true
+      }
+    },
+    {
+      "id": 7,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        1146
+      ],
+      "size": [
+        340,
+        440
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            6,
+            9
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "image": true,
+            "upload": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "wevisone-busy-street.jpg",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "wevisone-busy-street.jpg",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 8,
+      "type": "WASImageDevelop",
+      "pos": [
+        460,
+        1146
+      ],
+      "size": [
+        300,
+        570
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 6
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "localized_name": "temperature",
+          "name": "temperature",
+          "type": "FLOAT",
+          "widget": {
+            "name": "temperature"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tint",
+          "name": "tint",
+          "type": "FLOAT",
+          "widget": {
+            "name": "tint"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "exposure",
+          "name": "exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "contrast",
+          "name": "contrast",
+          "type": "FLOAT",
+          "widget": {
+            "name": "contrast"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights",
+          "name": "highlights",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows",
+          "name": "shadows",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "whites",
+          "name": "whites",
+          "type": "FLOAT",
+          "widget": {
+            "name": "whites"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blacks",
+          "name": "blacks",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blacks"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture",
+          "name": "texture",
+          "type": "FLOAT",
+          "widget": {
+            "name": "texture"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "clarity",
+          "name": "clarity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "clarity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dehaze",
+          "name": "dehaze",
+          "type": "FLOAT",
+          "widget": {
+            "name": "dehaze"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "vibrance",
+          "name": "vibrance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "vibrance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "saturation",
+          "name": "saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "saturation"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageDevelop",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "temperature": true,
+            "tint": true,
+            "exposure": true,
+            "contrast": true,
+            "highlights": true,
+            "shadows": true,
+            "whites": true,
+            "blacks": true,
+            "texture": true,
+            "clarity": true,
+            "dehaze": true,
+            "vibrance": true,
+            "saturation": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        8,
+        0,
+        0.15,
+        15,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        15,
+        0
+      ],
+      "widgets_values_named": {
+        "temperature": 8,
+        "tint": 0,
+        "exposure": 0.15,
+        "contrast": 15,
+        "highlights": 0,
+        "shadows": 0,
+        "whites": 0,
+        "blacks": 0,
+        "texture": 0,
+        "clarity": 0,
+        "dehaze": 0,
+        "vibrance": 15,
+        "saturation": 0
+      }
+    },
+    {
+      "id": 9,
+      "type": "WASImageColorGrade",
+      "pos": [
+        840,
+        1146
+      ],
+      "size": [
+        300,
+        716
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 7
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "localized_name": "shadows_hue",
+          "name": "shadows_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows_saturation",
+          "name": "shadows_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows_luminance",
+          "name": "shadows_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "midtones_hue",
+          "name": "midtones_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "midtones_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "midtones_saturation",
+          "name": "midtones_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "midtones_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "midtones_luminance",
+          "name": "midtones_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "midtones_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights_hue",
+          "name": "highlights_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights_saturation",
+          "name": "highlights_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights_luminance",
+          "name": "highlights_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "global_hue",
+          "name": "global_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "global_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "global_saturation",
+          "name": "global_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "global_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "global_luminance",
+          "name": "global_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "global_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blending",
+          "name": "blending",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blending"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "balance",
+          "name": "balance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "balance"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageColorGrade",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "shadows_hue": true,
+            "shadows_saturation": true,
+            "shadows_luminance": true,
+            "midtones_hue": true,
+            "midtones_saturation": true,
+            "midtones_luminance": true,
+            "highlights_hue": true,
+            "highlights_saturation": true,
+            "highlights_luminance": true,
+            "global_hue": true,
+            "global_saturation": true,
+            "global_luminance": true,
+            "blending": true,
+            "balance": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        200,
+        25,
+        0,
+        0,
+        0,
+        0,
+        40,
+        20,
+        0,
+        0,
+        0,
+        0,
+        50,
+        0
+      ],
+      "widgets_values_named": {
+        "shadows_hue": 200,
+        "shadows_saturation": 25,
+        "shadows_luminance": 0,
+        "midtones_hue": 0,
+        "midtones_saturation": 0,
+        "midtones_luminance": 0,
+        "highlights_hue": 40,
+        "highlights_saturation": 20,
+        "highlights_luminance": 0,
+        "global_hue": 0,
+        "global_saturation": 0,
+        "global_luminance": 0,
+        "blending": 50,
+        "balance": 0
+      }
+    },
+    {
+      "id": 10,
+      "type": "WASImageFilmStock",
+      "pos": [
+        1220,
+        1146
+      ],
+      "size": [
+        300,
+        406
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 8
+        },
+        {
+          "localized_name": "stock",
+          "name": "stock",
+          "type": "COMBO",
+          "widget": {
+            "name": "stock"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength",
+          "name": "strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "exposure",
+          "name": "exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "grain",
+          "name": "grain",
+          "type": "FLOAT",
+          "widget": {
+            "name": "grain"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "halation",
+          "name": "halation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "halation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageFilmStock",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "stock": true,
+            "strength": true,
+            "exposure": true,
+            "grain": true,
+            "halation": true,
+            "seed": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Color Negative: Kodak Portra 400",
+        1,
+        0,
+        0,
+        0,
+        0,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "stock": "Color Negative: Kodak Portra 400",
+        "strength": 1,
+        "exposure": 0,
+        "grain": 0,
+        "halation": 0,
+        "seed": 0,
+        "control_after_generate": "fixed"
+      }
+    },
+    {
+      "id": 11,
+      "type": "WASNSApplyLUT",
+      "pos": [
+        1600,
+        1146
+      ],
+      "size": [
+        270,
+        330
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 9
+        },
+        {
+          "localized_name": "lut",
+          "name": "lut",
+          "type": "LUT",
+          "link": 10
+        },
+        {
+          "localized_name": "strength",
+          "name": "strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "use_threads",
+          "name": "use_threads",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "use_threads"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "threads",
+          "name": "threads",
+          "type": "INT",
+          "widget": {
+            "name": "threads"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            12,
+            13,
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASNSApplyLUT",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "strength": true,
+            "use_threads": true,
+            "threads": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        1,
+        false,
+        0
+      ],
+      "widgets_values_named": {
+        "strength": 1,
+        "use_threads": false,
+        "threads": 0
+      }
+    },
+    {
+      "id": 12,
+      "type": "WASImageCompare",
+      "pos": [
+        1980,
+        1146
+      ],
+      "size": [
+        680,
+        500
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 11
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "pairs",
+          "name": "pairs",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageCompare",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "was_compare_images": {
+          "a": [
+            {
+              "filename": "03a903518c49d9321e800efa3c6f69fe.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 3072,
+              "height": 2304,
+              "mode": "RGB",
+              "bytes": 16311785,
+              "total": 1,
+              "workflow": "ad15f30f-9936-4076-8300-988ec8610e24"
+            }
+          ],
+          "b": [
+            {
+              "filename": "44aee1acddf5b03a5b5ba9ffa2408d57.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 3072,
+              "height": 2304,
+              "mode": "RGB",
+              "bytes": 16327962,
+              "total": 1,
+              "workflow": "ad15f30f-9936-4076-8300-988ec8610e24"
+            }
+          ]
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 13,
+      "type": "WASImageVectorscope",
+      "pos": [
+        40,
+        2316
+      ],
+      "size": [
+        300,
+        442
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 13
+        },
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "INT",
+          "widget": {
+            "name": "size"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "scope",
+          "name": "scope",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageVectorscope",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "size": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        512
+      ],
+      "widgets_values_named": {
+        "size": 512
+      }
+    },
+    {
+      "id": 14,
+      "type": "WASImageFalseColor",
+      "pos": [
+        420,
+        2316
+      ],
+      "size": [
+        300,
+        438
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageFalseColor",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      4,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      5,
+      0,
+      6,
+      0,
+      "LUT"
+    ],
+    [
+      6,
+      7,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      8,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      8,
+      9,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ],
+    [
+      9,
+      7,
+      0,
+      11,
+      0,
+      "IMAGE"
+    ],
+    [
+      10,
+      6,
+      0,
+      11,
+      1,
+      "LUT"
+    ],
+    [
+      11,
+      10,
+      0,
+      12,
+      0,
+      "IMAGE"
+    ],
+    [
+      12,
+      11,
+      0,
+      12,
+      1,
+      "IMAGE"
+    ],
+    [
+      13,
+      11,
+      0,
+      13,
+      0,
+      "IMAGE"
+    ],
+    [
+      14,
+      11,
+      0,
+      14,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Bake the look into a LUT",
+      "bounding": [
+        0,
+        0,
+        2290,
+        906
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "The same look on a photo: the chain beside its LUT",
+      "bounding": [
+        0,
+        1026,
+        2700,
+        906
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Scopes on the graded photo",
+      "bounding": [
+        0,
+        2196,
+        760,
+        632
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.95,
+      "offset": [
+        80,
+        -2202.315789473684
+      ]
+    }
+  },
+  "version": 0.4
+}

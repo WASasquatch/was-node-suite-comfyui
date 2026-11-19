@@ -1,0 +1,1480 @@
+{
+  "id": "7c1da666-8781-4f64-ad80-b1c72a2e6e4c",
+  "revision": 0,
+  "last_node_id": 9,
+  "last_link_id": 11,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "WASLoadVideo",
+      "pos": [
+        40,
+        120
+      ],
+      "size": [
+        270,
+        602
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "path",
+          "name": "path",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "file",
+          "name": "file",
+          "type": "COMBO",
+          "widget": {
+            "name": "file"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "num_frames",
+          "name": "num_frames",
+          "type": "INT",
+          "widget": {
+            "name": "num_frames"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strategy",
+          "name": "strategy",
+          "type": "COMBO",
+          "widget": {
+            "name": "strategy"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "nth",
+          "name": "nth",
+          "type": "INT",
+          "widget": {
+            "name": "nth"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_fps",
+          "name": "target_fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "target_fps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "resize_mode",
+          "name": "resize_mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "resize_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start",
+          "name": "start",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "end",
+          "name": "end",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "end"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_size",
+          "name": "max_size",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "max_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "interpolation",
+          "name": "interpolation",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "interpolation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "align",
+          "name": "align",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "align"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pad_color",
+          "name": "pad_color",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "pad_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "channels",
+          "name": "channels",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "channels"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "video",
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            7,
+            9
+          ]
+        },
+        {
+          "localized_name": "metadata",
+          "name": "metadata",
+          "type": "WAS_VIDEO_METADATA",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLoadVideo",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "file": true,
+            "num_frames": true,
+            "strategy": true,
+            "nth": true,
+            "seed": true,
+            "target_fps": true,
+            "resize_mode": true,
+            "width": true,
+            "height": true,
+            "start": true,
+            "end": true,
+            "max_size": true,
+            "interpolation": true,
+            "align": true,
+            "pad_color": true,
+            "channels": true,
+            "upload": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "vid_00004-audio.mp4 [input]",
+        0,
+        "uniform",
+        1,
+        0,
+        "fixed",
+        0,
+        "fill and crop",
+        1280,
+        720,
+        0,
+        95,
+        0,
+        "lanczos",
+        "middle center",
+        "#000000",
+        "RGB",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "vid_00004-audio.mp4 [input]",
+        "num_frames": 0,
+        "strategy": "uniform",
+        "nth": 1,
+        "seed": 0,
+        "control_after_generate": "fixed",
+        "target_fps": 0,
+        "resize_mode": "fill and crop",
+        "width": 1280,
+        "height": 720,
+        "start": 0,
+        "end": 95,
+        "max_size": 0,
+        "interpolation": "lanczos",
+        "align": "middle center",
+        "pad_color": "#000000",
+        "channels": "RGB",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "WASImageColorSpace",
+      "pos": [
+        435,
+        120
+      ],
+      "size": [
+        300,
+        364
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "source_color_space",
+          "name": "source_color_space",
+          "type": "COMBO",
+          "widget": {
+            "name": "source_color_space"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_gamma",
+          "name": "source_gamma",
+          "type": "COMBO",
+          "widget": {
+            "name": "source_gamma"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_color_space",
+          "name": "target_color_space",
+          "type": "COMBO",
+          "widget": {
+            "name": "target_color_space"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_gamma",
+          "name": "target_gamma",
+          "type": "COMBO",
+          "widget": {
+            "name": "target_gamma"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "chromatic_adaptation",
+          "name": "chromatic_adaptation",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "chromatic_adaptation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_levels",
+          "name": "source_levels",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "source_levels"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_levels",
+          "name": "target_levels",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "target_levels"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hdr_reference_white",
+          "name": "hdr_reference_white",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "hdr_reference_white"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            2,
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageColorSpace",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "source_color_space": true,
+            "source_gamma": true,
+            "target_color_space": true,
+            "target_gamma": true,
+            "chromatic_adaptation": true,
+            "source_levels": true,
+            "target_levels": true,
+            "hdr_reference_white": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Rec.709 / sRGB",
+        "sRGB",
+        "Sony S-Gamut3.Cine",
+        "Sony S-Log3",
+        "Bradford",
+        "full",
+        "full",
+        203
+      ],
+      "widgets_values_named": {
+        "source_color_space": "Rec.709 / sRGB",
+        "source_gamma": "sRGB",
+        "target_color_space": "Sony S-Gamut3.Cine",
+        "target_gamma": "Sony S-Log3",
+        "chromatic_adaptation": "Bradford",
+        "source_levels": "full",
+        "target_levels": "full",
+        "hdr_reference_white": 203
+      }
+    },
+    {
+      "id": 3,
+      "type": "CreateVideo",
+      "pos": [
+        1195,
+        120
+      ],
+      "size": [
+        270,
+        174
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bit_depth",
+          "name": "bit_depth",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "bit_depth"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color_space",
+          "name": "color_space",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "color_space"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "chroma_subsampling",
+          "name": "chroma_subsampling",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "chroma_subsampling"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "codec",
+          "name": "codec",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "codec"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "VIDEO",
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "fps": true,
+            "bit_depth": true,
+            "color_space": true,
+            "chroma_subsampling": true,
+            "codec": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        24,
+        "auto",
+        "sRGB",
+        "auto",
+        "none"
+      ],
+      "widgets_values_named": {
+        "fps": 24,
+        "bit_depth": "auto",
+        "color_space": "sRGB",
+        "chroma_subsampling": "auto",
+        "codec": "none"
+      }
+    },
+    {
+      "id": 4,
+      "type": "WASImageColorSpace",
+      "pos": [
+        40,
+        1032
+      ],
+      "size": [
+        300,
+        364
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "localized_name": "source_color_space",
+          "name": "source_color_space",
+          "type": "COMBO",
+          "widget": {
+            "name": "source_color_space"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_gamma",
+          "name": "source_gamma",
+          "type": "COMBO",
+          "widget": {
+            "name": "source_gamma"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_color_space",
+          "name": "target_color_space",
+          "type": "COMBO",
+          "widget": {
+            "name": "target_color_space"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_gamma",
+          "name": "target_gamma",
+          "type": "COMBO",
+          "widget": {
+            "name": "target_gamma"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "chromatic_adaptation",
+          "name": "chromatic_adaptation",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "chromatic_adaptation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "source_levels",
+          "name": "source_levels",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "source_levels"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_levels",
+          "name": "target_levels",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "target_levels"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hdr_reference_white",
+          "name": "hdr_reference_white",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "hdr_reference_white"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            4,
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageColorSpace",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "source_color_space": true,
+            "source_gamma": true,
+            "target_color_space": true,
+            "target_gamma": true,
+            "chromatic_adaptation": true,
+            "source_levels": true,
+            "target_levels": true,
+            "hdr_reference_white": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Sony S-Gamut3.Cine",
+        "Sony S-Log3",
+        "ACEScg (AP1)",
+        "Linear",
+        "Bradford",
+        "full",
+        "full",
+        203
+      ],
+      "widgets_values_named": {
+        "source_color_space": "Sony S-Gamut3.Cine",
+        "source_gamma": "Sony S-Log3",
+        "target_color_space": "ACEScg (AP1)",
+        "target_gamma": "Linear",
+        "chromatic_adaptation": "Bradford",
+        "source_levels": "full",
+        "target_levels": "full",
+        "hdr_reference_white": 203
+      }
+    },
+    {
+      "id": 5,
+      "type": "WASImageACESOutput",
+      "pos": [
+        435,
+        1032
+      ],
+      "size": [
+        300,
+        310
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "localized_name": "source",
+          "name": "source",
+          "type": "COMBO",
+          "widget": {
+            "name": "source"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "preset",
+          "name": "preset",
+          "type": "COMBO",
+          "widget": {
+            "name": "preset"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "white",
+          "name": "white",
+          "type": "COMBO",
+          "widget": {
+            "name": "white"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageACESOutput",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "source": true,
+            "preset": true,
+            "white": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "ACEScg",
+        "SDR 100 nit sRGB",
+        "D65"
+      ],
+      "widgets_values_named": {
+        "source": "ACEScg",
+        "preset": "SDR 100 nit sRGB",
+        "white": "D65"
+      }
+    },
+    {
+      "id": 6,
+      "type": "WASImageACESOutput",
+      "pos": [
+        435,
+        1462
+      ],
+      "size": [
+        300,
+        310
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 5
+        },
+        {
+          "localized_name": "source",
+          "name": "source",
+          "type": "COMBO",
+          "widget": {
+            "name": "source"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "preset",
+          "name": "preset",
+          "type": "COMBO",
+          "widget": {
+            "name": "preset"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "white",
+          "name": "white",
+          "type": "COMBO",
+          "widget": {
+            "name": "white"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageACESOutput",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "source": true,
+            "preset": true,
+            "white": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "ACEScg",
+        "HDR 1000 nit Rec.2100 PQ, P3 limited",
+        "D65"
+      ],
+      "widgets_values_named": {
+        "source": "ACEScg",
+        "preset": "HDR 1000 nit Rec.2100 PQ, P3 limited",
+        "white": "D65"
+      }
+    },
+    {
+      "id": 7,
+      "type": "WASSaveVideo",
+      "pos": [
+        40,
+        2082
+      ],
+      "size": [
+        315,
+        568
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 6
+        },
+        {
+          "localized_name": "video",
+          "name": "video",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        },
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 7
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "root",
+          "name": "root",
+          "type": "COMBO",
+          "widget": {
+            "name": "root"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_delimiter",
+          "name": "filename_delimiter",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_delimiter"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_number_padding",
+          "name": "filename_number_padding",
+          "type": "INT",
+          "widget": {
+            "name": "filename_number_padding"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "container",
+          "name": "container",
+          "type": "COMBO",
+          "widget": {
+            "name": "container"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "codec",
+          "name": "codec",
+          "type": "COMBO",
+          "widget": {
+            "name": "codec"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "crf",
+          "name": "crf",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "crf"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overwrite",
+          "name": "overwrite",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "overwrite"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color_space",
+          "name": "color_space",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "color_space"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dither",
+          "name": "dither",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "dither"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "video",
+          "name": "video",
+          "type": "VIDEO",
+          "links": [
+            11
+          ]
+        },
+        {
+          "localized_name": "file_path",
+          "name": "file_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "filename",
+          "name": "filename",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASSaveVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "fps": true,
+            "root": true,
+            "filename_prefix": true,
+            "filename_delimiter": true,
+            "filename_number_padding": true,
+            "container": true,
+            "codec": true,
+            "crf": true,
+            "overwrite": true,
+            "color_space": true,
+            "dither": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        24,
+        "output",
+        "was_demo/aces_sdr",
+        "_",
+        4,
+        "mp4",
+        "ComfyUI H264",
+        0,
+        false,
+        "SDR sRGB",
+        false
+      ],
+      "widgets_values_named": {
+        "fps": 24,
+        "root": "output",
+        "filename_prefix": "was_demo/aces_sdr",
+        "filename_delimiter": "_",
+        "filename_number_padding": 4,
+        "container": "mp4",
+        "codec": "ComfyUI H264",
+        "crf": 0,
+        "overwrite": false,
+        "color_space": "SDR sRGB",
+        "dither": false
+      }
+    },
+    {
+      "id": 8,
+      "type": "WASSaveVideo",
+      "pos": [
+        40,
+        2770
+      ],
+      "size": [
+        315,
+        568
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 8
+        },
+        {
+          "localized_name": "video",
+          "name": "video",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        },
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 9
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "root",
+          "name": "root",
+          "type": "COMBO",
+          "widget": {
+            "name": "root"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_delimiter",
+          "name": "filename_delimiter",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_delimiter"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_number_padding",
+          "name": "filename_number_padding",
+          "type": "INT",
+          "widget": {
+            "name": "filename_number_padding"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "container",
+          "name": "container",
+          "type": "COMBO",
+          "widget": {
+            "name": "container"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "codec",
+          "name": "codec",
+          "type": "COMBO",
+          "widget": {
+            "name": "codec"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "crf",
+          "name": "crf",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "crf"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overwrite",
+          "name": "overwrite",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "overwrite"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color_space",
+          "name": "color_space",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "color_space"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dither",
+          "name": "dither",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "dither"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "video",
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "localized_name": "file_path",
+          "name": "file_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "filename",
+          "name": "filename",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASSaveVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "fps": true,
+            "root": true,
+            "filename_prefix": true,
+            "filename_delimiter": true,
+            "filename_number_padding": true,
+            "container": true,
+            "codec": true,
+            "crf": true,
+            "overwrite": true,
+            "color_space": true,
+            "dither": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        24,
+        "output",
+        "was_demo/aces_hdr10",
+        "_",
+        4,
+        "mp4",
+        "H265",
+        18,
+        false,
+        "Rec.2100 PQ (HDR10)",
+        false
+      ],
+      "widgets_values_named": {
+        "fps": 24,
+        "root": "output",
+        "filename_prefix": "was_demo/aces_hdr10",
+        "filename_delimiter": "_",
+        "filename_number_padding": 4,
+        "container": "mp4",
+        "codec": "H265",
+        "crf": 18,
+        "overwrite": false,
+        "color_space": "Rec.2100 PQ (HDR10)",
+        "dither": false
+      }
+    },
+    {
+      "id": 9,
+      "type": "WASVideoCompare",
+      "pos": [
+        435,
+        2330
+      ],
+      "size": [
+        680,
+        480
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "video_a",
+          "name": "video_a",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": 10
+        },
+        {
+          "localized_name": "video_b",
+          "name": "video_b",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": 11
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "WASVideoCompare",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "was_compare_sides": {
+          "a": {
+            "filename": "765c79844198b2b0120702559d33f85d.mp4",
+            "subfolder": "",
+            "type": "was_compare",
+            "workflow": "381bf825-ac55-4fe8-ab93-2a94535059df"
+          },
+          "b": {
+            "filename": "70fc4eadcee9d3476c8dba20a505c238.mp4",
+            "subfolder": "",
+            "type": "was_compare",
+            "workflow": "381bf825-ac55-4fe8-ab93-2a94535059df"
+          }
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      1,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      2,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      4,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      4,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      5,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      1,
+      2,
+      7,
+      2,
+      "AUDIO"
+    ],
+    [
+      8,
+      6,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      9,
+      1,
+      2,
+      8,
+      2,
+      "AUDIO"
+    ],
+    [
+      10,
+      3,
+      0,
+      9,
+      0,
+      "VIDEO"
+    ],
+    [
+      11,
+      7,
+      0,
+      9,
+      1,
+      "VIDEO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "A clip recorded in camera log",
+      "bounding": [
+        0,
+        0,
+        1505,
+        792
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Log to ACEScg, then ACES 2.0 to each display",
+      "bounding": [
+        0,
+        912,
+        775,
+        930
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "SDR and HDR10 masters",
+      "bounding": [
+        0,
+        1962,
+        1155,
+        1446
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.4425149700598802,
+      "offset": [
+        1426.4133964817322,
+        225.9810554803789
+      ]
+    }
+  },
+  "version": 0.4
+}

@@ -17,6 +17,9 @@ const NODES = [
   "WASVideoMotion",
   "WASVideoMotionBlur",
   "WASVideoTemporalConsistency",
+  "WASVideoDenoise",
+  "WASVideoRemoveDust",
+  "WASVideoRemoveObject",
   "WASVideoTemporalUpscale",
   "WASVideoStabilize",
   "WASVideoMotionMask",
@@ -26,6 +29,8 @@ const NODES = [
   "WASVideoRetime",
   "WASVideoSeamlessLoop",
   "WASVideoReframe",
+  "WASVideoTrackCrop",
+  "WASVideoTrackPaste",
   "WASH3UpscaleVideo",
 ];
 

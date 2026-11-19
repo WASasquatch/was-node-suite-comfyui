@@ -37,10 +37,12 @@ runs.
 | [Liberation](https://github.com/liberationfonts/liberation-fonts) 2.1.5 | SIL Open Font License 1.1, Red Hat, Inc., with digitized data copyright Google Corporation | Four faces metric-compatible with Arial, Times New Roman and Courier New, in [`modules/data/fonts/liberation/`](../modules/data/fonts/liberation/) | [`liberation/LICENSE`](../modules/data/fonts/liberation/LICENSE), [`AUTHORS`](../modules/data/fonts/liberation/AUTHORS) |
 | [Aileron](https://www.dotcolon.net/font/aileron) 1.102 | CC0 1.0, public domain, Sora Sagano (dot colon) | The first font **Text Encode Fibo 2** draws a caption's text with where Pillow's built-in font lacks a character, as Fibo 2.0's training did, in [`modules/data/fibo2/`](../modules/data/fibo2/) | [`LICENSE-Aileron.txt`](../modules/data/fibo2/LICENSE-Aileron.txt) |
 | [DejaVu Sans](https://github.com/dejavu-fonts/dejavu-fonts), Bria's copy | Bitstream Vera and Arev, Bitstream Inc. and Tavmjong Bah, with the DejaVu changes in the public domain | The second font it draws with, the file Bria publishes beside Fibo 2.0, in [`modules/data/fibo2/`](../modules/data/fibo2/) | [`LICENSE-DejaVu.txt`](../modules/data/fibo2/LICENSE-DejaVu.txt) |
+| [ACES Output Transforms](https://github.com/aces-aswf/aces-output) 2.0 | Apache-2.0, Contributors to the ACES Project | The ACES 2.0 Output Transform **Image ACES Output** renders with, ported from the Academy's reference into [`modules/image/aces_output.py`](../modules/image/aces_output.py) | [`LICENSE.aces`](../modules/image/LICENSE.aces) |
+| [OpenColorIO](https://github.com/AcademySoftwareFoundation/OpenColorIO) 2.6.0 | BSD-3-Clause, Contributors to the OpenColorIO Project | Its ACES 2.0 building blocks, which the same port follows where they match the reference | [`LICENSE.opencolorio`](../modules/image/LICENSE.opencolorio) |
 
 Fifteen of the components are MIT in their own code, and two of those compile in a copy of
-DOMPurify, which is dual licensed `MPL-2.0 OR Apache-2.0`. Of the rest, four are Apache-2.0, one
-is BSD-3-Clause, one is zlib, two are under the SIL Open Font License, two are Bitstream Vera with Arev, one
+DOMPurify, which is dual licensed `MPL-2.0 OR Apache-2.0`. Of the rest, five are Apache-2.0, two
+are BSD-3-Clause, one is zlib, two are under the SIL Open Font License, two are Bitstream Vera with Arev, one
 is public domain under CC0, and one is Open RAIL++-M.
 All of those permit redistribution. MPL-2.0 is the only copyleft licence here and its conditions
 are file level, reaching the two files DOMPurify is compiled into and nothing beside them;

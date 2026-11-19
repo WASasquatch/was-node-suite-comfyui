@@ -1,0 +1,686 @@
+{
+  "id": "6fd2ce70-10ed-5e0c-ae1f-d955908e1dd3",
+  "revision": 0,
+  "last_node_id": 1,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "58218b59-c828-5ed0-9936-8e2a1479fb57",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        320,
+        138
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "amount",
+          "type": "FLOAT",
+          "widget": {
+            "name": "amount"
+          },
+          "link": null
+        },
+        {
+          "name": "grain",
+          "type": "FLOAT",
+          "widget": {
+            "name": "grain"
+          },
+          "link": null
+        },
+        {
+          "name": "vignette",
+          "type": "FLOAT",
+          "widget": {
+            "name": "vignette"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "title": "Kodachrome Classic",
+      "properties": {
+        "proxyWidgets": [
+          [
+            "-1",
+            "amount"
+          ],
+          [
+            "-1",
+            "grain"
+          ],
+          [
+            "-1",
+            "vignette"
+          ]
+        ]
+      },
+      "widgets_values": [
+        1.0,
+        1.0,
+        0.25
+      ]
+    }
+  ],
+  "links": [],
+  "version": 0.4,
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "58218b59-c828-5ed0-9936-8e2a1479fb57",
+        "version": 1,
+        "state": {
+          "lastGroupId": 0,
+          "lastNodeId": 4,
+          "lastLinkId": 9,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Kodachrome Classic",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -240,
+            -20,
+            140,
+            120
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            1480,
+            -20,
+            120,
+            60
+          ]
+        },
+        "inputs": [
+          {
+            "id": "63d4bd40-5215-5de8-b15e-b810b9f2adc7",
+            "name": "images",
+            "type": "IMAGE",
+            "linkIds": [
+              1,
+              4
+            ],
+            "pos": [
+              -160,
+              20
+            ]
+          },
+          {
+            "id": "52be11fb-74e8-584e-9bc4-66fcbfbec691",
+            "name": "amount",
+            "type": "FLOAT",
+            "linkIds": [
+              7
+            ],
+            "pos": [
+              -160,
+              40
+            ]
+          },
+          {
+            "id": "8a9028f1-5d49-50b7-8c35-974767319be8",
+            "name": "grain",
+            "type": "FLOAT",
+            "linkIds": [
+              8
+            ],
+            "pos": [
+              -160,
+              60
+            ]
+          },
+          {
+            "id": "26723a30-b25c-569e-98c2-1c664d27e5b7",
+            "name": "vignette",
+            "type": "FLOAT",
+            "linkIds": [
+              9
+            ],
+            "pos": [
+              -160,
+              80
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "74965c22-4455-595a-a18c-335afc75c49e",
+            "name": "images",
+            "type": "IMAGE",
+            "linkIds": [
+              6
+            ],
+            "pos": [
+              1500,
+              20
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 1,
+            "type": "WASImageFilmStock",
+            "pos": [
+              0,
+              0
+            ],
+            "size": [
+              300,
+              202
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 1
+              },
+              {
+                "name": "stock",
+                "localized_name": "stock",
+                "type": "COMBO",
+                "widget": {
+                  "name": "stock"
+                },
+                "link": null
+              },
+              {
+                "name": "strength",
+                "localized_name": "strength",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "strength"
+                },
+                "link": null
+              },
+              {
+                "name": "exposure",
+                "localized_name": "exposure",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "exposure"
+                },
+                "link": null
+              },
+              {
+                "name": "grain",
+                "localized_name": "grain",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "grain"
+                },
+                "link": 8
+              },
+              {
+                "name": "halation",
+                "localized_name": "halation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "halation"
+                },
+                "link": null
+              },
+              {
+                "name": "seed",
+                "localized_name": "seed",
+                "type": "INT",
+                "widget": {
+                  "name": "seed"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  2
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageFilmStock"
+            },
+            "widgets_values": [
+              "Slide: Kodachrome 64",
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              0,
+              "fixed"
+            ]
+          },
+          {
+            "id": 2,
+            "type": "WASImageDevelop",
+            "pos": [
+              380,
+              0
+            ],
+            "size": [
+              300,
+              346
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 2
+              },
+              {
+                "name": "temperature",
+                "localized_name": "temperature",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "temperature"
+                },
+                "link": null
+              },
+              {
+                "name": "tint",
+                "localized_name": "tint",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "tint"
+                },
+                "link": null
+              },
+              {
+                "name": "exposure",
+                "localized_name": "exposure",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "exposure"
+                },
+                "link": null
+              },
+              {
+                "name": "contrast",
+                "localized_name": "contrast",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "contrast"
+                },
+                "link": null
+              },
+              {
+                "name": "highlights",
+                "localized_name": "highlights",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "highlights"
+                },
+                "link": null
+              },
+              {
+                "name": "shadows",
+                "localized_name": "shadows",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "shadows"
+                },
+                "link": null
+              },
+              {
+                "name": "whites",
+                "localized_name": "whites",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "whites"
+                },
+                "link": null
+              },
+              {
+                "name": "blacks",
+                "localized_name": "blacks",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "blacks"
+                },
+                "link": null
+              },
+              {
+                "name": "texture",
+                "localized_name": "texture",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "texture"
+                },
+                "link": null
+              },
+              {
+                "name": "clarity",
+                "localized_name": "clarity",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "clarity"
+                },
+                "link": null
+              },
+              {
+                "name": "dehaze",
+                "localized_name": "dehaze",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "dehaze"
+                },
+                "link": null
+              },
+              {
+                "name": "vibrance",
+                "localized_name": "vibrance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "vibrance"
+                },
+                "link": null
+              },
+              {
+                "name": "saturation",
+                "localized_name": "saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "saturation"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  3
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageDevelop"
+            },
+            "widgets_values": [
+              0.0,
+              0.0,
+              0.0,
+              5,
+              0.0,
+              10,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "id": 3,
+            "type": "WASImageVignette",
+            "pos": [
+              760,
+              0
+            ],
+            "size": [
+              270,
+              382
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 3
+              },
+              {
+                "name": "amount",
+                "localized_name": "amount",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "amount"
+                },
+                "link": 9
+              },
+              {
+                "name": "size",
+                "localized_name": "size",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "size"
+                },
+                "link": null
+              },
+              {
+                "name": "feather",
+                "localized_name": "feather",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "feather"
+                },
+                "link": null
+              },
+              {
+                "name": "shape",
+                "localized_name": "shape",
+                "type": "COMBO",
+                "widget": {
+                  "name": "shape"
+                },
+                "link": null
+              },
+              {
+                "name": "centre_x",
+                "localized_name": "centre_x",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "centre_x"
+                },
+                "link": null
+              },
+              {
+                "name": "centre_y",
+                "localized_name": "centre_y",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "centre_y"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  5
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageVignette"
+            },
+            "widgets_values": [
+              0.25,
+              0.75,
+              0.5,
+              "to the frame",
+              0.5,
+              0.5
+            ]
+          },
+          {
+            "id": 4,
+            "type": "Image Blend",
+            "pos": [
+              1110,
+              0
+            ],
+            "size": [
+              270,
+              282
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "image_a",
+                "localized_name": "image_a",
+                "type": "IMAGE",
+                "link": 4
+              },
+              {
+                "name": "image_b",
+                "localized_name": "image_b",
+                "type": "IMAGE",
+                "link": 5
+              },
+              {
+                "name": "blend_percentage",
+                "localized_name": "blend_percentage",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "blend_percentage"
+                },
+                "link": 7
+              }
+            ],
+            "outputs": [
+              {
+                "name": "image",
+                "localized_name": "image",
+                "type": "IMAGE",
+                "links": [
+                  6
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Image Blend"
+            },
+            "widgets_values": [
+              1.0
+            ]
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 1,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 1,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 2,
+            "origin_id": 1,
+            "origin_slot": 0,
+            "target_id": 2,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 3,
+            "origin_id": 2,
+            "origin_slot": 0,
+            "target_id": 3,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 4,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 4,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 5,
+            "origin_id": 3,
+            "origin_slot": 0,
+            "target_id": 4,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 6,
+            "origin_id": 4,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 7,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 4,
+            "target_slot": 2,
+            "type": "FLOAT"
+          },
+          {
+            "id": 8,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 1,
+            "target_slot": 4,
+            "type": "FLOAT"
+          },
+          {
+            "id": 9,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 3,
+            "target_slot": 1,
+            "type": "FLOAT"
+          }
+        ],
+        "extra": {},
+        "category": "WAS Suite/Image/Looks",
+        "description": "Rich reds, deep shadows and cyan skies on a warm slide film, with a slight vignette."
+      }
+    ]
+  },
+  "extra": {}
+}

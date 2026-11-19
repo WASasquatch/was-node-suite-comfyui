@@ -34,6 +34,13 @@ def codecs() -> list[str]:
     return [*COMFY_CODECS, *video.codec_options()]
 
 
+def color_spaces() -> list[str]:
+    """Colour options the widget offers, the default first."""
+    from ...modules.media import video
+
+    return list(video.COLOR_SPACES)
+
+
 class SaveVideo(io.ComfyNode):
     """Write a video from frames and sound, or from a video, under a numbered name."""
 
@@ -149,8 +156,8 @@ class SaveVideo(io.ComfyNode):
                     step=0.5,
                     optional=True,
                     tooltip=(
-                        "Quality, lower is better and larger. 0 leaves the encoder's default; "
-                        "18 is near-lossless, 23 typical, 28 small."
+                        "Quality for H.264, H.265, AV1 and VP9, lower is better and larger. 0 "
+                        "leaves the encoder's default; 18 is near-lossless, 23 typical, 28 small."
                     ),
                 ),
                 io.Boolean.Input(
@@ -160,6 +167,29 @@ class SaveVideo(io.ComfyNode):
                     tooltip=(
                         "Write prefix.mp4 every run instead of a new number, so the file is "
                         "replaced rather than added to."
+                    ),
+                ),
+                io.Combo.Input(
+                    "color_space",
+                    options=color_spaces(),
+                    default="SDR sRGB",
+                    optional=True,
+                    tooltip=(
+                        "Tags only, no conversion. SDR sRGB = ordinary pictures; Rec.709 "
+                        "(BT.1886) = gamma 2.4 codes; Display P3 = P3, sRGB curve; PQ (HDR10) "
+                        "and HLG = Rec.2020 codes from Image Color Space, written 10-bit by "
+                        "H265, PRORES or AV01."
+                    ),
+                ),
+                io.Boolean.Input(
+                    "dither",
+                    default=False,
+                    optional=True,
+                    tooltip=(
+                        "false = plain rounding; true = an ordered dither, so slow gradients "
+                        "such as skies band less while pure black and white stay exact. "
+                        "Strongest on FFV1, weakest on H.264 at crf 18 to 23. Read by the "
+                        "pack's 8-bit codecs only."
                     ),
                 ),
             ],
@@ -185,6 +215,7 @@ class SaveVideo(io.ComfyNode):
         cls, images=None, video=None, audio=None, fps=24.0, root=rooted.DEFAULT,
         filename_prefix="ComfyUI", filename_delimiter="_", filename_number_padding=4,
         container="mp4", codec="ComfyUI H264", crf=0.0, overwrite=False,
+        color_space="SDR sRGB", dither=False,
     ) -> io.NodeOutput:
         """Write the file and answer where it went.
 
@@ -201,25 +232,44 @@ class SaveVideo(io.ComfyNode):
             codec: Video codec.
             crf: Quality, 0 for the encoder's default.
             overwrite: Reuse one name rather than numbering.
+            color_space: What the frames are, written as the stream's colour tags.
+            dither: Dither the 8-bit quantisation.
 
         Returns:
             The video, the full path and the file name.
 
         Raises:
-            ValueError: Neither images nor a video was connected.
+            ValueError: Neither images nor a video was connected, the colour option is
+                unknown, or it or the dither needs one of the pack's codecs.
         """
         import folder_paths
         from comfy_api.latest._util.video_types import VideoCodec, VideoContainer
 
         from ...modules.media import reader
+        from ...modules.media import video as encoding
 
         if video is None and images is None:
             raise ValueError(
                 "Save Video has nothing to write. Connect images, or a video, or both."
             )
+        color_space = color_space or encoding.SDR_SRGB
+        if color_space not in encoding.COLOR_SPACES:
+            raise ValueError(
+                f"Save Video color_space must be one of {', '.join(encoding.COLOR_SPACES)}, "
+                f"not {color_space!r}."
+            )
+        through_comfy = codec in COMFY_CODECS
+        if through_comfy and (color_space != encoding.SDR_SRGB or dither):
+            wanted = "dither" if color_space == encoding.SDR_SRGB else f"color_space {color_space!r}"
+            deep = "H265, HEVC, PRORES or AV01" if encoding.COLOR_TAGS[color_space].bits >= 10 \
+                else "AVC1, H264 or H265"
+            raise ValueError(
+                f"Save Video's {wanted} is written by the pack's own codecs, and {codec} hands "
+                f"the file to ComfyUI's writer, which always writes SDR sRGB without dither. "
+                f"Pick {deep} as the codec."
+            )
 
         written = video if video is not None else reader.to_video(images, float(fps), audio)
-        through_comfy = codec in COMFY_CODECS
 
         below, _, leaf = (filename_prefix or "").replace("\\", "/").rpartition("/")
         destination = rooted.destination(root, below)
@@ -229,8 +279,6 @@ class SaveVideo(io.ComfyNode):
         if through_comfy:
             extension = VideoContainer.get_extension(container) or "mp4"
         else:
-            from ...modules.media import video as encoding
-
             extension = encoding.container_extensions()[codec.lower()].lstrip(".")
 
         name = next_name(
@@ -259,7 +307,10 @@ class SaveVideo(io.ComfyNode):
                 else:
                     parts = written.get_components()
                     frames, sound = parts.images, (sound if sound is not None else parts.audio)
-            encoding.write_frames(str(target), frames, rate, codec, audio=sound)
+            encoding.write_frames(
+                str(target), frames, rate, codec, audio=sound, color=color_space,
+                crf=float(crf or 0.0), dither=bool(dither),
+            )
             if images is None and hasattr(written, "saved"):
                 written.saved()
         logger.info("wrote %s", target)

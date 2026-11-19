@@ -7,6 +7,7 @@
 
 import { app } from "../../scripts/app.js";
 import { createBeforeAfterPanel } from "./interface/before_after.js";
+import { createGradeWheels } from "./interface/grade_wheels.js";
 import { createHueDial } from "./interface/hue_dial.js";
 import { appendInterfaceWidget, chainWidgetCallback } from "./interface/widget.js";
 
@@ -25,6 +26,7 @@ const IMAGE_TYPE = "IMAGE";
 // control is drawn above the thumbnails, inside the one panel the node carries.
 const CONTROLS = {
   "Image Rotate Hue": node => createHueDial(node, { widgetName: "hue_shift" }),
+  WASImageColorGrade: node => createGradeWheels(node),
 };
 
 // Node id -> the CSS filter that stands for what the node does, read from its widgets. The
@@ -114,6 +116,19 @@ const NODES = [
   "WASImageToneMap",
   "WASImageVignette",
   "WASImageWhiteBalance",
+  "WASImageDevelop",
+  "WASImageColorMixer",
+  "WASImageColorGrade",
+  "WASImageNaturalFinish",
+  "WASImageFilmStock",
+  "WASImageHalation",
+  "WASImageDiffusionFilter",
+  "WASImageLightLeak",
+  "WASImageFilmDamage",
+  "WASImageDarkroomPrint",
+  "WASImageColorSpace",
+  "WASImageACESOutput",
+  "WASImagePortraitRetouch",
 ];
 
 /**
@@ -224,9 +239,10 @@ app.registerExtension({
       name: "Draw the control a node's band carries",
       tooltip:
         "Draw the control that belongs to the node above its before and after, where the node "
-        + "has one: a hue wheel on Image Rotate Hue. The wheel sets hue_shift by being "
-        + "dragged, and its two rings hold the hues as they arrive against where the turn "
-        + "sends them. The number widget stays and can be typed into either way. This applies "
+        + "has one: a hue wheel on Image Rotate Hue, and four colour grading wheels on Image "
+        + "Color Grading. The hue wheel sets hue_shift by being dragged; each grading wheel "
+        + "sets a hue and saturation by its puck and a luminance by the slider under it. The "
+        + "number widgets stay and can be typed into either way. This applies "
         + "to nodes added after the setting changes, so a reload shows it everywhere.",
       type: "boolean",
       defaultValue: true,

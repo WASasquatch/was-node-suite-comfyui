@@ -447,23 +447,22 @@ def synthesize_builtin_lut(name: str, size: int = 33) -> LUT:
 
 
 def _oriented(data: list, size: int) -> np.ndarray:
-    """Read a flat sample list as a cube, in the axis order closer to identity.
+    """Read a flat sample list as a cube, red fastest unless blue fastest is far closer to identity.
 
     Args:
         data: Sample triples in file order.
         size: Edge length of the cube.
 
     Returns:
-        A ``(size, size, size, 3)`` float32 array indexed ``[r, g, b]``.
+        A ``(size, size, size, 3)`` float32 array indexed ``[r, g, b]``. Blue fastest is
+        taken only where it lies at least twice as close to the identity cube.
     """
     written = np.asarray(data, dtype=np.float32).reshape(size, size, size, 3)
     identity = identity_cube(size).squeeze(0).cpu().numpy().astype(np.float32)
-    swapped = np.transpose(written, (2, 1, 0, 3))
-    # A LUT is a modest departure from the identity cube, which is what makes the distance
-    # from identity a usable test of the axis order.
-    error_written = float(np.mean((written - identity) ** 2))
-    error_swapped = float(np.mean((swapped - identity) ** 2))
-    return swapped if (error_swapped + 1e-12) < error_written else written
+    standard = np.transpose(written, (2, 1, 0, 3))
+    error_standard = float(np.mean((standard.astype(np.float64) - identity) ** 2))
+    error_blue_fastest = float(np.mean((written.astype(np.float64) - identity) ** 2))
+    return written if error_blue_fastest * 2.0 < error_standard else standard
 
 
 def load_cube(path: Path) -> LUT:
@@ -561,8 +560,8 @@ def load_cube(path: Path) -> LUT:
 def save_cube(path: Path, lut: LUT) -> None:
     """Write a 3D table as a ``.cube`` file.
 
-    Samples are written with the blue axis fastest, which is the order :func:`load_cube`
-    reads them back in.
+    Samples are written with the red axis fastest, then green, then blue, as the format
+    orders them.
 
     Args:
         path: File to write, replaced if it exists.
@@ -583,13 +582,10 @@ def save_cube(path: Path, lut: LUT) -> None:
         handle.write(f"LUT_3D_SIZE {edge}\n")
         handle.write(f"DOMAIN_MIN {low[0]:.6f} {low[1]:.6f} {low[2]:.6f}\n")
         handle.write(f"DOMAIN_MAX {high[0]:.6f} {high[1]:.6f} {high[2]:.6f}\n")
-        for red in range(edge):
-            for green in range(edge):
-                for blue in range(edge):
-                    sample = table[red, green, blue]
-                    handle.write(
-                        f"{float(sample[0]):.6f} {float(sample[1]):.6f} {float(sample[2]):.6f}\n"
-                    )
+        ordered = np.transpose(np.asarray(table, dtype=np.float64), (2, 1, 0, 3)).reshape(-1, 3)
+        handle.writelines(
+            f"{red:.6f} {green:.6f} {blue:.6f}\n" for red, green, blue in ordered.tolist()
+        )
 
 
 def _trilinear(table: torch.Tensor, coordinates: torch.Tensor) -> torch.Tensor:
@@ -677,20 +673,22 @@ def apply_lut_3d(
     """Grade an image through a 3D table.
 
     Args:
-        image: ``(batch, height, width, 3)`` tensor in ``[0, 1]``.
+        image: ``(batch, height, width, 3)`` tensor. Values outside the domain read the
+            table's edge.
         table: ``(size, size, size, 3)`` array indexed ``[r, g, b]``.
         domain_min: Per-channel input value mapping to the first sample.
         domain_max: Per-channel input value mapping to the last sample.
 
     Returns:
-        The graded image, in ``[0, 1]``, on the input's device and dtype.
+        The graded image on the input's device and dtype, holding whatever range the table
+        holds.
     """
     size = table.shape[0]
     cube = torch.from_numpy(table).to(image.device, dtype=image.dtype)
     low = torch.tensor(domain_min, device=image.device, dtype=image.dtype).view(1, 1, 1, 3)
     high = torch.tensor(domain_max, device=image.device, dtype=image.dtype).view(1, 1, 1, 3)
     normalized = ((image - low) / torch.clamp(high - low, min=1e-8)).clamp(0.0, 1.0)
-    return _trilinear(cube, normalized * (size - 1)).clamp(0.0, 1.0)
+    return _trilinear(cube, normalized * (size - 1))
 
 
 def save_directory() -> Path:

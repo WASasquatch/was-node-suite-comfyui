@@ -1,0 +1,731 @@
+{
+  "id": "56c94673-a6d6-42b1-9b5a-2c929fae119d",
+  "revision": 0,
+  "last_node_id": 5,
+  "last_link_id": 6,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        120
+      ],
+      "size": [
+        340,
+        440
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "image": true,
+            "upload": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "bluepixel_test_input.jpg",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "bluepixel_test_input.jpg",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "ImageScaleToTotalPixels",
+      "pos": [
+        460,
+        120
+      ],
+      "size": [
+        277,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "upscale_method",
+          "name": "upscale_method",
+          "type": "COMBO",
+          "widget": {
+            "name": "upscale_method"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "megapixels",
+          "name": "megapixels",
+          "type": "FLOAT",
+          "widget": {
+            "name": "megapixels"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "resolution_steps",
+          "name": "resolution_steps",
+          "type": "INT",
+          "widget": {
+            "name": "resolution_steps"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2,
+            3,
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScaleToTotalPixels",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "upscale_method": true,
+            "megapixels": true,
+            "resolution_steps": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "lanczos",
+        2,
+        1
+      ],
+      "widgets_values_named": {
+        "upscale_method": "lanczos",
+        "megapixels": 2,
+        "resolution_steps": 1
+      }
+    },
+    {
+      "id": 3,
+      "type": "WASPowerPreprocessor",
+      "pos": [
+        817,
+        120
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "preprocessor",
+          "name": "preprocessor",
+          "type": "COMBO",
+          "widget": {
+            "name": "preprocessor"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_name",
+          "name": "model_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "model_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "resolution",
+          "name": "resolution",
+          "type": "INT",
+          "widget": {
+            "name": "resolution"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "threshold_low",
+          "name": "threshold_low",
+          "type": "FLOAT",
+          "widget": {
+            "name": "threshold_low"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "threshold_high",
+          "name": "threshold_high",
+          "type": "FLOAT",
+          "widget": {
+            "name": "threshold_high"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "radius",
+          "name": "radius",
+          "type": "FLOAT",
+          "widget": {
+            "name": "radius"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength",
+          "name": "strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tile",
+          "name": "tile",
+          "type": "INT",
+          "widget": {
+            "name": "tile"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "adapter_name",
+          "name": "adapter_name",
+          "shape": 7,
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "adapter_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "vae_name",
+          "name": "vae_name",
+          "shape": 7,
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "vae_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "conditioning_name",
+          "name": "conditioning_name",
+          "shape": 7,
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "conditioning_name"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASPowerPreprocessor",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "preprocessor": true,
+            "model_name": true,
+            "resolution": true,
+            "threshold_low": true,
+            "threshold_high": true,
+            "radius": true,
+            "strength": true,
+            "seed": true,
+            "tile": true,
+            "steps": true,
+            "adapter_name": true,
+            "vae_name": true,
+            "conditioning_name": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "depth_map",
+        "Depth Anything V2 Large",
+        1024,
+        100,
+        200,
+        6,
+        16,
+        0,
+        "fixed",
+        0,
+        4,
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "preprocessor": "depth_map",
+        "model_name": "Depth Anything V2 Large",
+        "resolution": 1024,
+        "threshold_low": 100,
+        "threshold_high": 200,
+        "radius": 6,
+        "strength": 16,
+        "seed": 0,
+        "control_after_generate": "fixed",
+        "tile": 0,
+        "steps": 4,
+        "adapter_name": "auto",
+        "vae_name": "auto",
+        "conditioning_name": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "WASImageLensBlur",
+      "pos": [
+        1187,
+        120
+      ],
+      "size": [
+        300,
+        656
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "localized_name": "depth",
+          "name": "depth",
+          "type": "IMAGE,MASK",
+          "link": 4
+        },
+        {
+          "localized_name": "subject_mask",
+          "name": "subject_mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "localized_name": "near_is",
+          "name": "near_is",
+          "type": "COMBO",
+          "widget": {
+            "name": "near_is"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "focus_from",
+          "name": "focus_from",
+          "type": "COMBO",
+          "widget": {
+            "name": "focus_from"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "focus_depth",
+          "name": "focus_depth",
+          "type": "FLOAT",
+          "widget": {
+            "name": "focus_depth"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blur_amount",
+          "name": "blur_amount",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blur_amount"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "focus_range",
+          "name": "focus_range",
+          "type": "FLOAT",
+          "widget": {
+            "name": "focus_range"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "aperture",
+          "name": "aperture",
+          "type": "COMBO",
+          "widget": {
+            "name": "aperture"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blade_rotation",
+          "name": "blade_rotation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blade_rotation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlight_bloom",
+          "name": "highlight_bloom",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlight_bloom"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "focus_x",
+          "name": "focus_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "focus_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "focus_y",
+          "name": "focus_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "focus_y"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            6
+          ]
+        },
+        {
+          "localized_name": "focus_mask",
+          "name": "focus_mask",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageLensBlur",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "near_is": true,
+            "focus_from": true,
+            "focus_depth": true,
+            "blur_amount": true,
+            "focus_range": true,
+            "aperture": true,
+            "blade_rotation": true,
+            "highlight_bloom": true,
+            "focus_x": true,
+            "focus_y": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "bright",
+        "picked point",
+        0.5,
+        0.035,
+        0.1,
+        "6 blades",
+        0,
+        0.6,
+        0.53,
+        0.38
+      ],
+      "widgets_values_named": {
+        "near_is": "bright",
+        "focus_from": "picked point",
+        "focus_depth": 0.5,
+        "blur_amount": 0.035,
+        "focus_range": 0.1,
+        "aperture": "6 blades",
+        "blade_rotation": 0,
+        "highlight_bloom": 0.6,
+        "focus_x": 0.53,
+        "focus_y": 0.38
+      }
+    },
+    {
+      "id": 5,
+      "type": "WASImageCompare",
+      "pos": [
+        1567,
+        120
+      ],
+      "size": [
+        680,
+        500
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 5
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "pairs",
+          "name": "pairs",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageCompare",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "was_compare_images": {
+          "a": [
+            {
+              "filename": "997488e09a5a2fc481eb0b78ea9bdd49.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 1122,
+              "height": 1869,
+              "mode": "RGB",
+              "bytes": 3473275,
+              "total": 1,
+              "workflow": "12cbcec2-a028-4a68-bc1d-4e3c4ebfddf5"
+            }
+          ],
+          "b": [
+            {
+              "filename": "2b363c5a5dbfbb463879ccde58f6efec.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 1122,
+              "height": 1869,
+              "mode": "RGB",
+              "bytes": 2394447,
+              "total": 1,
+              "workflow": "12cbcec2-a028-4a68-bc1d-4e3c4ebfddf5"
+            }
+          ]
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      2,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      3,
+      0,
+      4,
+      1,
+      "IMAGE"
+    ],
+    [
+      5,
+      2,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      4,
+      0,
+      5,
+      1,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Picture and its depth",
+      "bounding": [
+        0,
+        0,
+        1067,
+        630
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Lens blur focused on her face",
+      "bounding": [
+        1147,
+        0,
+        1140,
+        846
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 2.2,
+      "offset": [
+        -1267,
+        -100
+      ]
+    }
+  },
+  "version": 0.4
+}

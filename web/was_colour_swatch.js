@@ -18,6 +18,8 @@ const COLOUR_WIDGETS = {
   "Hex to HSL": ["hex_color"],
   "Image Resize": ["pad_color"],
   WASDrawImageBounds: ["color"],
+  WASImageHalation: ["color"],
+  WASImageLightLeak: ["color"],
   WASImageDrawText: ["text_color", "stroke_color", "background_color"],
   WASNSImageTileExtract: ["border_color"],
   WASImageTileExtractGrid: ["border_color"],

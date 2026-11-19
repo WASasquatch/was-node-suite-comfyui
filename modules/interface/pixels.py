@@ -96,6 +96,19 @@ FAMILY = frozenset({
     "WASImageToneMap",
     "WASImageVignette",
     "WASImageWhiteBalance",
+    "WASImageDevelop",
+    "WASImageColorMixer",
+    "WASImageColorGrade",
+    "WASImageNaturalFinish",
+    "WASImageFilmStock",
+    "WASImageHalation",
+    "WASImageDiffusionFilter",
+    "WASImageLightLeak",
+    "WASImageFilmDamage",
+    "WASImageDarkroomPrint",
+    "WASImageColorSpace",
+    "WASImageACESOutput",
+    "WASImagePortraitRetouch",
 })
 
 

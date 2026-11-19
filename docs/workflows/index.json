@@ -1,0 +1,770 @@
+{
+  "sections": [
+    "Image generation and sampling",
+    "Image editing",
+    "Photo and film looks",
+    "Colour, HDR and scopes",
+    "Masks, regions and subjects",
+    "Filters, layers and preprocessors",
+    "MiniMax H3 video",
+    "Kandinsky 6 video",
+    "Video editing and restoration",
+    "3D and Three.js",
+    "Prompts and text",
+    "Language models and Llama-Index",
+    "Files, datasets and documents",
+    "Logic, loops and apps"
+  ],
+  "workflows": [
+    {
+      "file": "minimax-h3-image-sampler.json",
+      "section": "Image generation and sampling",
+      "title": "MiniMax H3 Image at 16 megapixels",
+      "description": "Text to image with MiniMax H3 Image through H3 Image Sampler, at 16 megapixels on a 24 GB card with H3 Low VRAM and Free Memory."
+    },
+    {
+      "file": "h3-image-blank-guidance.json",
+      "section": "Image generation and sampling",
+      "title": "MiniMax H3 Image with blank guidance",
+      "description": "One prompt at 16 MP three ways: plain, H3 Image Blank Guidance in blank mode for clean, photographic skin, and in subtraction mode for more detail, each compared with plain."
+    },
+    {
+      "file": "image_minimax_h3_image_t2i.json",
+      "section": "Image generation and sampling",
+      "title": "MiniMax H3 Image with a prompt enhancer",
+      "description": "MiniMax H3 Image text to image with a switchable prompt enhancer that expands a few words into a full caption and picks the aspect ratio, starting at 4 megapixels."
+    },
+    {
+      "file": "fibo2-generate-edit.json",
+      "section": "Image generation and sampling",
+      "title": "Fibo 2.0 generate and edit",
+      "description": "Generate Fibo 2 Prompt writes a structured caption, Fibo 2.0 Dev renders it, and Fibo 2.0 Edit Turbo changes a loaded picture from an instruction."
+    },
+    {
+      "file": "bluepixel-text-to-image.json",
+      "section": "Image generation and sampling",
+      "title": "BluePixel text to image",
+      "description": "BluePixel-Turbo renders a picture from a prompt with its own loaders and scheduler."
+    },
+    {
+      "file": "generate-refine-loop.json",
+      "section": "Image generation and sampling",
+      "title": "Generate, judge and retry",
+      "description": "Z-Image Turbo renders a prompt, a language model scores the result with Judge Images, and Revise Prompt rewrites the prompt from its notes until a picture passes or the tries run out."
+    },
+    {
+      "file": "affine-krea2.json",
+      "section": "Image generation and sampling",
+      "title": "Affine texture on Krea 2",
+      "description": "Krea 2 Turbo text to image with Custom Sampler Affine Advanced pushing texture into the latent as it forms, beside the plain render, with an optional language model prompt rewrite."
+    },
+    {
+      "file": "cns-klein9b.json",
+      "section": "Image generation and sampling",
+      "title": "Colored noise sampling on FLUX.2 klein 9B",
+      "description": "Three FLUX.2 klein 9B renders of one seed, euler_ancestral with and without CNS Model Patch and plain euler, compared side by side."
+    },
+    {
+      "file": "cns-krea2.json",
+      "section": "Image generation and sampling",
+      "title": "Colored noise sampling on Krea 2",
+      "description": "Three Krea 2 renders of one seed, euler_ancestral with and without CNS Model Patch and plain euler, compared side by side."
+    },
+    {
+      "file": "flux3-klein-distill-lora.json",
+      "section": "Image generation and sampling",
+      "title": "FLUX 3 Klein distilled on its base model",
+      "description": "The FLUX 3 Image Klein base model with a distillation LoRA and Flux 3 Flow Map Patch, sampled in 16 steps at CFG 1 and at CFG 2.5, compared."
+    },
+    {
+      "file": "flux3-klein-tiled-diffusion.json",
+      "section": "Image generation and sampling",
+      "title": "FLUX 3 Klein in tiles",
+      "description": "A FLUX 3 Image Klein frame larger than its native size, laid out whole and finished in tiles by Tiled Diffusion Model Patch, with Flow Shift and Shifted Tangent Scheduler, beside a plain render."
+    },
+    {
+      "file": "moss-image-high-res.json",
+      "section": "Image generation and sampling",
+      "title": "MOSS-Image at high resolution",
+      "description": "MOSS-Image past its native size with Model Block Restore against banding, RoPE Extension Patch and Tiled Diffusion Model Patch, compared with a plain render."
+    },
+    {
+      "file": "spectrum-and-adaptive-detail.json",
+      "section": "Image generation and sampling",
+      "title": "Spectrum Forecast and Adaptive Detail",
+      "description": "One prompt sampled four ways: plain, with Spectrum Forecast, with Adaptive Detail, and with both, each pair compared."
+    },
+    {
+      "file": "fast-samplers-and-savers.json",
+      "section": "Image generation and sampling",
+      "title": "Fast KSampler and fast savers",
+      "description": "An SDXL batch through Fast KSampler, saved by Image Save, quantized to 24 colours and written as an animated WebP by Fast Save Animated WEBP."
+    },
+    {
+      "file": "number-sequence-lora-schedule.json",
+      "section": "Image generation and sampling",
+      "title": "LoRA strength per step",
+      "description": "Number Sequence holds a LoRA back until the layout is set and Power LoRA Loader applies it step by step, beside the same LoRA at full strength from step 1."
+    },
+    {
+      "file": "power-lora-stack.json",
+      "section": "Image generation and sampling",
+      "title": "Power LoRA stack and merge",
+      "description": "Power LoRA Loader stacks two slider LoRAs, and Power LoRA Merger writes them into one new LoRA file, once from the stack and once from the model link."
+    },
+    {
+      "file": "image-edit-regions.json",
+      "section": "Image editing",
+      "title": "Edits picked on the picture",
+      "description": "Image Edit Regions finds things in a picture with SAM 3.1; each one clicked on the node is edited by MiniMax H3 Image through Image Edit Crop and pasted back by Image Edit Restore."
+    },
+    {
+      "file": "minimax-h3-image-precise-edit.json",
+      "section": "Image editing",
+      "title": "Precise edit with MiniMax H3 Image",
+      "description": "WeVisOne-VL Detect finds a raincoat, Image Edit Crop cuts it out, MiniMax H3 Image turns it into a navy wool coat, and Image Edit Restore pastes it back with the rest untouched."
+    },
+    {
+      "file": "qwen-image-edit-precise-edit.json",
+      "section": "Image editing",
+      "title": "Precise edit with Qwen-Image-Edit 2511",
+      "description": "The same crop and restore chain with Qwen-Image-Edit 2511: a striped awning found, cut out at 1536 pixels, turned plain green and pasted back."
+    },
+    {
+      "file": "wevisone-incremental-editing.json",
+      "section": "Image editing",
+      "title": "Six edits, one stage each",
+      "description": "Six edits to one street photograph with MiniMax H3 Image, each found by WeVisOne-VL Detect and made at the edit model's resolution: a car, an awning, coffee cups, a dog, a cap and an outfit."
+    },
+    {
+      "file": "wevisone-incremental-editing-loop.json",
+      "section": "Image editing",
+      "title": "Six edits in a For Loop",
+      "description": "The same six edits made by one stage inside a For Loop, read from three Multiline Text Lists; another edit is one more line in each list."
+    },
+    {
+      "file": "bluepixel-edit.json",
+      "section": "Image editing",
+      "title": "BluePixel 4K edit",
+      "description": "BluePixel-Turbo edits a picture at its full size from one English instruction in four steps, compared with the original."
+    },
+    {
+      "file": "bluepixel-refine-loop.json",
+      "section": "Image editing",
+      "title": "BluePixel edit, judge and retry",
+      "description": "Generate Edit Instruction expands a short request, BluePixel-Turbo makes the edit, and Judge Images scores it, rewriting the instruction from its notes until an edit passes."
+    },
+    {
+      "file": "edit-refine-loop.json",
+      "section": "Image editing",
+      "title": "FLUX.2 klein edit, judge and retry",
+      "description": "The edit, judge and retry loop on FLUX.2 klein 9B with reference latents, ending on the best scored edit."
+    },
+    {
+      "file": "photo-develop.json",
+      "section": "Photo and film looks",
+      "title": "Photo develop",
+      "description": "A photograph through Image Develop, Image Color Mixer and Image Color Grade, the basic panel, mixer and grading wheels of a raw developer, compared with the original."
+    },
+    {
+      "file": "photo-looks.json",
+      "section": "Photo and film looks",
+      "title": "Photo and film looks",
+      "description": "Eight of the look subgraphs on one picture, from Bright and Airy to Classic Black and White, each with an amount and two controls of its own."
+    },
+    {
+      "file": "film-lab.json",
+      "section": "Photo and film looks",
+      "title": "Film lab",
+      "description": "A colour film chain of stock, halation, diffusion mist, light leak and wear, and a darkroom chain of black and white stock, print and toner, each compared with the picture."
+    },
+    {
+      "file": "lens-blur.json",
+      "section": "Filters, layers and preprocessors",
+      "title": "Lens blur from depth",
+      "description": "A Depth Anything V2 depth map from Power Preprocessor drives Image Lens Blur, focused on a point picked on her face with six-blade bokeh, compared with the original."
+    },
+    {
+      "file": "image-style-filter.json",
+      "section": "Photo and film looks",
+      "title": "Image Style Filter presets",
+      "description": "Six Image Style Filter presets on one picture: Earlybird, Rise, 1977, Kelvin, Walden and Lark."
+    },
+    {
+      "file": "bake-look-to-lut.json",
+      "section": "Colour, HDR and scopes",
+      "title": "Bake a look into a LUT",
+      "description": "A develop, grade and film stock chain baked into a .cube LUT through LUT Lattice, applied to a photo beside the chain it came from, with false colour and a vectorscope on the result."
+    },
+    {
+      "file": "analysis-readouts.json",
+      "section": "Colour, HDR and scopes",
+      "title": "Scopes before and after a grade",
+      "description": "A LUT grade checked with channel waveforms, image statistics and a before and after comparison."
+    },
+    {
+      "file": "hdr.json",
+      "section": "Colour, HDR and scopes",
+      "title": "HDR decode, dequantise and reconstruct",
+      "description": "HDR VAE Decode beside VAE Decode through the same filters, then a banded, clipped 8-bit frame repaired by Image Dequantise and HDR Reconstruct and written as EXR and DNG."
+    },
+    {
+      "file": "image-optics-and-grade.json",
+      "section": "Colour, HDR and scopes",
+      "title": "Optics and grade",
+      "description": "Lens distortion, perspective, directional blur, vignette, auto levels, colour balance, tone mapping and a matte, each previewed on one picture."
+    },
+    {
+      "file": "local-adjustments.json",
+      "section": "Masks, regions and subjects",
+      "title": "Local adjustments",
+      "description": "Image Develop applied through a graduated mask on the sky, an inverted radial mask on the edges and a colour range mask on a tower."
+    },
+    {
+      "file": "subject-spotlight.json",
+      "section": "Masks, regions and subjects",
+      "title": "Subject spotlight",
+      "description": "A subject clicked on Image Track Subject with SAM 3 is kept in colour and lit by Image Spotlight while the rest is graded down."
+    },
+    {
+      "file": "image-skin-mask.json",
+      "section": "Masks, regions and subjects",
+      "title": "Skin masks",
+      "description": "Image Skin Mask and Image Simple Skin Mask on the same portrait, compared."
+    },
+    {
+      "file": "mask-bounds.json",
+      "section": "Masks, regions and subjects",
+      "title": "Mask bounds",
+      "description": "A subject's mask measured as bounds, drawn on the picture, read out as numbers and filled back as a mask at the picture's size."
+    },
+    {
+      "file": "mask-rect-area.json",
+      "section": "Masks, regions and subjects",
+      "title": "Rectangle masks",
+      "description": "Four Mask Rect Area (Advanced) settings, each previewed."
+    },
+    {
+      "file": "face-detection.json",
+      "section": "Masks, regions and subjects",
+      "title": "Face crop and paste",
+      "description": "A face cropped by Image Crop Face, pixelated, and pasted back by Image Paste Face."
+    },
+    {
+      "file": "comfyui-interop.json",
+      "section": "Masks, regions and subjects",
+      "title": "Bounding boxes with ComfyUI's own nodes",
+      "description": "Bounding boxes filtered and turned into bounds, a drawn outline and a mask, and into layers through ComfyUI's Layers From Bounding Boxes, with an Image Analyze histogram on ComfyUI's Curve Editor."
+    },
+    {
+      "file": "image-morphology-and-resize.json",
+      "section": "Filters, layers and preprocessors",
+      "title": "Morphology and resize",
+      "description": "Image Morphology beside ComfyUI's Morphology on the same top hat setting, and Image Resize beside ComfyUI's Image Scale."
+    },
+    {
+      "file": "scale-to-total-pixels.json",
+      "section": "Filters, layers and preprocessors",
+      "title": "Scale to total pixels",
+      "description": "A 3840 x 2160 photo capped at 1 megapixel, and a 768 x 768 picture under the cap passed through untouched."
+    },
+    {
+      "file": "image-draw-text.json",
+      "section": "Filters, layers and preprocessors",
+      "title": "Arabic and Hebrew captions",
+      "description": "Image Draw Text writing Arabic and Hebrew captions in DejaVu Sans, and an Arabic caption in Liberation Sans."
+    },
+    {
+      "file": "layers.json",
+      "section": "Filters, layers and preprocessors",
+      "title": "A layer stack",
+      "description": "Pictures built into a layer stack, then aligned, fitted, masked, given strokes, glows and shadows, arranged, merged and flattened, beside ComfyUI's Image Compositor."
+    },
+    {
+      "file": "layers-psd.json",
+      "section": "Filters, layers and preprocessors",
+      "title": "Layered PSD round trip",
+      "description": "Three pictures saved as a 16-bit layered PSD by Layers Save and read back by Layers Load, with the stack's details printed."
+    },
+    {
+      "file": "ssao-height-map.json",
+      "section": "Filters, layers and preprocessors",
+      "title": "Ambient occlusion from a depth map",
+      "description": "Image SSAO shading a picture from a Power Preprocessor depth map, compared with the original."
+    },
+    {
+      "file": "preprocessors.json",
+      "section": "Filters, layers and preprocessors",
+      "title": "Every Power Preprocessor mode",
+      "description": "Power Preprocessor in every mode and model it accepts: depth, normals, pose, segments, edges and lines, intrinsics and restoration, with sweeps of its controls, a batch and two resolutions."
+    },
+    {
+      "file": "marigold-v2.json",
+      "section": "Filters, layers and preprocessors",
+      "title": "Marigold v2 depth, normals and albedo",
+      "description": "Power Preprocessor's Marigold v2 mode reading depth, surface normals and albedo from one picture."
+    },
+    {
+      "file": "marigold-v2-preprocessor.json",
+      "section": "Filters, layers and preprocessors",
+      "title": "Marigold v2 at two sizes",
+      "description": "Marigold v2 normals and albedo at 768 and depth at 1280, with the model and VAEs loaded on their own loaders."
+    },
+    {
+      "file": "minimax-h3-prompt-timeline.json",
+      "section": "MiniMax H3 video",
+      "title": "Prompt Timeline video",
+      "description": "A three scene MiniMax H3 video laid out on the Prompt Timeline, each scene sampled by fl2va or ref2va in a While Loop and joined with carried sound and a referenced cut."
+    },
+    {
+      "file": "minimax-h3-extend-loop.json",
+      "section": "MiniMax H3 video",
+      "title": "H3 extend loop",
+      "description": "A long MiniMax H3 text to video built segment by segment in a While Loop, each carrying the shot on from the last, with a report per segment."
+    },
+    {
+      "file": "minimax-h3-scene-loop.json",
+      "section": "MiniMax H3 video",
+      "title": "H3 scene loop",
+      "description": "An animated short in MiniMax H3, its scenes joined by cuts and carries in one While Loop and decoded scene by scene by H3 Decode Video."
+    },
+    {
+      "file": "minimax-h3-extend-loop-audio-carry.json",
+      "section": "MiniMax H3 video",
+      "title": "H3 extend loop with sound across cuts",
+      "description": "The animated short with its soundtrack carried across picture cuts, so the sound runs on while the shot changes."
+    },
+    {
+      "file": "minimax-h3-ref2va-extend-loop.json",
+      "section": "MiniMax H3 video",
+      "title": "H3 extend loop on references",
+      "description": "A MiniMax H3 ref2va video whose segments share reference pictures, a clip and a sound, named in the prompts as Picture, Video and Audio tags."
+    },
+    {
+      "file": "minimax-h3-refmods.json",
+      "section": "MiniMax H3 video",
+      "title": "H3 cast saved as RefMods",
+      "description": "The reference video with its cast encoded once by MiniMax H3 Save RefMod and loaded back by MiniMax H3 RefMod, so no reference is encoded again on later runs."
+    },
+    {
+      "file": "minimax-h3-flf-pair-loop.json",
+      "section": "MiniMax H3 video",
+      "title": "H3 keyframe pairs",
+      "description": "A folder of keyframes read as pairs, each pair a segment that opens on one frame and closes on the next, sampled in a While Loop and joined."
+    },
+    {
+      "file": "minimax-h3-extend-loop-derope.json",
+      "section": "MiniMax H3 video",
+      "title": "H3 extend loop with De-RoPE",
+      "description": "A Prompt Timeline video whose every segment is stretched, refined and recovered by the De-RoPE nodes before it joins, so fast motion is re-rendered at a slowed pace."
+    },
+    {
+      "file": "minimax-h3-derope.json",
+      "section": "MiniMax H3 video",
+      "title": "De-RoPE a finished clip",
+      "description": "A finished MiniMax H3 clip stretched where it moves fastest by H3 De-RoPE Stretch, refined, and put back on its own timing by H3 De-RoPE Recover, compared with the source."
+    },
+    {
+      "file": "minimax-h3-derope-t2v.json",
+      "section": "MiniMax H3 video",
+      "title": "De-RoPE a text to video clip",
+      "description": "A MiniMax H3 clip generated from text, then stretched, refined and recovered by the De-RoPE nodes, compared with the plain render."
+    },
+    {
+      "file": "minimax-h3-sparse-attention.json",
+      "section": "MiniMax H3 video",
+      "title": "H3 sparse attention",
+      "description": "One MiniMax H3 image to video clip sampled with dense attention and with H3 Sparse Attention, compared side by side."
+    },
+    {
+      "file": "minimax-h3-ptd.json",
+      "section": "MiniMax H3 video",
+      "title": "H3 in four steps with PTD",
+      "description": "H3 PTD Patch on an fl2va model for text to video with sound, and on a ref2va model from one reference picture, each in four steps."
+    },
+    {
+      "file": "minimax-h3-pika-flex.json",
+      "section": "MiniMax H3 video",
+      "title": "Pika H3 Flex in two passes",
+      "description": "Pika H3 Flex image to video at 480p in six steps, then refined at 768p from a later knot through H3 Hires Latent."
+    },
+    {
+      "file": "minimax-h3-pikatd.json",
+      "section": "MiniMax H3 video",
+      "title": "PikaTD in four steps",
+      "description": "PikaTD files through H3 PTD Patch: a first frame to video, a clip from one reference picture, and text to video with speech, each in four steps with sound."
+    },
+    {
+      "file": "affine-minimax-h3-example.json",
+      "section": "MiniMax H3 video",
+      "title": "Affine texture on H3 image to video",
+      "description": "MiniMax H3 image to video with Custom Sampler Affine Advanced and Temporal Noise Hold, with a switch for a Lightning LoRA and its step count."
+    },
+    {
+      "file": "affine-minimax-h3-extend-loop.json",
+      "section": "MiniMax H3 video",
+      "title": "Affine texture on an H3 extend loop",
+      "description": "A hand-drawn anime MiniMax H3 video built in a While Loop, every segment sampled by Custom Sampler Affine Advanced, joined by cuts and carries."
+    },
+    {
+      "file": "affine-minimax-h3-t2va-cuts-loop.json",
+      "section": "MiniMax H3 video",
+      "title": "Affine H3 text to video with cuts",
+      "description": "The affine extend loop's anime video, its scenes opened on cuts and continued by carries, each segment sampled with the affine transform."
+    },
+    {
+      "file": "kandinsky6-lite-distill.json",
+      "section": "Kandinsky 6 video",
+      "title": "Kandinsky 6 Lite distilled",
+      "description": "Text to video with a soundtrack from Kandinsky 6 Lite distilled, the picture and the sound sampled together and saved as video."
+    },
+    {
+      "file": "kandinsky6-pro-distill.json",
+      "section": "Kandinsky 6 video",
+      "title": "Kandinsky 6 Pro distilled",
+      "description": "The same prompt on Kandinsky 6 Pro distilled, the picture and the sound sampled together and saved as video."
+    },
+    {
+      "file": "edit-and-titles.json",
+      "section": "Video editing and restoration",
+      "title": "Edit and titles",
+      "description": "Three clips joined with transitions, a day to night grade eased in over the last shot, then subtitles, a lower third and timecode, saved with the sound."
+    },
+    {
+      "file": "lower-third-styles.json",
+      "section": "Video editing and restoration",
+      "title": "Lower third styles",
+      "description": "Six Video Lower Third graphics on one clip, two at a time, one at the top and one at the bottom: stripe, split, banner, card, underline and minimal, sliding, rising and fading in."
+    },
+    {
+      "file": "subject-spotlight-video.json",
+      "section": "Video editing and restoration",
+      "title": "Subject spotlight on video",
+      "description": "A subject followed through a shot by Image Track Subject with SAM 3, kept in colour and lit by Image Spotlight while the rest is quieted, compared with the source."
+    },
+    {
+      "file": "motion_vector_model_difference.json",
+      "section": "Video editing and restoration",
+      "title": "Video motion with and without a flow model",
+      "description": "A clip's motion measured by Video Motion on its own and with a SEA-RAFT network, and film motion blur drawn along it by Video Motion Blur."
+    },
+    {
+      "file": "vtc_temporal_upscale.json",
+      "section": "Video editing and restoration",
+      "title": "Video temporal upscale",
+      "description": "A clip upscaled 4x by Video Temporal Upscale with detail held steady along its motion, then scaled by half and saved with its sound."
+    },
+    {
+      "file": "three-scene.json",
+      "section": "3D and Three.js",
+      "title": "A Three.js scene",
+      "description": "Every node in WAS Suite/Three in one scene: textures, materials, geometry, lights, two cameras, drawn on the canvas, rendered as frames and compiled into a web page."
+    },
+    {
+      "file": "three-environment.json",
+      "section": "3D and Three.js",
+      "title": "Environment lighting",
+      "description": "A mirror, brushed metal, painted metal and clear glaze sphere lit by Three Environment."
+    },
+    {
+      "file": "three-path-tracing.json",
+      "section": "3D and Three.js",
+      "title": "Path tracing",
+      "description": "Boxes and spheres under an area light, path traced on the node and rendered as a still."
+    },
+    {
+      "file": "three-skinned-model.json",
+      "section": "3D and Three.js",
+      "title": "A skinned model playing its animation",
+      "description": "A rigged .dae model playing its own animation, rendered to video. Reads stormtrooper.dae and Stormtrooper_D.jpg from ComfyUI/input."
+    },
+    {
+      "file": "three-camera-track.json",
+      "section": "3D and Three.js",
+      "title": "Camera tracking",
+      "description": "A camera kept on a walking model as it is carried around a turntable, by Three Track."
+    },
+    {
+      "file": "tripo-turntable.json",
+      "section": "3D and Three.js",
+      "title": "Tripo turntable",
+      "description": "A Tripo model from a prompt on a studio floor, rendered as a seamless 6 second turntable video and a path traced hero still."
+    },
+    {
+      "file": "tripo-hdri-showcase.json",
+      "section": "3D and Three.js",
+      "title": "Tripo HDRI showcase",
+      "description": "A Tripo model on a lacquer turntable plinth inside an HDRI panorama: a fast preview, a path traced turntable and a hero still."
+    },
+    {
+      "file": "tripo-reference-sheet.json",
+      "section": "3D and Three.js",
+      "title": "Tripo reference sheet",
+      "description": "Eight views of a Tripo model, 45 degrees apart, saved as colour, depth and normal sheets."
+    },
+    {
+      "file": "tripo-render-to-art.json",
+      "section": "3D and Three.js",
+      "title": "Tripo render to art",
+      "description": "A Tripo model's three-quarter view and depth pass, painted in three styles through Z-Image Turbo's Fun ControlNet with the model's shape and camera kept."
+    },
+    {
+      "file": "tripo-character-walk.json",
+      "section": "3D and Three.js",
+      "title": "Tripo walking character",
+      "description": "Z-Image Turbo concept art made into a textured Tripo character, rigged, given a walk and rendered as a seamless walk cycle on a turntable."
+    },
+    {
+      "file": "tripo-drow-turntable.json",
+      "section": "3D and Three.js",
+      "title": "Drow adventurer turntable",
+      "description": "A drow adventurer from a prompt: concept art, a Tripo model and a path traced HDRI turntable, each stage a subgraph, every final exported."
+    },
+    {
+      "file": "tripo-cave-asset-kit.json",
+      "section": "3D and Three.js",
+      "title": "Cave camp asset kit",
+      "description": "Twelve cave camp props made by Tripo from a sentence each, lightened with Smart Low Poly, kept in ComfyUI/input/tripo_assets and rendered as a lineup."
+    },
+    {
+      "file": "tripo-drow-scene.json",
+      "section": "3D and Three.js",
+      "title": "Drow in the cave camp",
+      "description": "The drow rigged and walking a circle around the fire in the dressed cave camp, lit by firelight and crystals, filmed by a wide camera and a chase camera."
+    },
+    {
+      "file": "tripo-character-vrm.json",
+      "section": "3D and Three.js",
+      "title": "Tripo character to a VRM avatar",
+      "description": "A head drawn by Z-Image and a body made by Tripo, assembled, rigged with the VRM skeleton by Tripo and locally, given hair springs, and saved as VRM and GLB."
+    },
+    {
+      "file": "3d-upscale-textures.json",
+      "section": "3D and Three.js",
+      "title": "Upscale a model's textures",
+      "description": "A model's six projections redrawn by MiniMax H3 Image at 67 megapixels, delit, read for roughness and surface direction, and recompiled into 4096 base colour, roughness and normal maps."
+    },
+    {
+      "file": "noodle-soup-pick.json",
+      "section": "Prompts and text",
+      "title": "Noodle Soup prompt terms",
+      "description": "Noodle Soup Pick choosing artists, colours and adjectives by hand and at random, Noodle Soup Term Edit refining the picks, and the result parsed into a prompt."
+    },
+    {
+      "file": "prompt-library.json",
+      "section": "Prompts and text",
+      "title": "Prompt and style library",
+      "description": "Prompt terms and styles saved, exported and imported: a style saved from a prompt, the style library and the term pantry each written to a file and read back."
+    },
+    {
+      "file": "prompt-lines.json",
+      "section": "Prompts and text",
+      "title": "Multiline prompt lists",
+      "description": "Multiline Text Lists and Multiline Text (Advanced): one prompt per line with notes and switched-off lines left out, lists combined into whole prompts, and a wired string in place of the typed lines."
+    },
+    {
+      "file": "prompt-lists.json",
+      "section": "Prompts and text",
+      "title": "Prompts from a text file",
+      "description": "Load Text Line reading a prompt file whole, at an index and at random from a seed, with every line handed on as a list."
+    },
+    {
+      "file": "json-validate.json",
+      "section": "Prompts and text",
+      "title": "Repair a model's JSON",
+      "description": "JSON Validate repairing a language model's answer into JSON other nodes can read, and checking one without changing it while the run goes on."
+    },
+    {
+      "file": "fast-generate-text.json",
+      "section": "Prompts and text",
+      "title": "Fast Generate Text",
+      "description": "Fast Generate Text and ComfyUI's Text Generate writing from one prompt on the same Qwen3 text encoder, side by side."
+    },
+    {
+      "file": "language-model-loader.json",
+      "section": "Prompts and text",
+      "title": "Language Model Loader",
+      "description": "A language model loaded by Language Model Loader as a CLIP and used by Fast Generate Text to write."
+    },
+    {
+      "file": "system-prompt-library.json",
+      "section": "Prompts and text",
+      "title": "System prompt library",
+      "description": "System prompts saved to the library and loaded back to steer Fast Generate Text."
+    },
+    {
+      "file": "built-in-prompt-enhancers.json",
+      "section": "Prompts and text",
+      "title": "Built-in prompt enhancers",
+      "description": "A short idea expanded by a built-in system prompt, then rendered as typed and as expanded on the same seed."
+    },
+    {
+      "file": "llm-chat-with-notes.json",
+      "section": "Language models and Llama-Index",
+      "title": "Chat with a folder of notes",
+      "description": "A folder of notes indexed for keyword and meaning search, fused and reranked, and a chat about them with a local model, kept between runs."
+    },
+    {
+      "file": "llm-picture-search.json",
+      "section": "Language models and Llama-Index",
+      "title": "Find pictures by what they show",
+      "description": "A folder of renders indexed by picture, searched by a sentence and by an example picture, with a vision model asked about what it found."
+    },
+    {
+      "file": "llm-research-agent.json",
+      "section": "Language models and Llama-Index",
+      "title": "Research agent",
+      "description": "An agent with three tools, a folder of notes, a calculator and dates, answering a question by calling them."
+    },
+    {
+      "file": "llm-retrievers.json",
+      "section": "Language models and Llama-Index",
+      "title": "Retrievers compared",
+      "description": "Studio notes and tables searched five ways: recursive, routed by the model, with model-written metadata filters, with HyDE, and by SQL."
+    },
+    {
+      "file": "llm-table-questions.json",
+      "section": "Language models and Llama-Index",
+      "title": "Questions about a spreadsheet",
+      "description": "A spreadsheet answered by a SQL query engine, and its rows searched by meaning."
+    },
+    {
+      "file": "llm-to-documents.json",
+      "section": "Language models and Llama-Index",
+      "title": "Text, pictures, video and tables in one index",
+      "description": "Text, a picture, a video and a table turned into documents and indexed together, then searched and shown as pictures."
+    },
+    {
+      "file": "llm-vector-store.json",
+      "section": "Language models and Llama-Index",
+      "title": "Vector store",
+      "description": "An index kept in a vector store between runs, and a document added to the stored index."
+    },
+    {
+      "file": "llm-skill-prompt-enhancer.json",
+      "section": "Language models and Llama-Index",
+      "title": "MOSS-Image prompt from a skill",
+      "description": "A MOSS-Image prompt written by a system prompt skill with its references looked up in an index, compiled for MOSS-Image."
+    },
+    {
+      "file": "caption-datasets.json",
+      "section": "Files, datasets and documents",
+      "title": "Captioned training set",
+      "description": "A captioned training set checked for health and caption statistics, its captions fixed and saved in place, flagged pictures dropped, and tags removed, renamed and pinned."
+    },
+    {
+      "file": "image-save-captions.json",
+      "section": "Files, datasets and documents",
+      "title": "Caption a folder of images",
+      "description": "A folder of images captioned by Fast Generate Text and saved with a caption file beside each picture."
+    },
+    {
+      "file": "folder-round-trip.json",
+      "section": "Files, datasets and documents",
+      "title": "Folder round trip",
+      "description": "Images read from a folder by Load Image Sequence, auto-levelled and saved back as a set."
+    },
+    {
+      "file": "image-library-pose-search.json",
+      "section": "Files, datasets and documents",
+      "title": "Pose library search",
+      "description": "A folder of pose photographs searched by a prompt, the best match turned into a ControlNet depth map."
+    },
+    {
+      "file": "content-viewer.json",
+      "section": "Files, datasets and documents",
+      "title": "Content Viewer",
+      "description": "Content Viewer showing a picture, its statistics, a loaded document, rich text and an exported document, each in the view that suits it."
+    },
+    {
+      "file": "document-export.json",
+      "section": "Files, datasets and documents",
+      "title": "Document export",
+      "description": "Text and metadata saved as a document in .wasdoc, .docx and .odt, with each file's metadata read back. .docx and .odt need the document_export group."
+    },
+    {
+      "file": "zip-archives.json",
+      "section": "Files, datasets and documents",
+      "title": "Zip archives",
+      "description": "Documents added to a zip in folders, an archive opened and its entries picked on the node, and the result saved. Reads review_comments.zip from ComfyUI/input."
+    },
+    {
+      "file": "app-workflow.json",
+      "section": "Logic, loops and apps",
+      "title": "App Workflow",
+      "description": "A workflow saved in app mode run as one node by App Workflow, its inputs set on the node and its results on wires. Copy the .app.json files below into ComfyUI/user/default/workflows."
+    },
+    {
+      "file": "app-workflow-example.app.json",
+      "section": "Logic, loops and apps",
+      "title": "App: caption and chromatic aberration",
+      "description": "An app mode workflow for App Workflow: chromatic aberration and a caption drawn on a picture."
+    },
+    {
+      "file": "app-workflow-resize.app.json",
+      "section": "Logic, loops and apps",
+      "title": "App: resize and sharpen",
+      "description": "An app mode workflow for App Workflow: a picture resized and sharpened."
+    },
+    {
+      "file": "app-workflow-subgraph.app.json",
+      "section": "Logic, loops and apps",
+      "title": "App: a subgraph inside",
+      "description": "An app mode workflow for App Workflow whose filters sit inside a subgraph."
+    },
+    {
+      "file": "app-workflow-text.app.json",
+      "section": "Logic, loops and apps",
+      "title": "App: find and replace text",
+      "description": "An app mode workflow for App Workflow that takes text and runs find and replace on it."
+    },
+    {
+      "file": "execution-gate.json",
+      "section": "Logic, loops and apps",
+      "title": "Execution Gate",
+      "description": "One branch passed by Execution Gate and one stopped, so everything after the closed gate is skipped."
+    },
+    {
+      "file": "execution-gate-controlboard.json",
+      "section": "Logic, loops and apps",
+      "title": "Execution Gate Controlboard",
+      "description": "Execution Gates and an Any Gate switched on and off from one Execution Gate Controlboard."
+    },
+    {
+      "file": "loops-for-loop.json",
+      "section": "Logic, loops and apps",
+      "title": "For Loop",
+      "description": "A For Loop of five passes carrying a running total."
+    },
+    {
+      "file": "color-management.json",
+      "section": "Colour, HDR and scopes",
+      "title": "Camera log to SDR and HDR10",
+      "description": "A clip in Sony S-Log3 decoded into ACEScg by Image Color Space, rendered by Image ACES Output for an sRGB screen and for 1000 nit HDR10, and saved as tagged SDR and 10-bit HDR video."
+    },
+    {
+      "file": "restore-footage.json",
+      "section": "Video editing and restoration",
+      "title": "Restore grainy, dusty footage",
+      "description": "Video Remove Dust repairs one-frame specks from the neighbouring frames, then Video Denoise averages along the motion, each node showing the clip before and after."
+    },
+    {
+      "file": "remove-object.json",
+      "section": "Video editing and restoration",
+      "title": "Remove a person from a clip",
+      "description": "Image Track Subject follows a clicked person with SAM 3, and Video Remove Object fills them in with background the other frames show, answering what no frame shows as a mask."
+    },
+    {
+      "file": "h3-video-face-restore.json",
+      "section": "Video editing and restoration",
+      "title": "Restore a far-away face with MiniMax H3",
+      "description": "Image Track Subject follows a face up a walk-up shot, Video Track Crop holds it centred, MiniMax H3 ref2va redraws it with the clearest frame as reference, and Video Track Paste lays it back at 1x and 2x."
+    },
+    {
+      "file": "portrait-retouch.json",
+      "section": "Image editing",
+      "title": "Portrait retouch",
+      "description": "Image Skin Mask finds the face, and Image Portrait Retouch evens blotchy redness and heals small red spots while keeping pores and lines, compared whole and up close."
+    }
+  ]
+}

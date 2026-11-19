@@ -1,0 +1,1414 @@
+{
+  "id": "24474a2b-4324-4550-a61f-ffe1b02c3283",
+  "revision": 0,
+  "last_node_id": 13,
+  "last_link_id": 14,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        120
+      ],
+      "size": [
+        340,
+        440
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1,
+            7,
+            10,
+            12
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "image": true,
+            "upload": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "bluepixel_test_input.jpg",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "bluepixel_test_input.jpg",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "WASImageNaturalFinish",
+      "pos": [
+        540,
+        120
+      ],
+      "size": [
+        300,
+        318
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "amount",
+          "name": "amount",
+          "type": "FLOAT",
+          "widget": {
+            "name": "amount"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "detail",
+          "name": "detail",
+          "type": "FLOAT",
+          "widget": {
+            "name": "detail"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageNaturalFinish",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "amount": true,
+            "detail": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0.3,
+        0.3
+      ],
+      "widgets_values_named": {
+        "amount": 0.3,
+        "detail": 0.3
+      }
+    },
+    {
+      "id": 3,
+      "type": "WASImageFilmStock",
+      "pos": [
+        920,
+        120
+      ],
+      "size": [
+        300,
+        430
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "stock",
+          "name": "stock",
+          "type": "COMBO",
+          "widget": {
+            "name": "stock"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength",
+          "name": "strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "exposure",
+          "name": "exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "grain",
+          "name": "grain",
+          "type": "FLOAT",
+          "widget": {
+            "name": "grain"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "halation",
+          "name": "halation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "halation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageFilmStock",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "stock": true,
+            "strength": true,
+            "exposure": true,
+            "grain": true,
+            "halation": true,
+            "seed": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Cinema: CineStill 800T",
+        1,
+        0,
+        1,
+        0,
+        0,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "stock": "Cinema: CineStill 800T",
+        "strength": 1,
+        "exposure": 0,
+        "grain": 1,
+        "halation": 0,
+        "seed": 0,
+        "control_after_generate": "fixed"
+      }
+    },
+    {
+      "id": 4,
+      "type": "WASImageHalation",
+      "pos": [
+        1300,
+        120
+      ],
+      "size": [
+        300,
+        382
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "localized_name": "amount",
+          "name": "amount",
+          "type": "FLOAT",
+          "widget": {
+            "name": "amount"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "radius",
+          "name": "radius",
+          "type": "FLOAT",
+          "widget": {
+            "name": "radius"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "threshold",
+          "name": "threshold",
+          "type": "FLOAT",
+          "widget": {
+            "name": "threshold"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color",
+          "name": "color",
+          "type": "STRING",
+          "widget": {
+            "name": "color"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageHalation",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "amount": true,
+            "radius": true,
+            "threshold": true,
+            "color": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        1,
+        1.2,
+        0.7,
+        "#ff4b1f"
+      ],
+      "widgets_values_named": {
+        "amount": 1,
+        "radius": 1.2,
+        "threshold": 0.7,
+        "color": "#ff4b1f"
+      }
+    },
+    {
+      "id": 5,
+      "type": "WASImageDiffusionFilter",
+      "pos": [
+        1680,
+        120
+      ],
+      "size": [
+        300,
+        374
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "localized_name": "style",
+          "name": "style",
+          "type": "COMBO",
+          "widget": {
+            "name": "style"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength",
+          "name": "strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "FLOAT",
+          "widget": {
+            "name": "size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "corners",
+          "name": "corners",
+          "type": "FLOAT",
+          "widget": {
+            "name": "corners"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageDiffusionFilter",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "style": true,
+            "strength": true,
+            "size": true,
+            "corners": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "black mist",
+        0.25,
+        1,
+        0.3
+      ],
+      "widgets_values_named": {
+        "style": "black mist",
+        "strength": 0.25,
+        "size": 1,
+        "corners": 0.3
+      }
+    },
+    {
+      "id": 6,
+      "type": "WASImageLightLeak",
+      "pos": [
+        2060,
+        120
+      ],
+      "size": [
+        300,
+        466
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 5
+        },
+        {
+          "localized_name": "style",
+          "name": "style",
+          "type": "COMBO",
+          "widget": {
+            "name": "style"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position",
+          "name": "position",
+          "type": "COMBO",
+          "widget": {
+            "name": "position"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color",
+          "name": "color",
+          "type": "STRING",
+          "widget": {
+            "name": "color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "amount",
+          "name": "amount",
+          "type": "FLOAT",
+          "widget": {
+            "name": "amount"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "FLOAT",
+          "widget": {
+            "name": "size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "each_frame",
+          "name": "each_frame",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "each_frame"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageLightLeak",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "style": true,
+            "position": true,
+            "color": true,
+            "amount": true,
+            "size": true,
+            "seed": true,
+            "each_frame": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "edge glow",
+        "left",
+        "#ff6a2b",
+        0.5,
+        0.4,
+        7,
+        "fixed",
+        false
+      ],
+      "widgets_values_named": {
+        "style": "edge glow",
+        "position": "left",
+        "color": "#ff6a2b",
+        "amount": 0.5,
+        "size": 0.4,
+        "seed": 7,
+        "control_after_generate": "fixed",
+        "each_frame": false
+      }
+    },
+    {
+      "id": 7,
+      "type": "WASImageFilmDamage",
+      "pos": [
+        2440,
+        120
+      ],
+      "size": [
+        300,
+        430
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 6
+        },
+        {
+          "localized_name": "dust",
+          "name": "dust",
+          "type": "FLOAT",
+          "widget": {
+            "name": "dust"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hairs",
+          "name": "hairs",
+          "type": "FLOAT",
+          "widget": {
+            "name": "hairs"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scratches",
+          "name": "scratches",
+          "type": "FLOAT",
+          "widget": {
+            "name": "scratches"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "mottle",
+          "name": "mottle",
+          "type": "FLOAT",
+          "widget": {
+            "name": "mottle"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tone",
+          "name": "tone",
+          "type": "COMBO",
+          "widget": {
+            "name": "tone"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            8,
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageFilmDamage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "dust": true,
+            "hairs": true,
+            "scratches": true,
+            "mottle": true,
+            "tone": true,
+            "seed": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0.25,
+        0.15,
+        0,
+        0.15,
+        "light",
+        0,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "dust": 0.25,
+        "hairs": 0.15,
+        "scratches": 0,
+        "mottle": 0.15,
+        "tone": "light",
+        "seed": 0,
+        "control_after_generate": "fixed"
+      }
+    },
+    {
+      "id": 8,
+      "type": "WASImageCompare",
+      "pos": [
+        2820,
+        120
+      ],
+      "size": [
+        680,
+        500
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 7
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "pairs",
+          "name": "pairs",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageCompare",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "was_compare_images": {
+          "a": [
+            {
+              "filename": "aeb48698a12c9fb5db5babe391796d2a.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 3600,
+              "height": 5998,
+              "mode": "RGB",
+              "bytes": 20742577,
+              "total": 1,
+              "workflow": "bca1cd5e-4a17-44f6-a447-4521428c746c"
+            }
+          ],
+          "b": [
+            {
+              "filename": "dbf9d68ad055d8f6a2cca27f7817de88.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 3600,
+              "height": 5998,
+              "mode": "RGB",
+              "bytes": 37387572,
+              "total": 1,
+              "workflow": "bca1cd5e-4a17-44f6-a447-4521428c746c"
+            }
+          ]
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 9,
+      "type": "SaveImage",
+      "pos": [
+        2820,
+        740
+      ],
+      "size": [
+        460,
+        420
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 9
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "filename_prefix": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "film_lab_color"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "film_lab_color"
+      }
+    },
+    {
+      "id": 10,
+      "type": "WASImageFilmStock",
+      "pos": [
+        40,
+        1470
+      ],
+      "size": [
+        300,
+        430
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 10
+        },
+        {
+          "localized_name": "stock",
+          "name": "stock",
+          "type": "COMBO",
+          "widget": {
+            "name": "stock"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength",
+          "name": "strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "exposure",
+          "name": "exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "grain",
+          "name": "grain",
+          "type": "FLOAT",
+          "widget": {
+            "name": "grain"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "halation",
+          "name": "halation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "halation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageFilmStock",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "stock": true,
+            "strength": true,
+            "exposure": true,
+            "grain": true,
+            "halation": true,
+            "seed": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Black and White: Kodak Tri-X 400",
+        1,
+        0,
+        1,
+        1,
+        0,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "stock": "Black and White: Kodak Tri-X 400",
+        "strength": 1,
+        "exposure": 0,
+        "grain": 1,
+        "halation": 1,
+        "seed": 0,
+        "control_after_generate": "fixed"
+      }
+    },
+    {
+      "id": 11,
+      "type": "WASImageDarkroomPrint",
+      "pos": [
+        460,
+        1470
+      ],
+      "size": [
+        300,
+        458
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 11
+        },
+        {
+          "localized_name": "lens_filter",
+          "name": "lens_filter",
+          "type": "COMBO",
+          "widget": {
+            "name": "lens_filter"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "paper_grade",
+          "name": "paper_grade",
+          "type": "FLOAT",
+          "widget": {
+            "name": "paper_grade"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "exposure",
+          "name": "exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "toner",
+          "name": "toner",
+          "type": "COMBO",
+          "widget": {
+            "name": "toner"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "toner_amount",
+          "name": "toner_amount",
+          "type": "FLOAT",
+          "widget": {
+            "name": "toner_amount"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sabattier",
+          "name": "sabattier",
+          "type": "FLOAT",
+          "widget": {
+            "name": "sabattier"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "paper",
+          "name": "paper",
+          "type": "COMBO",
+          "widget": {
+            "name": "paper"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            13,
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageDarkroomPrint",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "lens_filter": true,
+            "paper_grade": true,
+            "exposure": true,
+            "toner": true,
+            "toner_amount": true,
+            "sabattier": true,
+            "paper": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "none",
+        3,
+        0,
+        "split",
+        0.6,
+        0,
+        "warm fibre"
+      ],
+      "widgets_values_named": {
+        "lens_filter": "none",
+        "paper_grade": 3,
+        "exposure": 0,
+        "toner": "split",
+        "toner_amount": 0.6,
+        "sabattier": 0,
+        "paper": "warm fibre"
+      }
+    },
+    {
+      "id": 12,
+      "type": "WASImageCompare",
+      "pos": [
+        840,
+        1470
+      ],
+      "size": [
+        680,
+        500
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 12
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "pairs",
+          "name": "pairs",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageCompare",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "was_compare_images": {
+          "a": [
+            {
+              "filename": "aeb48698a12c9fb5db5babe391796d2a.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 3600,
+              "height": 5998,
+              "mode": "RGB",
+              "bytes": 20742577,
+              "total": 1,
+              "workflow": "bca1cd5e-4a17-44f6-a447-4521428c746c"
+            }
+          ],
+          "b": [
+            {
+              "filename": "1ffbd1fdccc7e58410c648dca9555480.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 3600,
+              "height": 5998,
+              "mode": "RGB",
+              "bytes": 36712585,
+              "total": 1,
+              "workflow": "bca1cd5e-4a17-44f6-a447-4521428c746c"
+            }
+          ]
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 13,
+      "type": "SaveImage",
+      "pos": [
+        840,
+        2090
+      ],
+      "size": [
+        460,
+        420
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 14
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "filename_prefix": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "film_lab_print"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "film_lab_print"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      4,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      5,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      6,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      1,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      8,
+      7,
+      0,
+      8,
+      1,
+      "IMAGE"
+    ],
+    [
+      9,
+      7,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      10,
+      1,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ],
+    [
+      11,
+      10,
+      0,
+      11,
+      0,
+      "IMAGE"
+    ],
+    [
+      12,
+      1,
+      0,
+      12,
+      0,
+      "IMAGE"
+    ],
+    [
+      13,
+      11,
+      0,
+      12,
+      1,
+      "IMAGE"
+    ],
+    [
+      14,
+      11,
+      0,
+      13,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Picture",
+      "bounding": [
+        0,
+        0,
+        420,
+        630
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Color film: stock, halation, mist, light leak, wear",
+      "bounding": [
+        500,
+        0,
+        3040,
+        1230
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Darkroom: black and white stock, print and toner",
+      "bounding": [
+        0,
+        1350,
+        1560,
+        1230
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.6075,
+      "offset": [
+        98.76543209876543,
+        181.06995884773661
+      ]
+    }
+  },
+  "version": 0.4
+}

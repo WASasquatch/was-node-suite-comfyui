@@ -1,0 +1,473 @@
+{
+  "id": "bc40abac-b5f1-569a-9f78-e270d303e16a",
+  "revision": 0,
+  "last_node_id": 1,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "1fd3641d-cb77-5197-8a46-e079b746a327",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        320,
+        138
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "amount",
+          "type": "FLOAT",
+          "widget": {
+            "name": "amount"
+          },
+          "link": null
+        },
+        {
+          "name": "clarity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "clarity"
+          },
+          "link": null
+        },
+        {
+          "name": "vibrance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "vibrance"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "title": "Clean Commercial",
+      "properties": {
+        "proxyWidgets": [
+          [
+            "-1",
+            "amount"
+          ],
+          [
+            "-1",
+            "clarity"
+          ],
+          [
+            "-1",
+            "vibrance"
+          ]
+        ]
+      },
+      "widgets_values": [
+        1.0,
+        12,
+        18
+      ]
+    }
+  ],
+  "links": [],
+  "version": 0.4,
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "1fd3641d-cb77-5197-8a46-e079b746a327",
+        "version": 1,
+        "state": {
+          "lastGroupId": 0,
+          "lastNodeId": 2,
+          "lastLinkId": 7,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Clean Commercial",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -240,
+            -20,
+            140,
+            120
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            750,
+            -20,
+            120,
+            60
+          ]
+        },
+        "inputs": [
+          {
+            "id": "61f897ed-d65a-5747-92b4-888d07d02160",
+            "name": "images",
+            "type": "IMAGE",
+            "linkIds": [
+              1,
+              2
+            ],
+            "pos": [
+              -160,
+              20
+            ]
+          },
+          {
+            "id": "cc7010b6-5992-5803-89f9-ba7eb92dffa1",
+            "name": "amount",
+            "type": "FLOAT",
+            "linkIds": [
+              5
+            ],
+            "pos": [
+              -160,
+              40
+            ]
+          },
+          {
+            "id": "0ef79c04-4269-5906-be51-e92675018d69",
+            "name": "clarity",
+            "type": "FLOAT",
+            "linkIds": [
+              6
+            ],
+            "pos": [
+              -160,
+              60
+            ]
+          },
+          {
+            "id": "00c19dc5-b996-581d-88fe-61fda5f5c61f",
+            "name": "vibrance",
+            "type": "FLOAT",
+            "linkIds": [
+              7
+            ],
+            "pos": [
+              -160,
+              80
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "48122556-23aa-5661-afea-e4a0708d304e",
+            "name": "images",
+            "type": "IMAGE",
+            "linkIds": [
+              4
+            ],
+            "pos": [
+              770,
+              20
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 1,
+            "type": "WASImageDevelop",
+            "pos": [
+              0,
+              0
+            ],
+            "size": [
+              300,
+              346
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 1
+              },
+              {
+                "name": "temperature",
+                "localized_name": "temperature",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "temperature"
+                },
+                "link": null
+              },
+              {
+                "name": "tint",
+                "localized_name": "tint",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "tint"
+                },
+                "link": null
+              },
+              {
+                "name": "exposure",
+                "localized_name": "exposure",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "exposure"
+                },
+                "link": null
+              },
+              {
+                "name": "contrast",
+                "localized_name": "contrast",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "contrast"
+                },
+                "link": null
+              },
+              {
+                "name": "highlights",
+                "localized_name": "highlights",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "highlights"
+                },
+                "link": null
+              },
+              {
+                "name": "shadows",
+                "localized_name": "shadows",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "shadows"
+                },
+                "link": null
+              },
+              {
+                "name": "whites",
+                "localized_name": "whites",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "whites"
+                },
+                "link": null
+              },
+              {
+                "name": "blacks",
+                "localized_name": "blacks",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "blacks"
+                },
+                "link": null
+              },
+              {
+                "name": "texture",
+                "localized_name": "texture",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "texture"
+                },
+                "link": null
+              },
+              {
+                "name": "clarity",
+                "localized_name": "clarity",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "clarity"
+                },
+                "link": 6
+              },
+              {
+                "name": "dehaze",
+                "localized_name": "dehaze",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "dehaze"
+                },
+                "link": null
+              },
+              {
+                "name": "vibrance",
+                "localized_name": "vibrance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "vibrance"
+                },
+                "link": 7
+              },
+              {
+                "name": "saturation",
+                "localized_name": "saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "saturation"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  3
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageDevelop"
+            },
+            "widgets_values": [
+              0.0,
+              0.0,
+              0.1,
+              12,
+              -30,
+              20,
+              12,
+              -8,
+              12,
+              12,
+              5,
+              18,
+              0.0
+            ]
+          },
+          {
+            "id": 2,
+            "type": "Image Blend",
+            "pos": [
+              380,
+              0
+            ],
+            "size": [
+              270,
+              282
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "image_a",
+                "localized_name": "image_a",
+                "type": "IMAGE",
+                "link": 2
+              },
+              {
+                "name": "image_b",
+                "localized_name": "image_b",
+                "type": "IMAGE",
+                "link": 3
+              },
+              {
+                "name": "blend_percentage",
+                "localized_name": "blend_percentage",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "blend_percentage"
+                },
+                "link": 5
+              }
+            ],
+            "outputs": [
+              {
+                "name": "image",
+                "localized_name": "image",
+                "type": "IMAGE",
+                "links": [
+                  4
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Image Blend"
+            },
+            "widgets_values": [
+              1.0
+            ]
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 1,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 1,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 2,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 2,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 3,
+            "origin_id": 1,
+            "origin_slot": 0,
+            "target_id": 2,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 4,
+            "origin_id": 2,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 5,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 2,
+            "target_slot": 2,
+            "type": "FLOAT"
+          },
+          {
+            "id": 6,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 1,
+            "target_slot": 10,
+            "type": "FLOAT"
+          },
+          {
+            "id": 7,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 1,
+            "target_slot": 12,
+            "type": "FLOAT"
+          }
+        ],
+        "extra": {},
+        "category": "WAS Suite/Image/Looks",
+        "description": "Crisp and bright for products, food and marketing: opened shadows, held highlights, firm whites and clear, lively colour."
+      }
+    ]
+  },
+  "extra": {}
+}

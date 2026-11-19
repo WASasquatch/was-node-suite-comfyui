@@ -59,11 +59,11 @@ class SaveLUT(io.ComfyNode):
                 ),
                 io.Int.Input(
                     "output_size", default=33, min=MIN_OUTPUT_SIZE, max=MAX_OUTPUT_SIZE,
-                    step=2,
+                    step=1,
                     tooltip=(
-                        "Edge length of the cube written to the file, in samples. 33 is the "
-                        "industry-standard size and is what most grading tools expect; 65 is "
-                        "finer and produces a file eight times the size."
+                        "Edge length of the cube written, in samples. 33 = the usual size; 65 = "
+                        "finer, eight times the file. A table already this size is written as it "
+                        "is: 64 keeps a 64-step LUT from Lattice exact."
                     ),
                 ),
                 io.Boolean.Input(
@@ -105,15 +105,15 @@ class SaveLUT(io.ComfyNode):
         target = sandbox.resolve_write_file(tables.save_directory(), name)
         if target.exists() and not overwrite:
             raise FileExistsError(
-                f"{target} is already there. Turn overwrite on to replace it, or save it "
-                f"under another name."
+                f"{name} is already in the luts folder. Turn overwrite on to replace it, or "
+                f"save it under another name."
             )
 
         output_size = max(MIN_OUTPUT_SIZE, min(int(output_size), MAX_OUTPUT_SIZE))
         target.parent.mkdir(parents=True, exist_ok=True)
         resampled = tables.convert_to_3d(lut, output_size)
         tables.save_cube(target, resampled)
-        logger.info("wrote the LUT to %s", target)
+        logger.info("wrote the LUT %s", target.name)
 
         lut_report.publish(resampled, strip=False, detail=f"written to {target.name}")
         return io.NodeOutput(resampled)

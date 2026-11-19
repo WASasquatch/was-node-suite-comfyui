@@ -25,11 +25,13 @@ const STRIP_SLOT = "lut_strip";
 
 // Every node this draws on. Apply LUT is deliberately absent: it already carries the before
 // and after band, and two panels on one node leave neither of them room.
-const NODES = ["WASNSLoadLUT", "WASNSCombineLUT", "WASNSSaveLUT", "WASLUTFromReference"];
+const NODES = [
+  "WASNSLoadLUT", "WASNSCombineLUT", "WASNSSaveLUT", "WASLUTFromReference", "WASLUTFromLattice",
+];
 
-// Of those, the two that build a table with no picture anywhere near them, which get the
-// curves and the chart. The rest state what the table is and leave looking to a preview node.
-const NODES_WITH_CHART = ["WASNSLoadLUT", "WASNSCombineLUT"];
+// Of those, the ones that build a table with no picture worth looking at near them, which get
+// the curves and the chart. The rest state what the table is and leave looking to a preview node.
+const NODES_WITH_CHART = ["WASNSLoadLUT", "WASNSCombineLUT", "WASLUTFromLattice"];
 
 // Rows of the published strip, matching `modules/image/lut_preview.py`. The ramp is read for
 // the curves and the two bands below it are drawn as the chart.
@@ -372,8 +374,9 @@ app.registerExtension({
       name: "Show the LUT readout",
       tooltip:
         "Draw what a LUT node built on the node: its name, size and shape, whether it " +
-        "changes anything at all, and on Load LUT and LUT Blender the transfer curves and " +
-        "a graded reference chart. This applies to nodes added after the setting changes.",
+        "changes anything at all, and on Load LUT, LUT Blender and LUT from Lattice the " +
+        "transfer curves and a graded reference chart. This applies to nodes added after the " +
+        "setting changes.",
       type: "boolean",
       defaultValue: true,
     },

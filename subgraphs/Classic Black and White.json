@@ -1,0 +1,520 @@
+{
+  "id": "d70b3b8a-ee43-5b82-9203-a8112a99a12b",
+  "revision": 0,
+  "last_node_id": 1,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "739ebd7f-9269-5f63-a314-296b41ac881e",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        320,
+        138
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "amount",
+          "type": "FLOAT",
+          "widget": {
+            "name": "amount"
+          },
+          "link": null
+        },
+        {
+          "name": "grain",
+          "type": "FLOAT",
+          "widget": {
+            "name": "grain"
+          },
+          "link": null
+        },
+        {
+          "name": "contrast",
+          "type": "FLOAT",
+          "widget": {
+            "name": "contrast"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "title": "Classic Black and White",
+      "properties": {
+        "proxyWidgets": [
+          [
+            "-1",
+            "amount"
+          ],
+          [
+            "-1",
+            "grain"
+          ],
+          [
+            "-1",
+            "contrast"
+          ]
+        ]
+      },
+      "widgets_values": [
+        1.0,
+        1.0,
+        2.5
+      ]
+    }
+  ],
+  "links": [],
+  "version": 0.4,
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "739ebd7f-9269-5f63-a314-296b41ac881e",
+        "version": 1,
+        "state": {
+          "lastGroupId": 0,
+          "lastNodeId": 3,
+          "lastLinkId": 8,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Classic Black and White",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -240,
+            -20,
+            140,
+            120
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            1130,
+            -20,
+            120,
+            60
+          ]
+        },
+        "inputs": [
+          {
+            "id": "69d5db19-495b-57db-818b-d9c7dfca327a",
+            "name": "images",
+            "type": "IMAGE",
+            "linkIds": [
+              1,
+              3
+            ],
+            "pos": [
+              -160,
+              20
+            ]
+          },
+          {
+            "id": "e8cdf206-f773-5828-a27d-a601bea9a7b1",
+            "name": "amount",
+            "type": "FLOAT",
+            "linkIds": [
+              6
+            ],
+            "pos": [
+              -160,
+              40
+            ]
+          },
+          {
+            "id": "85fbdc34-9963-58a2-ad73-cd760d76ccbc",
+            "name": "grain",
+            "type": "FLOAT",
+            "linkIds": [
+              7
+            ],
+            "pos": [
+              -160,
+              60
+            ]
+          },
+          {
+            "id": "48a5be68-10d9-5fd3-ba03-3261fb728e88",
+            "name": "contrast",
+            "type": "FLOAT",
+            "linkIds": [
+              8
+            ],
+            "pos": [
+              -160,
+              80
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "3c741998-b1f9-5e37-bda1-51aa64f4c52d",
+            "name": "images",
+            "type": "IMAGE",
+            "linkIds": [
+              5
+            ],
+            "pos": [
+              1150,
+              20
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 1,
+            "type": "WASImageDarkroomPrint",
+            "pos": [
+              0,
+              0
+            ],
+            "size": [
+              300,
+              202
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 1
+              },
+              {
+                "name": "lens_filter",
+                "localized_name": "lens_filter",
+                "type": "COMBO",
+                "widget": {
+                  "name": "lens_filter"
+                },
+                "link": null
+              },
+              {
+                "name": "paper_grade",
+                "localized_name": "paper_grade",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "paper_grade"
+                },
+                "link": 8
+              },
+              {
+                "name": "exposure",
+                "localized_name": "exposure",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "exposure"
+                },
+                "link": null
+              },
+              {
+                "name": "toner",
+                "localized_name": "toner",
+                "type": "COMBO",
+                "widget": {
+                  "name": "toner"
+                },
+                "link": null
+              },
+              {
+                "name": "toner_amount",
+                "localized_name": "toner_amount",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "toner_amount"
+                },
+                "link": null
+              },
+              {
+                "name": "sabattier",
+                "localized_name": "sabattier",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "sabattier"
+                },
+                "link": null
+              },
+              {
+                "name": "paper",
+                "localized_name": "paper",
+                "type": "COMBO",
+                "widget": {
+                  "name": "paper"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  2
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageDarkroomPrint"
+            },
+            "widgets_values": [
+              "yellow",
+              2.5,
+              0.0,
+              "selenium",
+              0.4,
+              0.0,
+              "warm fibre"
+            ]
+          },
+          {
+            "id": 2,
+            "type": "WASImageFilmStock",
+            "pos": [
+              380,
+              0
+            ],
+            "size": [
+              300,
+              202
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 2
+              },
+              {
+                "name": "stock",
+                "localized_name": "stock",
+                "type": "COMBO",
+                "widget": {
+                  "name": "stock"
+                },
+                "link": null
+              },
+              {
+                "name": "strength",
+                "localized_name": "strength",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "strength"
+                },
+                "link": null
+              },
+              {
+                "name": "exposure",
+                "localized_name": "exposure",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "exposure"
+                },
+                "link": null
+              },
+              {
+                "name": "grain",
+                "localized_name": "grain",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "grain"
+                },
+                "link": 7
+              },
+              {
+                "name": "halation",
+                "localized_name": "halation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "halation"
+                },
+                "link": null
+              },
+              {
+                "name": "seed",
+                "localized_name": "seed",
+                "type": "INT",
+                "widget": {
+                  "name": "seed"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  4
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageFilmStock"
+            },
+            "widgets_values": [
+              "Black and White: Kodak Tri-X 400",
+              0.0,
+              0.0,
+              1.0,
+              1.0,
+              0,
+              "fixed"
+            ]
+          },
+          {
+            "id": 3,
+            "type": "Image Blend",
+            "pos": [
+              760,
+              0
+            ],
+            "size": [
+              270,
+              282
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "image_a",
+                "localized_name": "image_a",
+                "type": "IMAGE",
+                "link": 3
+              },
+              {
+                "name": "image_b",
+                "localized_name": "image_b",
+                "type": "IMAGE",
+                "link": 4
+              },
+              {
+                "name": "blend_percentage",
+                "localized_name": "blend_percentage",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "blend_percentage"
+                },
+                "link": 6
+              }
+            ],
+            "outputs": [
+              {
+                "name": "image",
+                "localized_name": "image",
+                "type": "IMAGE",
+                "links": [
+                  5
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Image Blend"
+            },
+            "widgets_values": [
+              1.0
+            ]
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 1,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 1,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 2,
+            "origin_id": 1,
+            "origin_slot": 0,
+            "target_id": 2,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 3,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 3,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 4,
+            "origin_id": 2,
+            "origin_slot": 0,
+            "target_id": 3,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 5,
+            "origin_id": 3,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 6,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 3,
+            "target_slot": 2,
+            "type": "FLOAT"
+          },
+          {
+            "id": 7,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 2,
+            "target_slot": 4,
+            "type": "FLOAT"
+          },
+          {
+            "id": 8,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 1,
+            "target_slot": 2,
+            "type": "FLOAT"
+          }
+        ],
+        "extra": {},
+        "category": "WAS Suite/Image/Looks",
+        "description": "Gritty street black and white: a high speed stock printed through a yellow filter on warm fibre paper with a touch of selenium."
+      }
+    ]
+  },
+  "extra": {}
+}

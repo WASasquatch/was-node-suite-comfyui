@@ -1,0 +1,1168 @@
+{
+  "id": "738cce3e-94d0-5cb2-929f-c6eaa2dd4b4e",
+  "revision": 0,
+  "last_node_id": 1,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "6577fd2e-f915-5b39-afd1-4c595055f7c4",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        320,
+        138
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "amount",
+          "type": "FLOAT",
+          "widget": {
+            "name": "amount"
+          },
+          "link": null
+        },
+        {
+          "name": "grain",
+          "type": "FLOAT",
+          "widget": {
+            "name": "grain"
+          },
+          "link": null
+        },
+        {
+          "name": "vignette",
+          "type": "FLOAT",
+          "widget": {
+            "name": "vignette"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "title": "Moody Film",
+      "properties": {
+        "proxyWidgets": [
+          [
+            "-1",
+            "amount"
+          ],
+          [
+            "-1",
+            "grain"
+          ],
+          [
+            "-1",
+            "vignette"
+          ]
+        ]
+      },
+      "widgets_values": [
+        1.0,
+        1.0,
+        0.35
+      ]
+    }
+  ],
+  "links": [],
+  "version": 0.4,
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "6577fd2e-f915-5b39-afd1-4c595055f7c4",
+        "version": 1,
+        "state": {
+          "lastGroupId": 0,
+          "lastNodeId": 6,
+          "lastLinkId": 11,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Moody Film",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -240,
+            -20,
+            140,
+            120
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            2240,
+            -20,
+            120,
+            60
+          ]
+        },
+        "inputs": [
+          {
+            "id": "34dd92b2-c8f7-59c1-80c9-e635346bab50",
+            "name": "images",
+            "type": "IMAGE",
+            "linkIds": [
+              1,
+              6
+            ],
+            "pos": [
+              -160,
+              20
+            ]
+          },
+          {
+            "id": "6156d5cd-73e2-56a8-9ba7-4bb18fcdf77b",
+            "name": "amount",
+            "type": "FLOAT",
+            "linkIds": [
+              9
+            ],
+            "pos": [
+              -160,
+              40
+            ]
+          },
+          {
+            "id": "cd087270-584d-5d73-914d-22971fb4d9f1",
+            "name": "grain",
+            "type": "FLOAT",
+            "linkIds": [
+              10
+            ],
+            "pos": [
+              -160,
+              60
+            ]
+          },
+          {
+            "id": "dd69c36d-f010-546e-9d96-9e767966826e",
+            "name": "vignette",
+            "type": "FLOAT",
+            "linkIds": [
+              11
+            ],
+            "pos": [
+              -160,
+              80
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "a632bea6-453b-5625-96ef-15797d428a91",
+            "name": "images",
+            "type": "IMAGE",
+            "linkIds": [
+              8
+            ],
+            "pos": [
+              2260,
+              20
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 1,
+            "type": "WASImageDevelop",
+            "pos": [
+              0,
+              0
+            ],
+            "size": [
+              300,
+              346
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 1
+              },
+              {
+                "name": "temperature",
+                "localized_name": "temperature",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "temperature"
+                },
+                "link": null
+              },
+              {
+                "name": "tint",
+                "localized_name": "tint",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "tint"
+                },
+                "link": null
+              },
+              {
+                "name": "exposure",
+                "localized_name": "exposure",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "exposure"
+                },
+                "link": null
+              },
+              {
+                "name": "contrast",
+                "localized_name": "contrast",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "contrast"
+                },
+                "link": null
+              },
+              {
+                "name": "highlights",
+                "localized_name": "highlights",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "highlights"
+                },
+                "link": null
+              },
+              {
+                "name": "shadows",
+                "localized_name": "shadows",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "shadows"
+                },
+                "link": null
+              },
+              {
+                "name": "whites",
+                "localized_name": "whites",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "whites"
+                },
+                "link": null
+              },
+              {
+                "name": "blacks",
+                "localized_name": "blacks",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "blacks"
+                },
+                "link": null
+              },
+              {
+                "name": "texture",
+                "localized_name": "texture",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "texture"
+                },
+                "link": null
+              },
+              {
+                "name": "clarity",
+                "localized_name": "clarity",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "clarity"
+                },
+                "link": null
+              },
+              {
+                "name": "dehaze",
+                "localized_name": "dehaze",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "dehaze"
+                },
+                "link": null
+              },
+              {
+                "name": "vibrance",
+                "localized_name": "vibrance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "vibrance"
+                },
+                "link": null
+              },
+              {
+                "name": "saturation",
+                "localized_name": "saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "saturation"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  2
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageDevelop"
+            },
+            "widgets_values": [
+              0.0,
+              0.0,
+              -0.3,
+              10,
+              -45,
+              -10,
+              0.0,
+              35,
+              0.0,
+              10,
+              0.0,
+              0.0,
+              -25
+            ]
+          },
+          {
+            "id": 2,
+            "type": "WASImageColorMixer",
+            "pos": [
+              380,
+              0
+            ],
+            "size": [
+              300,
+              634
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 2
+              },
+              {
+                "name": "mode",
+                "localized_name": "mode",
+                "type": "COMBO",
+                "widget": {
+                  "name": "mode"
+                },
+                "link": null
+              },
+              {
+                "name": "red_hue",
+                "localized_name": "red_hue",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "red_hue"
+                },
+                "link": null
+              },
+              {
+                "name": "orange_hue",
+                "localized_name": "orange_hue",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "orange_hue"
+                },
+                "link": null
+              },
+              {
+                "name": "yellow_hue",
+                "localized_name": "yellow_hue",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "yellow_hue"
+                },
+                "link": null
+              },
+              {
+                "name": "green_hue",
+                "localized_name": "green_hue",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "green_hue"
+                },
+                "link": null
+              },
+              {
+                "name": "aqua_hue",
+                "localized_name": "aqua_hue",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "aqua_hue"
+                },
+                "link": null
+              },
+              {
+                "name": "blue_hue",
+                "localized_name": "blue_hue",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "blue_hue"
+                },
+                "link": null
+              },
+              {
+                "name": "purple_hue",
+                "localized_name": "purple_hue",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "purple_hue"
+                },
+                "link": null
+              },
+              {
+                "name": "magenta_hue",
+                "localized_name": "magenta_hue",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "magenta_hue"
+                },
+                "link": null
+              },
+              {
+                "name": "red_saturation",
+                "localized_name": "red_saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "red_saturation"
+                },
+                "link": null
+              },
+              {
+                "name": "orange_saturation",
+                "localized_name": "orange_saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "orange_saturation"
+                },
+                "link": null
+              },
+              {
+                "name": "yellow_saturation",
+                "localized_name": "yellow_saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "yellow_saturation"
+                },
+                "link": null
+              },
+              {
+                "name": "green_saturation",
+                "localized_name": "green_saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "green_saturation"
+                },
+                "link": null
+              },
+              {
+                "name": "aqua_saturation",
+                "localized_name": "aqua_saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "aqua_saturation"
+                },
+                "link": null
+              },
+              {
+                "name": "blue_saturation",
+                "localized_name": "blue_saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "blue_saturation"
+                },
+                "link": null
+              },
+              {
+                "name": "purple_saturation",
+                "localized_name": "purple_saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "purple_saturation"
+                },
+                "link": null
+              },
+              {
+                "name": "magenta_saturation",
+                "localized_name": "magenta_saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "magenta_saturation"
+                },
+                "link": null
+              },
+              {
+                "name": "red_luminance",
+                "localized_name": "red_luminance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "red_luminance"
+                },
+                "link": null
+              },
+              {
+                "name": "orange_luminance",
+                "localized_name": "orange_luminance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "orange_luminance"
+                },
+                "link": null
+              },
+              {
+                "name": "yellow_luminance",
+                "localized_name": "yellow_luminance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "yellow_luminance"
+                },
+                "link": null
+              },
+              {
+                "name": "green_luminance",
+                "localized_name": "green_luminance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "green_luminance"
+                },
+                "link": null
+              },
+              {
+                "name": "aqua_luminance",
+                "localized_name": "aqua_luminance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "aqua_luminance"
+                },
+                "link": null
+              },
+              {
+                "name": "blue_luminance",
+                "localized_name": "blue_luminance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "blue_luminance"
+                },
+                "link": null
+              },
+              {
+                "name": "purple_luminance",
+                "localized_name": "purple_luminance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "purple_luminance"
+                },
+                "link": null
+              },
+              {
+                "name": "magenta_luminance",
+                "localized_name": "magenta_luminance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "magenta_luminance"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  3
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageColorMixer"
+            },
+            "widgets_values": [
+              "color",
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              5,
+              -20,
+              -45,
+              0.0,
+              -30,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              -20,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "id": 3,
+            "type": "WASImageColorGrade",
+            "pos": [
+              760,
+              0
+            ],
+            "size": [
+              300,
+              82
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 3
+              },
+              {
+                "name": "shadows_hue",
+                "localized_name": "shadows_hue",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "shadows_hue"
+                },
+                "link": null
+              },
+              {
+                "name": "shadows_saturation",
+                "localized_name": "shadows_saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "shadows_saturation"
+                },
+                "link": null
+              },
+              {
+                "name": "shadows_luminance",
+                "localized_name": "shadows_luminance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "shadows_luminance"
+                },
+                "link": null
+              },
+              {
+                "name": "midtones_hue",
+                "localized_name": "midtones_hue",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "midtones_hue"
+                },
+                "link": null
+              },
+              {
+                "name": "midtones_saturation",
+                "localized_name": "midtones_saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "midtones_saturation"
+                },
+                "link": null
+              },
+              {
+                "name": "midtones_luminance",
+                "localized_name": "midtones_luminance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "midtones_luminance"
+                },
+                "link": null
+              },
+              {
+                "name": "highlights_hue",
+                "localized_name": "highlights_hue",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "highlights_hue"
+                },
+                "link": null
+              },
+              {
+                "name": "highlights_saturation",
+                "localized_name": "highlights_saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "highlights_saturation"
+                },
+                "link": null
+              },
+              {
+                "name": "highlights_luminance",
+                "localized_name": "highlights_luminance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "highlights_luminance"
+                },
+                "link": null
+              },
+              {
+                "name": "global_hue",
+                "localized_name": "global_hue",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "global_hue"
+                },
+                "link": null
+              },
+              {
+                "name": "global_saturation",
+                "localized_name": "global_saturation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "global_saturation"
+                },
+                "link": null
+              },
+              {
+                "name": "global_luminance",
+                "localized_name": "global_luminance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "global_luminance"
+                },
+                "link": null
+              },
+              {
+                "name": "blending",
+                "localized_name": "blending",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "blending"
+                },
+                "link": null
+              },
+              {
+                "name": "balance",
+                "localized_name": "balance",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "balance"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  4
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageColorGrade"
+            },
+            "widgets_values": [
+              195,
+              22,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              35,
+              12,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              50.0,
+              -20
+            ]
+          },
+          {
+            "id": 4,
+            "type": "WASImageFilmStock",
+            "pos": [
+              1140,
+              0
+            ],
+            "size": [
+              300,
+              202
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 4
+              },
+              {
+                "name": "stock",
+                "localized_name": "stock",
+                "type": "COMBO",
+                "widget": {
+                  "name": "stock"
+                },
+                "link": null
+              },
+              {
+                "name": "strength",
+                "localized_name": "strength",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "strength"
+                },
+                "link": null
+              },
+              {
+                "name": "exposure",
+                "localized_name": "exposure",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "exposure"
+                },
+                "link": null
+              },
+              {
+                "name": "grain",
+                "localized_name": "grain",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "grain"
+                },
+                "link": 10
+              },
+              {
+                "name": "halation",
+                "localized_name": "halation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "halation"
+                },
+                "link": null
+              },
+              {
+                "name": "seed",
+                "localized_name": "seed",
+                "type": "INT",
+                "widget": {
+                  "name": "seed"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  5
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageFilmStock"
+            },
+            "widgets_values": [
+              "Color Negative: Kodak Portra 400",
+              0.6,
+              0.0,
+              1.0,
+              1.0,
+              0,
+              "fixed"
+            ]
+          },
+          {
+            "id": 5,
+            "type": "WASImageVignette",
+            "pos": [
+              1520,
+              0
+            ],
+            "size": [
+              270,
+              382
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 5
+              },
+              {
+                "name": "amount",
+                "localized_name": "amount",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "amount"
+                },
+                "link": 11
+              },
+              {
+                "name": "size",
+                "localized_name": "size",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "size"
+                },
+                "link": null
+              },
+              {
+                "name": "feather",
+                "localized_name": "feather",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "feather"
+                },
+                "link": null
+              },
+              {
+                "name": "shape",
+                "localized_name": "shape",
+                "type": "COMBO",
+                "widget": {
+                  "name": "shape"
+                },
+                "link": null
+              },
+              {
+                "name": "centre_x",
+                "localized_name": "centre_x",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "centre_x"
+                },
+                "link": null
+              },
+              {
+                "name": "centre_y",
+                "localized_name": "centre_y",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "centre_y"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  7
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageVignette"
+            },
+            "widgets_values": [
+              0.35,
+              0.75,
+              0.5,
+              "to the frame",
+              0.5,
+              0.5
+            ]
+          },
+          {
+            "id": 6,
+            "type": "Image Blend",
+            "pos": [
+              1870,
+              0
+            ],
+            "size": [
+              270,
+              282
+            ],
+            "flags": {},
+            "order": 6,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "image_a",
+                "localized_name": "image_a",
+                "type": "IMAGE",
+                "link": 6
+              },
+              {
+                "name": "image_b",
+                "localized_name": "image_b",
+                "type": "IMAGE",
+                "link": 7
+              },
+              {
+                "name": "blend_percentage",
+                "localized_name": "blend_percentage",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "blend_percentage"
+                },
+                "link": 9
+              }
+            ],
+            "outputs": [
+              {
+                "name": "image",
+                "localized_name": "image",
+                "type": "IMAGE",
+                "links": [
+                  8
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Image Blend"
+            },
+            "widgets_values": [
+              1.0
+            ]
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 1,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 1,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 2,
+            "origin_id": 1,
+            "origin_slot": 0,
+            "target_id": 2,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 3,
+            "origin_id": 2,
+            "origin_slot": 0,
+            "target_id": 3,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 4,
+            "origin_id": 3,
+            "origin_slot": 0,
+            "target_id": 4,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 5,
+            "origin_id": 4,
+            "origin_slot": 0,
+            "target_id": 5,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 6,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 6,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 7,
+            "origin_id": 5,
+            "origin_slot": 0,
+            "target_id": 6,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 8,
+            "origin_id": 6,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 9,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 6,
+            "target_slot": 2,
+            "type": "FLOAT"
+          },
+          {
+            "id": 10,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 4,
+            "target_slot": 4,
+            "type": "FLOAT"
+          },
+          {
+            "id": 11,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 5,
+            "target_slot": 1,
+            "type": "FLOAT"
+          }
+        ],
+        "extra": {},
+        "category": "WAS Suite/Image/Looks",
+        "description": "Dark and muted with faded blacks, quiet greens, teal shadows and warm highlights on a colour negative, with grain and a vignette."
+      }
+    ]
+  },
+  "extra": {}
+}

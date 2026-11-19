@@ -1,0 +1,703 @@
+{
+  "id": "1c0b5610-0759-5896-9ead-ab4e72b8fd98",
+  "revision": 0,
+  "last_node_id": 1,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "1c32c2e4-c1eb-5868-8eba-43e390bab66e",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        320,
+        138
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "amount",
+          "type": "FLOAT",
+          "widget": {
+            "name": "amount"
+          },
+          "link": null
+        },
+        {
+          "name": "vignette",
+          "type": "FLOAT",
+          "widget": {
+            "name": "vignette"
+          },
+          "link": null
+        },
+        {
+          "name": "dust",
+          "type": "FLOAT",
+          "widget": {
+            "name": "dust"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "title": "Vintage Instant",
+      "properties": {
+        "proxyWidgets": [
+          [
+            "-1",
+            "amount"
+          ],
+          [
+            "-1",
+            "vignette"
+          ],
+          [
+            "-1",
+            "dust"
+          ]
+        ]
+      },
+      "widgets_values": [
+        1.0,
+        0.4,
+        0.15
+      ]
+    }
+  ],
+  "links": [],
+  "version": 0.4,
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "1c32c2e4-c1eb-5868-8eba-43e390bab66e",
+        "version": 1,
+        "state": {
+          "lastGroupId": 0,
+          "lastNodeId": 5,
+          "lastLinkId": 10,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Vintage Instant",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -240,
+            -20,
+            140,
+            120
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            1860,
+            -20,
+            120,
+            60
+          ]
+        },
+        "inputs": [
+          {
+            "id": "687d6c91-d9f7-5a9a-bed1-18d782cb2ecc",
+            "name": "images",
+            "type": "IMAGE",
+            "linkIds": [
+              1,
+              5
+            ],
+            "pos": [
+              -160,
+              20
+            ]
+          },
+          {
+            "id": "ce454b61-d0a6-50f0-bce8-9879c149d4b7",
+            "name": "amount",
+            "type": "FLOAT",
+            "linkIds": [
+              8
+            ],
+            "pos": [
+              -160,
+              40
+            ]
+          },
+          {
+            "id": "6929934b-d86c-5695-a819-f3535bbda786",
+            "name": "vignette",
+            "type": "FLOAT",
+            "linkIds": [
+              9
+            ],
+            "pos": [
+              -160,
+              60
+            ]
+          },
+          {
+            "id": "bcda432c-1af8-50d1-8ed8-c969fc5c19fa",
+            "name": "dust",
+            "type": "FLOAT",
+            "linkIds": [
+              10
+            ],
+            "pos": [
+              -160,
+              80
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "496c3dcd-c3c9-52fc-a1e6-f88be15daf5b",
+            "name": "images",
+            "type": "IMAGE",
+            "linkIds": [
+              7
+            ],
+            "pos": [
+              1880,
+              20
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 1,
+            "type": "WASImageFilmStock",
+            "pos": [
+              0,
+              0
+            ],
+            "size": [
+              300,
+              202
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 1
+              },
+              {
+                "name": "stock",
+                "localized_name": "stock",
+                "type": "COMBO",
+                "widget": {
+                  "name": "stock"
+                },
+                "link": null
+              },
+              {
+                "name": "strength",
+                "localized_name": "strength",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "strength"
+                },
+                "link": null
+              },
+              {
+                "name": "exposure",
+                "localized_name": "exposure",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "exposure"
+                },
+                "link": null
+              },
+              {
+                "name": "grain",
+                "localized_name": "grain",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "grain"
+                },
+                "link": null
+              },
+              {
+                "name": "halation",
+                "localized_name": "halation",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "halation"
+                },
+                "link": null
+              },
+              {
+                "name": "seed",
+                "localized_name": "seed",
+                "type": "INT",
+                "widget": {
+                  "name": "seed"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  2
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageFilmStock"
+            },
+            "widgets_values": [
+              "Instant: Polaroid SX-70",
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              0,
+              "fixed"
+            ]
+          },
+          {
+            "id": 2,
+            "type": "WASImageDiffusionFilter",
+            "pos": [
+              380,
+              0
+            ],
+            "size": [
+              300,
+              130
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 2
+              },
+              {
+                "name": "style",
+                "localized_name": "style",
+                "type": "COMBO",
+                "widget": {
+                  "name": "style"
+                },
+                "link": null
+              },
+              {
+                "name": "strength",
+                "localized_name": "strength",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "strength"
+                },
+                "link": null
+              },
+              {
+                "name": "size",
+                "localized_name": "size",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "size"
+                },
+                "link": null
+              },
+              {
+                "name": "corners",
+                "localized_name": "corners",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "corners"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  3
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageDiffusionFilter"
+            },
+            "widgets_values": [
+              "soft focus",
+              0.2,
+              1.0,
+              0.4
+            ]
+          },
+          {
+            "id": 3,
+            "type": "WASImageVignette",
+            "pos": [
+              760,
+              0
+            ],
+            "size": [
+              270,
+              382
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 3
+              },
+              {
+                "name": "amount",
+                "localized_name": "amount",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "amount"
+                },
+                "link": 9
+              },
+              {
+                "name": "size",
+                "localized_name": "size",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "size"
+                },
+                "link": null
+              },
+              {
+                "name": "feather",
+                "localized_name": "feather",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "feather"
+                },
+                "link": null
+              },
+              {
+                "name": "shape",
+                "localized_name": "shape",
+                "type": "COMBO",
+                "widget": {
+                  "name": "shape"
+                },
+                "link": null
+              },
+              {
+                "name": "centre_x",
+                "localized_name": "centre_x",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "centre_x"
+                },
+                "link": null
+              },
+              {
+                "name": "centre_y",
+                "localized_name": "centre_y",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "centre_y"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  4
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageVignette"
+            },
+            "widgets_values": [
+              0.4,
+              0.75,
+              0.5,
+              "to the frame",
+              0.5,
+              0.5
+            ]
+          },
+          {
+            "id": 4,
+            "type": "WASImageFilmDamage",
+            "pos": [
+              1110,
+              0
+            ],
+            "size": [
+              300,
+              202
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "link": 4
+              },
+              {
+                "name": "dust",
+                "localized_name": "dust",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "dust"
+                },
+                "link": 10
+              },
+              {
+                "name": "hairs",
+                "localized_name": "hairs",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "hairs"
+                },
+                "link": null
+              },
+              {
+                "name": "scratches",
+                "localized_name": "scratches",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "scratches"
+                },
+                "link": null
+              },
+              {
+                "name": "mottle",
+                "localized_name": "mottle",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "mottle"
+                },
+                "link": null
+              },
+              {
+                "name": "tone",
+                "localized_name": "tone",
+                "type": "COMBO",
+                "widget": {
+                  "name": "tone"
+                },
+                "link": null
+              },
+              {
+                "name": "seed",
+                "localized_name": "seed",
+                "type": "INT",
+                "widget": {
+                  "name": "seed"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "name": "images",
+                "localized_name": "images",
+                "type": "IMAGE",
+                "links": [
+                  6
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASImageFilmDamage"
+            },
+            "widgets_values": [
+              0.15,
+              0.1,
+              0.0,
+              0.0,
+              "light",
+              0,
+              "fixed"
+            ]
+          },
+          {
+            "id": 5,
+            "type": "Image Blend",
+            "pos": [
+              1490,
+              0
+            ],
+            "size": [
+              270,
+              282
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "image_a",
+                "localized_name": "image_a",
+                "type": "IMAGE",
+                "link": 5
+              },
+              {
+                "name": "image_b",
+                "localized_name": "image_b",
+                "type": "IMAGE",
+                "link": 6
+              },
+              {
+                "name": "blend_percentage",
+                "localized_name": "blend_percentage",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "blend_percentage"
+                },
+                "link": 8
+              }
+            ],
+            "outputs": [
+              {
+                "name": "image",
+                "localized_name": "image",
+                "type": "IMAGE",
+                "links": [
+                  7
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Image Blend"
+            },
+            "widgets_values": [
+              1.0
+            ]
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 1,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 1,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 2,
+            "origin_id": 1,
+            "origin_slot": 0,
+            "target_id": 2,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 3,
+            "origin_id": 2,
+            "origin_slot": 0,
+            "target_id": 3,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 4,
+            "origin_id": 3,
+            "origin_slot": 0,
+            "target_id": 4,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 5,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 5,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 6,
+            "origin_id": 4,
+            "origin_slot": 0,
+            "target_id": 5,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 7,
+            "origin_id": 5,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 8,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 5,
+            "target_slot": 2,
+            "type": "FLOAT"
+          },
+          {
+            "id": 9,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 3,
+            "target_slot": 1,
+            "type": "FLOAT"
+          },
+          {
+            "id": 10,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 4,
+            "target_slot": 1,
+            "type": "FLOAT"
+          }
+        ],
+        "extra": {},
+        "category": "WAS Suite/Image/Looks",
+        "description": "An old instant print: faded colour and a warm cast, soft corners, a dark edge and a little dust."
+      }
+    ]
+  },
+  "extra": {}
+}

@@ -5,11 +5,11 @@ What the pack does. Every entry names the nodes and what the area is for.
 
 | | |
 |---|---|
-| Nodes | **721** across **72** categories |
+| Nodes | **757** across **75** categories |
 | Deprecated | **28**, each naming its replacement |
 | Gated | Nine `legacy` groups and several feature groups in `config.yaml`. A workflow opened with one of their nodes turned off names the setting that loads it and any package it lacks, with the install command or a way into Open Manager: [`docs/CONFIG.md`](docs/CONFIG.md) |
 | Panels | 386 nodes draw their own readout, picture or editor on the canvas |
-| Graphs | Runnable examples in [`docs/workflows/`](docs/workflows), linked per area below |
+| Graphs | Every runnable example by area, with a preview and a download link: [`docs/WORKFLOWS.md`](docs/WORKFLOWS.md). Each is also linked from its area below |
 
 ---
 
@@ -57,6 +57,38 @@ For retouching, grading or inpainting skin without touching what is around it.
 [`NODES.md`](NODES.md) under **WAS Suite/Image/Masking**. Graph:
 [`image-skin-mask.json`](docs/workflows/image-skin-mask.json). The models, and the terms the
 Sapiens2 weights come with: [`docs/MODELS.md`](docs/MODELS.md#skin-masks).
+
+---
+
+## Masks drawn on the picture
+
+**Image Graduated Mask**, **Image Radial Mask** and **Image Color Range Mask** make the
+masks a photo editor's local adjustments use: a graduated filter dragged across the frame, an
+ellipse dragged round a subject, and a range of hue, saturation and lightness picked from the
+picture, following the colour through a video. Each draws its handles on the node over the
+picture, and each mask can be inverted and combined with one already made. Image Develop, Image
+Color Mixer and Image Color Grading take one on their `mask` input.
+
+For darkening a sky, lifting a face or cooling one colour without painting a mask by hand.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Image/Masking**. Graph:
+[`local-adjustments.json`](docs/workflows/local-adjustments.json).
+
+---
+
+## A subject followed through a clip
+
+**Image Track Subject** finds a person or an object by clicked points, a named subject or a
+wired mask on any frame, and follows it forward and backward through a clip with SAM 3, its
+matte snapped to the picture's edges. Its panel shows the frames with their mattes and the
+candidates found. **Image Spotlight** develops the subject and its surroundings apart through
+that matte, such as the subject in colour and the rest in black and white.
+
+For grading, isolating or removing one subject in a still or a moving shot.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Image/Masking** and **WAS Suite/Image/Develop**. Graphs:
+[`subject-spotlight.json`](docs/workflows/subject-spotlight.json),
+[`subject-spotlight-video.json`](docs/workflows/subject-spotlight-video.json).
 
 ---
 
@@ -119,6 +151,8 @@ closes with a square kernel, matching core Apply Morphology on any kernel size o
 the frames of a batch worked on at once. **Image Filter Adjustments**, **Image Bloom Filter** and
 **Vivid Sharpen** process a whole batch together on the GPU, the filters that work frame by frame
 use several CPU cores at once, and every one of them shows a progress bar on long batches.
+**Image Lens Blur** defocuses a picture by its depth map the way a fast lens does, small lights
+opening into the aperture's shape, with the point kept sharp clicked on the node.
 
 **Image Crop Face (YuNet)**, **Image Paste Face**, **Image Crop Region**, **Image Paste Crop**,
 **Image Seamless Texture**, **Image Tiled**, **Image Draw Text**, **Image Pixelate**, **Image
@@ -128,6 +162,7 @@ For grading and finishing a render inside the graph.
 
 [`NODES.md`](NODES.md) under **WAS Suite/Image/Filter** and **WAS Suite/Image/Process**. Graphs:
 [`image-style-filter.json`](docs/workflows/image-style-filter.json),
+[`lens-blur.json`](docs/workflows/lens-blur.json),
 [`ssao-height-map.json`](docs/workflows/ssao-height-map.json),
 [`image-morphology-and-resize.json`](docs/workflows/image-morphology-and-resize.json).
 
@@ -195,6 +230,81 @@ unlit colour to paint a 3D model's texture with.
 
 ---
 
+## A photo developed like a raw file
+
+**Image Develop** carries a raw editor's basic panel: exposure, white balance, contrast,
+highlights, shadows, whites, blacks, texture, clarity, dehaze, vibrance and saturation, on
+sliders drawn as gradients. **Image Color Mixer** sets the hue, saturation and lightness of
+eight colour bands, or mixes them into black and white. **Image Color Grading** tints shadows,
+midtones, highlights and the whole picture on four colour wheels drawn on the node. **Image
+Natural Finish** takes the generated look off a render: crushed blacks and hard highlights
+eased, neon colour calmed and over-sharpened texture softened.
+
+**Image Portrait Retouch** evens blotchy redness and patchy tone inside a skin mask and heals
+small red spots, keeping pores and fine lines. It leaves wrinkles, deep shadows, dense acne and
+face shape alone, and on video its healed spots flicker, so it is for stills.
+
+For finishing a render or a photo the way a photographer would, inside the graph.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Image/Develop**. Graphs:
+[`photo-develop.json`](docs/workflows/photo-develop.json),
+[`portrait-retouch.json`](docs/workflows/portrait-retouch.json).
+
+---
+
+## Film stocks and the darkroom
+
+**Image Film Stock** develops a picture as one of 70 colour negative, slide, cinema, instant,
+black and white, lab process and camera simulation stocks, each with its tone curve, colour,
+halation and grain. **Image Darkroom Print** prints it in black and white through a lens filter,
+a paper grade and a toner. **Image Halation**, **Image Diffusion Filter**, **Image Light Leak**
+and **Image Film Damage** add the red glow round highlights, a softening filter, a leak of light,
+and dust, hairs, scratches and uneven density.
+
+Sixteen ready looks, from Kodachrome Classic and Teal and Orange to Dramatic Black and White,
+are in the Node Library under Subgraph Blueprints › WAS Suite › Image › Looks, each with an
+`amount` and two controls of its own.
+
+For a film look built from the parts a lab would use rather than a single filter.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Image/Film**. Graphs:
+[`film-lab.json`](docs/workflows/film-lab.json),
+[`photo-looks.json`](docs/workflows/photo-looks.json).
+
+---
+
+## A look baked into a LUT
+
+**LUT Lattice** makes a Hald picture holding every colour a LUT samples. Run it through any chain
+of colour nodes, and **LUT from Lattice** reads the result back as a 3D LUT for Save LUT (.cube).
+It refuses a chain that changes pixels by their neighbours, such as grain, blur or a vignette,
+which no LUT can hold. Load LUT, Apply LUT and Save LUT read and write the `.cube` layout every
+editor uses.
+
+For taking a grade made in ComfyUI into DaVinci Resolve, Premiere, a camera monitor or another
+graph.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Image/LUT**. Graph:
+[`bake-look-to-lut.json`](docs/workflows/bake-look-to-lut.json).
+
+---
+
+## Colour spaces, ACES and HDR video
+
+**Image Color Space** converts between sRGB, Display P3, Rec.709, Rec.2020, ACES2065-1, ACEScg,
+ACEScct, the common camera logs, PQ and HLG. **Image ACES Output** renders scene light for a
+screen with the ACES 2.0 output transforms, SDR and HDR, matching OpenColorIO. Save Video
+(Advanced) tags what it writes as sRGB, Rec.709, Display P3, HDR10 with its mastering metadata
+or HLG, and dithers on request.
+
+For footage from a log camera, for an ACES pipeline, and for HDR video a television plays as HDR.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Image/Color Management** and **WAS Suite/IO**. Graph:
+[`color-management.json`](docs/workflows/color-management.json). The ACES and OpenColorIO terms:
+[`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
+
+---
+
 ## HDR and linear light
 
 9 nodes. **Linear Light** and **Images to Linear** move an image out of picture codes.
@@ -216,7 +326,9 @@ For work where values above white have to survive the filter chain.
 ## Instruments
 
 **Image Histogram Chart**, **Image Waveform**, **Image Statistics**, **Image Color Palette** and
-**Image Compare (Advanced)** measure a picture. **Latent Statistics** and **Latent Power
+**Image Compare (Advanced)** measure a picture. **Image Vectorscope** plots its colours on a
+vectorscope with the skin tone line and colour bar targets, and **Image False Color** paints its
+exposure in ARRI's false colour bands. **Latent Statistics** and **Latent Power
 Spectrum** measure a latent. **Compare Video** plays two renders under a divider that drags.
 
 For deciding whether a change improved anything, from a number rather than an impression.
@@ -572,6 +684,57 @@ one to music.
 
 ---
 
+## Edits, transitions and titles
+
+**Video Join** joins clips with cuts, dissolves, dips and wipes, their sound crossfaded under
+each join. **Video Look Transition** eases one grade into another over a stretch of a clip, such
+as day into night. **Video Subtitles** burns in an SRT or WebVTT file or typed cues, wrapped to
+two balanced lines with an outline, shadow or box. **Video Timecode** stamps timecode or a frame
+number, drop frame included. **Video Lower Third** introduces a speaker in one of six styles, at the top or bottom
+of the frame, sliding, rising or fading in.
+
+For cutting and titling a clip without leaving ComfyUI.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Animation**. Graphs:
+[`edit-and-titles.json`](docs/workflows/edit-and-titles.json),
+[`lower-third-styles.json`](docs/workflows/lower-third-styles.json).
+
+---
+
+## Restored footage
+
+**Video Denoise** averages each frame with its neighbours along their motion, keeping detail that
+moves. **Video Remove Dust** repairs specks and blotches that last one frame from the frames
+either side. **Video Remove Object** fills a masked person or object with the background other
+frames show, carried along their motion. What no frame shows comes out as its own mask, to fill
+on one frame and wire back. It suits locked-off shots and pans; parallax, changing light and
+motion behind the object degrade it.
+
+For old, grainy or dusty footage, and for taking a passer-by out of a shot.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Animation**. Graphs:
+[`restore-footage.json`](docs/workflows/restore-footage.json),
+[`remove-object.json`](docs/workflows/remove-object.json).
+
+---
+
+## A face restored through a whole shot
+
+**Video Track Crop** cuts the subject a mask follows, such as a face from Image Track Subject,
+out of every frame at one fixed size, centred and steadied however far away it is, and hands on
+the frame that shows it in most detail at that frame's own resolution. Restore the crops as their
+own clip, and **Video Track Paste** lays them back where they were cut, shifted onto the original
+subject, its colour and light matched, into the clip or an upscaled copy of it. Frames where the
+subject already held more detail than the crop keep their own.
+
+For a face that is only a smudge for most of a walk-up shot, redrawn by MiniMax H3 with the
+close-up as the identity reference.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Animation**. Graph:
+[`h3-video-face-restore.json`](docs/workflows/h3-video-face-restore.json).
+
+---
+
 ## A video built one segment at a time
 
 **MiniMax H3 Conditioning** writes every segment of a MiniMax H3 video on one node. Each row is
@@ -761,13 +924,20 @@ megapixels. `standard` mode keeps every step at full size with the composition o
 sampler, and `renoise_steps` 0 there is that sampler exactly. The graph runs it at 16 megapixels
 on a 24 GB card with **H3 Low VRAM** and **Free Memory**.
 
+**H3 Image Blank Guidance** reads the prompt beside a blank picture, which makes text to image
+more photographic: clean skin with real pores in place of speckled crust, crisper lashes, fur and
+stone. `blank` mode does it on every step at no extra cost, and `subtraction` pushes the first
+steps past the change the picture makes for still more detail. Strength sets how far, and both
+modes change the composition.
+
 The system prompt library's built-in **MiniMax H3 Image Prompt Enhancer** skill turns a few words
 into the long, literal caption H3 Image follows best, and picks the aspect ratio to render at.
 
 For finished H3 Image pictures at the sizes the model is released for.
 
-[`NODES.md`](NODES.md) under **WAS Suite/Sampling**. Graph:
-[`minimax-h3-image-sampler.json`](docs/workflows/minimax-h3-image-sampler.json).
+[`NODES.md`](NODES.md) under **WAS Suite/Sampling**. Graphs:
+[`minimax-h3-image-sampler.json`](docs/workflows/minimax-h3-image-sampler.json),
+[`h3-image-blank-guidance.json`](docs/workflows/h3-image-blank-guidance.json).
 
 ---
 

@@ -1,0 +1,1186 @@
+{
+  "id": "2c586c7c-c97d-4366-a56c-26872d669ada",
+  "revision": 0,
+  "last_node_id": 7,
+  "last_link_id": 8,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "WASLoadVideo",
+      "pos": [
+        40,
+        120
+      ],
+      "size": [
+        270,
+        602
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "path",
+          "name": "path",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "file",
+          "name": "file",
+          "type": "COMBO",
+          "widget": {
+            "name": "file"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "num_frames",
+          "name": "num_frames",
+          "type": "INT",
+          "widget": {
+            "name": "num_frames"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strategy",
+          "name": "strategy",
+          "type": "COMBO",
+          "widget": {
+            "name": "strategy"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "nth",
+          "name": "nth",
+          "type": "INT",
+          "widget": {
+            "name": "nth"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_fps",
+          "name": "target_fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "target_fps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "resize_mode",
+          "name": "resize_mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "resize_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start",
+          "name": "start",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "end",
+          "name": "end",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "end"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_size",
+          "name": "max_size",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "max_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "interpolation",
+          "name": "interpolation",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "interpolation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "align",
+          "name": "align",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "align"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pad_color",
+          "name": "pad_color",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "pad_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "channels",
+          "name": "channels",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "channels"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "video",
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            8
+          ]
+        },
+        {
+          "localized_name": "metadata",
+          "name": "metadata",
+          "type": "WAS_VIDEO_METADATA",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLoadVideo",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "file": true,
+            "num_frames": true,
+            "strategy": true,
+            "nth": true,
+            "seed": true,
+            "target_fps": true,
+            "resize_mode": true,
+            "width": true,
+            "height": true,
+            "start": true,
+            "end": true,
+            "max_size": true,
+            "interpolation": true,
+            "align": true,
+            "pad_color": true,
+            "channels": true,
+            "upload": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "vid_00004-audio.mp4 [input]",
+        0,
+        "uniform",
+        1,
+        0,
+        "fixed",
+        0,
+        "fill and crop",
+        960,
+        540,
+        100,
+        147,
+        0,
+        "lanczos",
+        "middle center",
+        "#000000",
+        "RGB",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "vid_00004-audio.mp4 [input]",
+        "num_frames": 0,
+        "strategy": "uniform",
+        "nth": 1,
+        "seed": 0,
+        "control_after_generate": "fixed",
+        "target_fps": 0,
+        "resize_mode": "fill and crop",
+        "width": 960,
+        "height": 540,
+        "start": 100,
+        "end": 147,
+        "max_size": 0,
+        "interpolation": "lanczos",
+        "align": "middle center",
+        "pad_color": "#000000",
+        "channels": "RGB",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "Image Film Grain",
+      "pos": [
+        404,
+        120
+      ],
+      "size": [
+        270,
+        358
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "strength",
+          "name": "strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "grain_size",
+          "name": "grain_size",
+          "type": "FLOAT",
+          "widget": {
+            "name": "grain_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color",
+          "name": "color",
+          "type": "FLOAT",
+          "widget": {
+            "name": "color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Image Film Grain",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "strength": true,
+            "grain_size": true,
+            "color": true,
+            "seed": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0.06,
+        1.5,
+        0,
+        0,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "strength": 0.06,
+        "grain_size": 1.5,
+        "color": 0,
+        "seed": 0,
+        "control_after_generate": "fixed"
+      }
+    },
+    {
+      "id": 3,
+      "type": "WASImageFilmDamage",
+      "pos": [
+        784,
+        120
+      ],
+      "size": [
+        300,
+        430
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "dust",
+          "name": "dust",
+          "type": "FLOAT",
+          "widget": {
+            "name": "dust"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hairs",
+          "name": "hairs",
+          "type": "FLOAT",
+          "widget": {
+            "name": "hairs"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scratches",
+          "name": "scratches",
+          "type": "FLOAT",
+          "widget": {
+            "name": "scratches"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "mottle",
+          "name": "mottle",
+          "type": "FLOAT",
+          "widget": {
+            "name": "mottle"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tone",
+          "name": "tone",
+          "type": "COMBO",
+          "widget": {
+            "name": "tone"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageFilmDamage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "dust": true,
+            "hairs": true,
+            "scratches": true,
+            "mottle": true,
+            "tone": true,
+            "seed": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0.5,
+        0,
+        0,
+        0,
+        "light",
+        7,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "dust": 0.5,
+        "hairs": 0,
+        "scratches": 0,
+        "mottle": 0,
+        "tone": "light",
+        "seed": 7,
+        "control_after_generate": "fixed"
+      }
+    },
+    {
+      "id": 4,
+      "type": "WASVideoMotionModelLoader",
+      "pos": [
+        40,
+        1032
+      ],
+      "size": [
+        284,
+        82
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "checkpoint",
+          "name": "checkpoint",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "checkpoint"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "iterations",
+          "name": "iterations",
+          "type": "INT",
+          "widget": {
+            "name": "iterations"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "motion_model",
+          "name": "motion_model",
+          "type": "WAS_MOTION_MODEL",
+          "links": [
+            4,
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASVideoMotionModelLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "checkpoint": true,
+            "iterations": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "models": [
+          {
+            "name": "sea_raft_m_spring.safetensors",
+            "url": "https://huggingface.co/MemorySlices/Tartan-C-T-TSKH-spring540x960-M/resolve/main/model.safetensors",
+            "directory": "optical_flow"
+          }
+        ]
+      },
+      "widgets_values": [
+        "sea_raft_m_spring.safetensors",
+        4
+      ],
+      "widgets_values_named": {
+        "checkpoint": "sea_raft_m_spring.safetensors",
+        "iterations": 4
+      }
+    },
+    {
+      "id": 5,
+      "type": "WASVideoRemoveDust",
+      "pos": [
+        404,
+        1032
+      ],
+      "size": [
+        300,
+        494
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "video",
+          "name": "video",
+          "type": "VIDEO,IMAGE",
+          "link": 3
+        },
+        {
+          "localized_name": "motion_model",
+          "name": "motion_model",
+          "shape": 7,
+          "type": "WAS_MOTION_MODEL",
+          "link": 4
+        },
+        {
+          "localized_name": "sensitivity",
+          "name": "sensitivity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "sensitivity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_size",
+          "name": "max_size",
+          "type": "INT",
+          "widget": {
+            "name": "max_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "polarity",
+          "name": "polarity",
+          "type": "COMBO",
+          "widget": {
+            "name": "polarity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "motion_resolution",
+          "name": "motion_resolution",
+          "type": "INT",
+          "widget": {
+            "name": "motion_resolution"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            5
+          ]
+        },
+        {
+          "localized_name": "video",
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASVideoRemoveDust",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "sensitivity": true,
+            "max_size": true,
+            "polarity": true,
+            "motion_resolution": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "was_compare_sides": {
+          "a": {
+            "filename": "0b877ee4c20b5797e1d20d1f5e9f754d.mp4",
+            "subfolder": "",
+            "type": "was_compare",
+            "workflow": "8086cd14-d9ca-4909-84ae-bfd1e52a06cb"
+          },
+          "b": {
+            "filename": "9233271d03ed7e7b40cf84683d021e46.mp4",
+            "subfolder": "",
+            "type": "was_compare",
+            "workflow": "8086cd14-d9ca-4909-84ae-bfd1e52a06cb"
+          }
+        }
+      },
+      "widgets_values": [
+        0.5,
+        24,
+        "light and dark",
+        768
+      ],
+      "widgets_values_named": {
+        "sensitivity": 0.5,
+        "max_size": 24,
+        "polarity": "light and dark",
+        "motion_resolution": 768
+      }
+    },
+    {
+      "id": 6,
+      "type": "WASVideoDenoise",
+      "pos": [
+        784,
+        1032
+      ],
+      "size": [
+        300,
+        542
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "video",
+          "name": "video",
+          "type": "VIDEO,IMAGE",
+          "link": 5
+        },
+        {
+          "localized_name": "motion_model",
+          "name": "motion_model",
+          "shape": 7,
+          "type": "WAS_MOTION_MODEL",
+          "link": 6
+        },
+        {
+          "localized_name": "neighbours",
+          "name": "neighbours",
+          "type": "INT",
+          "widget": {
+            "name": "neighbours"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "luma_strength",
+          "name": "luma_strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "luma_strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "chroma_strength",
+          "name": "chroma_strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "chroma_strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "detail",
+          "name": "detail",
+          "type": "FLOAT",
+          "widget": {
+            "name": "detail"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "noise_level",
+          "name": "noise_level",
+          "type": "FLOAT",
+          "widget": {
+            "name": "noise_level"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "motion_resolution",
+          "name": "motion_resolution",
+          "type": "INT",
+          "widget": {
+            "name": "motion_resolution"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            7
+          ]
+        },
+        {
+          "localized_name": "video",
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "localized_name": "noise",
+          "name": "noise",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASVideoDenoise",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "neighbours": true,
+            "luma_strength": true,
+            "chroma_strength": true,
+            "detail": true,
+            "noise_level": true,
+            "motion_resolution": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "was_compare_sides": {
+          "a": {
+            "filename": "9233271d03ed7e7b40cf84683d021e46.mp4",
+            "subfolder": "",
+            "type": "was_compare",
+            "workflow": "8086cd14-d9ca-4909-84ae-bfd1e52a06cb"
+          },
+          "b": {
+            "filename": "6ba30e29da48034c42c0bcb1b7cfe26f.mp4",
+            "subfolder": "",
+            "type": "was_compare",
+            "workflow": "8086cd14-d9ca-4909-84ae-bfd1e52a06cb"
+          }
+        }
+      },
+      "widgets_values": [
+        2,
+        1,
+        1,
+        0.5,
+        0,
+        768
+      ],
+      "widgets_values_named": {
+        "neighbours": 2,
+        "luma_strength": 1,
+        "chroma_strength": 1,
+        "detail": 0.5,
+        "noise_level": 0,
+        "motion_resolution": 768
+      }
+    },
+    {
+      "id": 7,
+      "type": "WASSaveVideo",
+      "pos": [
+        1244,
+        1032
+      ],
+      "size": [
+        315,
+        568
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 7
+        },
+        {
+          "localized_name": "video",
+          "name": "video",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        },
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 8
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "root",
+          "name": "root",
+          "type": "COMBO",
+          "widget": {
+            "name": "root"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_delimiter",
+          "name": "filename_delimiter",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_delimiter"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_number_padding",
+          "name": "filename_number_padding",
+          "type": "INT",
+          "widget": {
+            "name": "filename_number_padding"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "container",
+          "name": "container",
+          "type": "COMBO",
+          "widget": {
+            "name": "container"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "codec",
+          "name": "codec",
+          "type": "COMBO",
+          "widget": {
+            "name": "codec"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "crf",
+          "name": "crf",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "crf"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overwrite",
+          "name": "overwrite",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "overwrite"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color_space",
+          "name": "color_space",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "color_space"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dither",
+          "name": "dither",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "dither"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "video",
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "localized_name": "file_path",
+          "name": "file_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "filename",
+          "name": "filename",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASSaveVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "fps": true,
+            "root": true,
+            "filename_prefix": true,
+            "filename_delimiter": true,
+            "filename_number_padding": true,
+            "container": true,
+            "codec": true,
+            "crf": true,
+            "overwrite": true,
+            "color_space": true,
+            "dither": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        24,
+        "output",
+        "was_demo/restored",
+        "_",
+        4,
+        "mp4",
+        "ComfyUI H264",
+        0,
+        false,
+        "SDR sRGB",
+        false
+      ],
+      "widgets_values_named": {
+        "fps": 24,
+        "root": "output",
+        "filename_prefix": "was_demo/restored",
+        "filename_delimiter": "_",
+        "filename_number_padding": 4,
+        "container": "mp4",
+        "codec": "ComfyUI H264",
+        "crf": 0,
+        "overwrite": false,
+        "color_space": "SDR sRGB",
+        "dither": false
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      1,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      3,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      4,
+      0,
+      5,
+      1,
+      "WAS_MOTION_MODEL"
+    ],
+    [
+      5,
+      5,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      4,
+      0,
+      6,
+      1,
+      "WAS_MOTION_MODEL"
+    ],
+    [
+      7,
+      6,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      8,
+      1,
+      2,
+      7,
+      2,
+      "AUDIO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Footage with grain and dust",
+      "bounding": [
+        0,
+        0,
+        1124,
+        792
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Remove the dust, then the noise",
+      "bounding": [
+        0,
+        912,
+        1124,
+        732
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Result",
+      "bounding": [
+        1204,
+        912,
+        395,
+        758
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.4473365617433414,
+      "offset": [
+        1028.4215155615698,
+        223.54533152909337
+      ]
+    }
+  },
+  "version": 0.4,
+  "models": [
+    {
+      "name": "sea_raft_m_spring.safetensors",
+      "url": "https://huggingface.co/MemorySlices/Tartan-C-T-TSKH-spring540x960-M/resolve/main/model.safetensors",
+      "directory": "optical_flow"
+    }
+  ]
+}

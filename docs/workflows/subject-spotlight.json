@@ -1,0 +1,954 @@
+{
+  "id": "08cf20be-ec22-4d35-8c56-302b126f0b76",
+  "revision": 0,
+  "last_node_id": 7,
+  "last_link_id": 10,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        120
+      ],
+      "size": [
+        340,
+        440
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1,
+            4,
+            8
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "image": true,
+            "upload": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "wevisone-busy-street.jpg",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "wevisone-busy-street.jpg",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        40,
+        680
+      ],
+      "size": [
+        270,
+        98
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "ckpt_name",
+          "name": "ckpt_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "ckpt_name"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            2
+          ]
+        },
+        {
+          "localized_name": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            3
+          ]
+        },
+        {
+          "localized_name": "VAE",
+          "name": "VAE",
+          "type": "VAE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "ckpt_name": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "models": [
+          {
+            "name": "sam3.1_multiplex_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/sam3.1/resolve/main/checkpoints/sam3.1_multiplex_fp16.safetensors",
+            "directory": "checkpoints"
+          }
+        ]
+      },
+      "widgets_values": [
+        "sam3.1_multiplex_fp16.safetensors"
+      ],
+      "widgets_values_named": {
+        "ckpt_name": "sam3.1_multiplex_fp16.safetensors"
+      }
+    },
+    {
+      "id": 3,
+      "type": "WASImageTrackSubject",
+      "pos": [
+        540,
+        120
+      ],
+      "size": [
+        480,
+        800
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 2
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "shape": 7,
+          "type": "CLIP",
+          "link": 3
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "localized_name": "subject",
+          "name": "subject",
+          "type": "STRING",
+          "widget": {
+            "name": "subject"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "key_frame",
+          "name": "key_frame",
+          "type": "INT",
+          "widget": {
+            "name": "key_frame"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pick",
+          "name": "pick",
+          "type": "INT",
+          "widget": {
+            "name": "pick"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "points",
+          "name": "points",
+          "type": "STRING",
+          "widget": {
+            "name": "points"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "track",
+          "name": "track",
+          "type": "COMBO",
+          "widget": {
+            "name": "track"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "grow",
+          "name": "grow",
+          "type": "FLOAT",
+          "widget": {
+            "name": "grow"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "feather",
+          "name": "feather",
+          "type": "FLOAT",
+          "widget": {
+            "name": "feather"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageTrackSubject",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "subject": true,
+            "key_frame": true,
+            "pick": true,
+            "points": true,
+            "track": true,
+            "grow": true,
+            "feather": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "person",
+        0,
+        0,
+        "[{\"x\": 0.79, \"y\": 0.52, \"keep\": true}, {\"x\": 0.82, \"y\": 0.6, \"keep\": true}]",
+        "both ways",
+        0,
+        0.15
+      ],
+      "widgets_values_named": {
+        "subject": "person",
+        "key_frame": 0,
+        "pick": 0,
+        "points": "[{\"x\": 0.79, \"y\": 0.52, \"keep\": true}, {\"x\": 0.82, \"y\": 0.6, \"keep\": true}]",
+        "track": "both ways",
+        "grow": 0,
+        "feather": 0.15
+      }
+    },
+    {
+      "id": 4,
+      "type": "WASImageSpotlight",
+      "pos": [
+        1100,
+        120
+      ],
+      "size": [
+        307,
+        222
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "type": "MASK",
+          "link": 5
+        },
+        {
+          "localized_name": "subject_exposure",
+          "name": "subject_exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "subject_exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "subject_shadows",
+          "name": "subject_shadows",
+          "type": "FLOAT",
+          "widget": {
+            "name": "subject_shadows"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "subject_clarity",
+          "name": "subject_clarity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "subject_clarity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "surround_exposure",
+          "name": "surround_exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "surround_exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "surround_saturation",
+          "name": "surround_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "surround_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "spill",
+          "name": "spill",
+          "type": "FLOAT",
+          "widget": {
+            "name": "spill"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "softness",
+          "name": "softness",
+          "type": "FLOAT",
+          "widget": {
+            "name": "softness"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            6
+          ]
+        },
+        {
+          "localized_name": "light",
+          "name": "light",
+          "type": "MASK",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageSpotlight",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "subject_exposure": true,
+            "subject_shadows": true,
+            "subject_clarity": true,
+            "surround_exposure": true,
+            "surround_saturation": true,
+            "spill": true,
+            "softness": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0.3,
+        40,
+        15,
+        -0.8,
+        -100,
+        0,
+        0.15
+      ],
+      "widgets_values_named": {
+        "subject_exposure": 0.3,
+        "subject_shadows": 40,
+        "subject_clarity": 15,
+        "surround_exposure": -0.8,
+        "surround_saturation": -100,
+        "spill": 0,
+        "softness": 0.15
+      }
+    },
+    {
+      "id": 5,
+      "type": "WASImageColorGrade",
+      "pos": [
+        1487,
+        120
+      ],
+      "size": [
+        300,
+        716
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 6
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 7
+        },
+        {
+          "localized_name": "shadows_hue",
+          "name": "shadows_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows_saturation",
+          "name": "shadows_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows_luminance",
+          "name": "shadows_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "midtones_hue",
+          "name": "midtones_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "midtones_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "midtones_saturation",
+          "name": "midtones_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "midtones_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "midtones_luminance",
+          "name": "midtones_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "midtones_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights_hue",
+          "name": "highlights_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights_saturation",
+          "name": "highlights_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights_luminance",
+          "name": "highlights_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "global_hue",
+          "name": "global_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "global_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "global_saturation",
+          "name": "global_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "global_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "global_luminance",
+          "name": "global_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "global_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blending",
+          "name": "blending",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blending"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "balance",
+          "name": "balance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "balance"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            9,
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageColorGrade",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "shadows_hue": true,
+            "shadows_saturation": true,
+            "shadows_luminance": true,
+            "midtones_hue": true,
+            "midtones_saturation": true,
+            "midtones_luminance": true,
+            "highlights_hue": true,
+            "highlights_saturation": true,
+            "highlights_luminance": true,
+            "global_hue": true,
+            "global_saturation": true,
+            "global_luminance": true,
+            "blending": true,
+            "balance": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        30,
+        10,
+        0,
+        35,
+        12,
+        0,
+        45,
+        10,
+        0,
+        0,
+        0,
+        0,
+        50,
+        0
+      ],
+      "widgets_values_named": {
+        "shadows_hue": 30,
+        "shadows_saturation": 10,
+        "shadows_luminance": 0,
+        "midtones_hue": 35,
+        "midtones_saturation": 12,
+        "midtones_luminance": 0,
+        "highlights_hue": 45,
+        "highlights_saturation": 10,
+        "highlights_luminance": 0,
+        "global_hue": 0,
+        "global_saturation": 0,
+        "global_luminance": 0,
+        "blending": 50,
+        "balance": 0
+      }
+    },
+    {
+      "id": 6,
+      "type": "WASImageCompare",
+      "pos": [
+        1947,
+        120
+      ],
+      "size": [
+        680,
+        500
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 8
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "pairs",
+          "name": "pairs",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageCompare",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "was_compare_images": {
+          "a": [
+            {
+              "filename": "b72edd56562b7a59680f7d1cf5e55d1a.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 3072,
+              "height": 2304,
+              "mode": "RGB",
+              "bytes": 14748914,
+              "total": 1,
+              "workflow": "2f428ef3-82d6-42bf-8e45-24bd25d94b96"
+            }
+          ],
+          "b": [
+            {
+              "filename": "eae9ded9c81d6aa825131e45620b1f3b.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 3072,
+              "height": 2304,
+              "mode": "RGB",
+              "bytes": 10078718,
+              "total": 1,
+              "workflow": "2f428ef3-82d6-42bf-8e45-24bd25d94b96"
+            }
+          ]
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 7,
+      "type": "SaveImage",
+      "pos": [
+        1947,
+        740
+      ],
+      "size": [
+        460,
+        420
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 10
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "filename_prefix": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "subject_spotlight"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "subject_spotlight"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      1,
+      "MODEL"
+    ],
+    [
+      3,
+      2,
+      1,
+      3,
+      2,
+      "CLIP"
+    ],
+    [
+      4,
+      1,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      3,
+      0,
+      4,
+      1,
+      "MASK"
+    ],
+    [
+      6,
+      4,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      4,
+      1,
+      5,
+      1,
+      "MASK"
+    ],
+    [
+      8,
+      1,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      9,
+      5,
+      0,
+      6,
+      1,
+      "IMAGE"
+    ],
+    [
+      10,
+      5,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Picture and SAM 3",
+      "bounding": [
+        0,
+        0,
+        420,
+        848
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Click the subject, keep it in colour, quiet the rest",
+      "bounding": [
+        500,
+        0,
+        1327,
+        990
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Result",
+      "bounding": [
+        1907,
+        0,
+        760,
+        1230
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 1.3310000000000004,
+      "offset": [
+        -68.93633338971733,
+        -303.5656676218746
+      ]
+    }
+  },
+  "version": 0.4,
+  "models": [
+    {
+      "name": "sam3.1_multiplex_fp16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/sam3.1/resolve/main/checkpoints/sam3.1_multiplex_fp16.safetensors",
+      "directory": "checkpoints"
+    }
+  ]
+}

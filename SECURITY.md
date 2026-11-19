@@ -413,6 +413,10 @@ deflate bomb yields no more than the block it claims to be. A file is read whole
 the ceilings are what keep a small file from asking for a large allocation. The expansion figure
 sits above the 1032 bytes per byte deflate can produce, so it refuses no real picture.
 
+Video Subtitles reads an `.srt` or `.vtt` file, or subtitle text, of at most 4 MB, at most 20000
+cues, each at most 2000 characters and 12 lines. A cue whose timing cannot be read is skipped and
+counted, and the text is read as data, never run.
+
 ## 3D model readers
 
 3D Model Load, Three Load Model and the mesh and character nodes read glTF, GLB, VRM, FBX and OBJ

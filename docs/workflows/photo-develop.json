@@ -1,0 +1,1087 @@
+{
+  "id": "e7448e27-cd26-4970-aa95-e9efe1c209d5",
+  "revision": 0,
+  "last_node_id": 6,
+  "last_link_id": 6,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        120
+      ],
+      "size": [
+        340,
+        440
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1,
+            4
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "image": true,
+            "upload": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "wevisone-busy-street.jpg",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "wevisone-busy-street.jpg",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "WASImageDevelop",
+      "pos": [
+        540,
+        120
+      ],
+      "size": [
+        300,
+        626
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "temperature",
+          "name": "temperature",
+          "type": "FLOAT",
+          "widget": {
+            "name": "temperature"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tint",
+          "name": "tint",
+          "type": "FLOAT",
+          "widget": {
+            "name": "tint"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "exposure",
+          "name": "exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "contrast",
+          "name": "contrast",
+          "type": "FLOAT",
+          "widget": {
+            "name": "contrast"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights",
+          "name": "highlights",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows",
+          "name": "shadows",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "whites",
+          "name": "whites",
+          "type": "FLOAT",
+          "widget": {
+            "name": "whites"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blacks",
+          "name": "blacks",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blacks"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture",
+          "name": "texture",
+          "type": "FLOAT",
+          "widget": {
+            "name": "texture"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "clarity",
+          "name": "clarity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "clarity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dehaze",
+          "name": "dehaze",
+          "type": "FLOAT",
+          "widget": {
+            "name": "dehaze"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "vibrance",
+          "name": "vibrance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "vibrance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "saturation",
+          "name": "saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "saturation"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageDevelop",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "temperature": true,
+            "tint": true,
+            "exposure": true,
+            "contrast": true,
+            "highlights": true,
+            "shadows": true,
+            "whites": true,
+            "blacks": true,
+            "texture": true,
+            "clarity": true,
+            "dehaze": true,
+            "vibrance": true,
+            "saturation": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        8,
+        0,
+        0.1,
+        15,
+        -55,
+        35,
+        5,
+        -12,
+        10,
+        18,
+        10,
+        20,
+        -5
+      ],
+      "widgets_values_named": {
+        "temperature": 8,
+        "tint": 0,
+        "exposure": 0.1,
+        "contrast": 15,
+        "highlights": -55,
+        "shadows": 35,
+        "whites": 5,
+        "blacks": -12,
+        "texture": 10,
+        "clarity": 18,
+        "dehaze": 10,
+        "vibrance": 20,
+        "saturation": -5
+      }
+    },
+    {
+      "id": 3,
+      "type": "WASImageColorMixer",
+      "pos": [
+        920,
+        120
+      ],
+      "size": [
+        300,
+        962
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "mode",
+          "name": "mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "red_hue",
+          "name": "red_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "red_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "orange_hue",
+          "name": "orange_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "orange_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "yellow_hue",
+          "name": "yellow_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "yellow_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "green_hue",
+          "name": "green_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "green_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "aqua_hue",
+          "name": "aqua_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "aqua_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blue_hue",
+          "name": "blue_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blue_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "purple_hue",
+          "name": "purple_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "purple_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "magenta_hue",
+          "name": "magenta_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "magenta_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "red_saturation",
+          "name": "red_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "red_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "orange_saturation",
+          "name": "orange_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "orange_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "yellow_saturation",
+          "name": "yellow_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "yellow_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "green_saturation",
+          "name": "green_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "green_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "aqua_saturation",
+          "name": "aqua_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "aqua_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blue_saturation",
+          "name": "blue_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blue_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "purple_saturation",
+          "name": "purple_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "purple_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "magenta_saturation",
+          "name": "magenta_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "magenta_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "red_luminance",
+          "name": "red_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "red_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "orange_luminance",
+          "name": "orange_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "orange_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "yellow_luminance",
+          "name": "yellow_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "yellow_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "green_luminance",
+          "name": "green_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "green_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "aqua_luminance",
+          "name": "aqua_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "aqua_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blue_luminance",
+          "name": "blue_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blue_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "purple_luminance",
+          "name": "purple_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "purple_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "magenta_luminance",
+          "name": "magenta_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "magenta_luminance"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageColorMixer",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "mode": true,
+            "red_hue": true,
+            "orange_hue": true,
+            "yellow_hue": true,
+            "green_hue": true,
+            "aqua_hue": true,
+            "blue_hue": true,
+            "purple_hue": true,
+            "magenta_hue": true,
+            "red_saturation": true,
+            "orange_saturation": true,
+            "yellow_saturation": true,
+            "green_saturation": true,
+            "aqua_saturation": true,
+            "blue_saturation": true,
+            "purple_saturation": true,
+            "magenta_saturation": true,
+            "red_luminance": true,
+            "orange_luminance": true,
+            "yellow_luminance": true,
+            "green_luminance": true,
+            "aqua_luminance": true,
+            "blue_luminance": true,
+            "purple_luminance": true,
+            "magenta_luminance": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "color",
+        0,
+        0,
+        -10,
+        15,
+        10,
+        0,
+        0,
+        0,
+        -10,
+        -5,
+        0,
+        -25,
+        0,
+        10,
+        0,
+        0,
+        0,
+        10,
+        0,
+        0,
+        0,
+        -25,
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "mode": "color",
+        "red_hue": 0,
+        "orange_hue": 0,
+        "yellow_hue": -10,
+        "green_hue": 15,
+        "aqua_hue": 10,
+        "blue_hue": 0,
+        "purple_hue": 0,
+        "magenta_hue": 0,
+        "red_saturation": -10,
+        "orange_saturation": -5,
+        "yellow_saturation": 0,
+        "green_saturation": -25,
+        "aqua_saturation": 0,
+        "blue_saturation": 10,
+        "purple_saturation": 0,
+        "magenta_saturation": 0,
+        "red_luminance": 0,
+        "orange_luminance": 10,
+        "yellow_luminance": 0,
+        "green_luminance": 0,
+        "aqua_luminance": 0,
+        "blue_luminance": -25,
+        "purple_luminance": 0,
+        "magenta_luminance": 0
+      }
+    },
+    {
+      "id": 4,
+      "type": "WASImageColorGrade",
+      "pos": [
+        1300,
+        120
+      ],
+      "size": [
+        300,
+        728
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "localized_name": "shadows_hue",
+          "name": "shadows_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows_saturation",
+          "name": "shadows_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows_luminance",
+          "name": "shadows_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "midtones_hue",
+          "name": "midtones_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "midtones_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "midtones_saturation",
+          "name": "midtones_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "midtones_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "midtones_luminance",
+          "name": "midtones_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "midtones_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights_hue",
+          "name": "highlights_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights_saturation",
+          "name": "highlights_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights_luminance",
+          "name": "highlights_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "global_hue",
+          "name": "global_hue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "global_hue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "global_saturation",
+          "name": "global_saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "global_saturation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "global_luminance",
+          "name": "global_luminance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "global_luminance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blending",
+          "name": "blending",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blending"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "balance",
+          "name": "balance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "balance"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            5,
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageColorGrade",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "shadows_hue": true,
+            "shadows_saturation": true,
+            "shadows_luminance": true,
+            "midtones_hue": true,
+            "midtones_saturation": true,
+            "midtones_luminance": true,
+            "highlights_hue": true,
+            "highlights_saturation": true,
+            "highlights_luminance": true,
+            "global_hue": true,
+            "global_saturation": true,
+            "global_luminance": true,
+            "blending": true,
+            "balance": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        200,
+        18,
+        0,
+        0,
+        0,
+        0,
+        40,
+        14,
+        0,
+        0,
+        0,
+        0,
+        55,
+        -10
+      ],
+      "widgets_values_named": {
+        "shadows_hue": 200,
+        "shadows_saturation": 18,
+        "shadows_luminance": 0,
+        "midtones_hue": 0,
+        "midtones_saturation": 0,
+        "midtones_luminance": 0,
+        "highlights_hue": 40,
+        "highlights_saturation": 14,
+        "highlights_luminance": 0,
+        "global_hue": 0,
+        "global_saturation": 0,
+        "global_luminance": 0,
+        "blending": 55,
+        "balance": -10
+      }
+    },
+    {
+      "id": 5,
+      "type": "WASImageCompare",
+      "pos": [
+        1760,
+        120
+      ],
+      "size": [
+        680,
+        500
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "pairs",
+          "name": "pairs",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageCompare",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "was_compare_images": {
+          "a": [
+            {
+              "filename": "b72edd56562b7a59680f7d1cf5e55d1a.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 3072,
+              "height": 2304,
+              "mode": "RGB",
+              "bytes": 14748914,
+              "total": 1,
+              "workflow": "ebfa405a-fb66-4e38-85e7-9a78f48efbe8"
+            }
+          ],
+          "b": [
+            {
+              "filename": "6c9b971e2047b496126124c84201ecac.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 3072,
+              "height": 2304,
+              "mode": "RGB",
+              "bytes": 16816171,
+              "total": 1,
+              "workflow": "ebfa405a-fb66-4e38-85e7-9a78f48efbe8"
+            }
+          ]
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 6,
+      "type": "SaveImage",
+      "pos": [
+        1760,
+        740
+      ],
+      "size": [
+        460,
+        420
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 6
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "filename_prefix": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "photo_develop"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "photo_develop"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      1,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      4,
+      0,
+      5,
+      1,
+      "IMAGE"
+    ],
+    [
+      6,
+      4,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Picture",
+      "bounding": [
+        0,
+        0,
+        420,
+        630
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Develop: basic panel, color mixer, color grading",
+      "bounding": [
+        500,
+        0,
+        1140,
+        1152
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Result",
+      "bounding": [
+        1720,
+        0,
+        760,
+        1230
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.6075,
+      "offset": [
+        98.76543209876543,
+        181.06995884773661
+      ]
+    }
+  },
+  "version": 0.4
+}

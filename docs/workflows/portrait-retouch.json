@@ -1,0 +1,904 @@
+{
+  "id": "9744078e-abdd-43c9-96ef-43f3f1722997",
+  "revision": 0,
+  "last_node_id": 9,
+  "last_link_id": 13,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        120
+      ],
+      "size": [
+        340,
+        440
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "image": true,
+            "upload": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "pexels_hanna_pad_6475978.jpg",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "pexels_hanna_pad_6475978.jpg",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "ImageScaleToTotalPixels",
+      "pos": [
+        460,
+        120
+      ],
+      "size": [
+        277,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "upscale_method",
+          "name": "upscale_method",
+          "type": "COMBO",
+          "widget": {
+            "name": "upscale_method"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "megapixels",
+          "name": "megapixels",
+          "type": "FLOAT",
+          "widget": {
+            "name": "megapixels"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "resolution_steps",
+          "name": "resolution_steps",
+          "type": "INT",
+          "widget": {
+            "name": "resolution_steps"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2,
+            3,
+            5,
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScaleToTotalPixels",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "upscale_method": true,
+            "megapixels": true,
+            "resolution_steps": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "lanczos",
+        2,
+        1
+      ],
+      "widgets_values_named": {
+        "upscale_method": "lanczos",
+        "megapixels": 2,
+        "resolution_steps": 1
+      }
+    },
+    {
+      "id": 3,
+      "type": "WASImageSkinMask",
+      "pos": [
+        817,
+        120
+      ],
+      "size": [
+        270,
+        498
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "model"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "areas",
+          "name": "areas",
+          "type": "COMBO",
+          "widget": {
+            "name": "areas"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "eyes",
+          "name": "eyes",
+          "type": "COMBO",
+          "widget": {
+            "name": "eyes"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "mouth",
+          "name": "mouth",
+          "type": "COMBO",
+          "widget": {
+            "name": "mouth"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tolerance",
+          "name": "tolerance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "tolerance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "person_threshold",
+          "name": "person_threshold",
+          "type": "FLOAT",
+          "widget": {
+            "name": "person_threshold"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            4,
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageSkinMask",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "model": true,
+            "areas": true,
+            "eyes": true,
+            "mouth": true,
+            "tolerance": true,
+            "person_threshold": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "models": [
+          {
+            "name": "sapiens2_1b_seg.safetensors",
+            "url": "https://huggingface.co/facebook/sapiens2-seg-1b/resolve/main/sapiens2_1b_seg.safetensors",
+            "directory": "sapiens"
+          }
+        ]
+      },
+      "widgets_values": [
+        "sapiens2_1b_seg.safetensors",
+        "face",
+        "remove with brows",
+        "remove lips",
+        1,
+        0.4
+      ],
+      "widgets_values_named": {
+        "model": "sapiens2_1b_seg.safetensors",
+        "areas": "face",
+        "eyes": "remove with brows",
+        "mouth": "remove lips",
+        "tolerance": 1,
+        "person_threshold": 0.4
+      }
+    },
+    {
+      "id": 4,
+      "type": "WASImagePortraitRetouch",
+      "pos": [
+        1247,
+        120
+      ],
+      "size": [
+        300,
+        354
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "type": "MASK",
+          "link": 4
+        },
+        {
+          "localized_name": "even_tone",
+          "name": "even_tone",
+          "type": "FLOAT",
+          "widget": {
+            "name": "even_tone"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture",
+          "name": "texture",
+          "type": "FLOAT",
+          "widget": {
+            "name": "texture"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blemishes",
+          "name": "blemishes",
+          "type": "COMBO",
+          "widget": {
+            "name": "blemishes"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blemish_size",
+          "name": "blemish_size",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blemish_size"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            6,
+            10
+          ]
+        },
+        {
+          "localized_name": "healed",
+          "name": "healed",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImagePortraitRetouch",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "even_tone": true,
+            "texture": true,
+            "blemishes": true,
+            "blemish_size": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        1,
+        1,
+        "red spots",
+        0.03
+      ],
+      "widgets_values_named": {
+        "even_tone": 1,
+        "texture": 1,
+        "blemishes": "red spots",
+        "blemish_size": 0.03
+      }
+    },
+    {
+      "id": 5,
+      "type": "WASImageCompare",
+      "pos": [
+        1627,
+        120
+      ],
+      "size": [
+        680,
+        500
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 5
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "pairs",
+          "name": "pairs",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageCompare",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "was_compare_images": {
+          "a": [
+            {
+              "filename": "b08feb735e014d91417f6238edd49bda.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 1236,
+              "height": 1696,
+              "mode": "RGB",
+              "bytes": 3578694,
+              "total": 1,
+              "workflow": "9072bbe9-41c9-4463-90b7-81f4119009a7"
+            }
+          ],
+          "b": [
+            {
+              "filename": "bf00bc904a875a31b9d919afd52f8c94.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 1236,
+              "height": 1696,
+              "mode": "RGB",
+              "bytes": 3671039,
+              "total": 1,
+              "workflow": "9072bbe9-41c9-4463-90b7-81f4119009a7"
+            }
+          ]
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 6,
+      "type": "WASMaskToBounds",
+      "pos": [
+        40,
+        930
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "type": "MASK",
+          "link": 7
+        },
+        {
+          "localized_name": "threshold",
+          "name": "threshold",
+          "type": "FLOAT",
+          "widget": {
+            "name": "threshold"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "padding",
+          "name": "padding",
+          "type": "INT",
+          "widget": {
+            "name": "padding"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image_bounds",
+          "name": "image_bounds",
+          "type": "IMAGE_BOUNDS",
+          "links": [
+            9,
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASMaskToBounds",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "threshold": true,
+            "padding": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0.5,
+        24
+      ],
+      "widgets_values_named": {
+        "threshold": 0.5,
+        "padding": 24
+      }
+    },
+    {
+      "id": 7,
+      "type": "Bounded Image Crop",
+      "pos": [
+        460,
+        930
+      ],
+      "size": [
+        260,
+        266
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 8
+        },
+        {
+          "localized_name": "image_bounds",
+          "name": "image_bounds",
+          "type": "IMAGE_BOUNDS",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Bounded Image Crop",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 8,
+      "type": "Bounded Image Crop",
+      "pos": [
+        460,
+        1316
+      ],
+      "size": [
+        260,
+        266
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 10
+        },
+        {
+          "localized_name": "image_bounds",
+          "name": "image_bounds",
+          "type": "IMAGE_BOUNDS",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Bounded Image Crop",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 9,
+      "type": "WASImageCompare",
+      "pos": [
+        817,
+        930
+      ],
+      "size": [
+        680,
+        500
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 12
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image_a",
+          "name": "image_a",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "image_b",
+          "name": "image_b",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "pairs",
+          "name": "pairs",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageCompare",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        },
+        "was_compare_images": {
+          "a": [
+            {
+              "filename": "12ee280c46d3916562e836f02aaa5cc8.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 978,
+              "height": 1367,
+              "mode": "RGB",
+              "bytes": 2437081,
+              "total": 1,
+              "workflow": "9072bbe9-41c9-4463-90b7-81f4119009a7"
+            }
+          ],
+          "b": [
+            {
+              "filename": "635a540ecf824599ad996f39aaddeea6.png",
+              "subfolder": "",
+              "type": "was_compare",
+              "width": 978,
+              "height": 1367,
+              "mode": "RGB",
+              "bytes": 2527624,
+              "total": 1,
+              "workflow": "9072bbe9-41c9-4463-90b7-81f4119009a7"
+            }
+          ]
+        }
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      2,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      3,
+      0,
+      4,
+      1,
+      "MASK"
+    ],
+    [
+      5,
+      2,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      4,
+      0,
+      5,
+      1,
+      "IMAGE"
+    ],
+    [
+      7,
+      3,
+      0,
+      6,
+      0,
+      "MASK"
+    ],
+    [
+      8,
+      2,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      9,
+      6,
+      0,
+      7,
+      1,
+      "IMAGE_BOUNDS"
+    ],
+    [
+      10,
+      4,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      11,
+      6,
+      0,
+      8,
+      1,
+      "IMAGE_BOUNDS"
+    ],
+    [
+      12,
+      7,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      13,
+      8,
+      0,
+      9,
+      1,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Portrait and its skin",
+      "bounding": [
+        0,
+        0,
+        1127,
+        688
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Retouch: even tone, heal red spots, keep texture",
+      "bounding": [
+        1207,
+        0,
+        1140,
+        690
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "The face up close",
+      "bounding": [
+        0,
+        810,
+        1537,
+        842
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 1.015924271122343,
+      "offset": [
+        -504.2502944643106,
+        -569.6602800830971
+      ]
+    }
+  },
+  "version": 0.4,
+  "models": [
+    {
+      "name": "sapiens2_1b_seg.safetensors",
+      "url": "https://huggingface.co/facebook/sapiens2-seg-1b/resolve/main/sapiens2_1b_seg.safetensors",
+      "directory": "sapiens"
+    }
+  ]
+}

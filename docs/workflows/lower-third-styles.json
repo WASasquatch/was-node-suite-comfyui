@@ -1,0 +1,2184 @@
+{
+  "id": "77a6ae11-4e78-4280-816f-802884e1c788",
+  "revision": 0,
+  "last_node_id": 9,
+  "last_link_id": 16,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "WASLoadVideo",
+      "pos": [
+        40,
+        120
+      ],
+      "size": [
+        270,
+        602
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "path",
+          "name": "path",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "file",
+          "name": "file",
+          "type": "COMBO",
+          "widget": {
+            "name": "file"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "num_frames",
+          "name": "num_frames",
+          "type": "INT",
+          "widget": {
+            "name": "num_frames"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strategy",
+          "name": "strategy",
+          "type": "COMBO",
+          "widget": {
+            "name": "strategy"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "nth",
+          "name": "nth",
+          "type": "INT",
+          "widget": {
+            "name": "nth"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "target_fps",
+          "name": "target_fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "target_fps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "resize_mode",
+          "name": "resize_mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "resize_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start",
+          "name": "start",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "end",
+          "name": "end",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "end"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_size",
+          "name": "max_size",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "max_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "interpolation",
+          "name": "interpolation",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "interpolation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "align",
+          "name": "align",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "align"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "pad_color",
+          "name": "pad_color",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "pad_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "channels",
+          "name": "channels",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "channels"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "video",
+          "name": "video",
+          "type": "VIDEO",
+          "links": [
+            1
+          ]
+        },
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "localized_name": "metadata",
+          "name": "metadata",
+          "type": "WAS_VIDEO_METADATA",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASLoadVideo",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "file": true,
+            "num_frames": true,
+            "strategy": true,
+            "nth": true,
+            "seed": true,
+            "target_fps": true,
+            "resize_mode": true,
+            "width": true,
+            "height": true,
+            "start": true,
+            "end": true,
+            "max_size": true,
+            "interpolation": true,
+            "align": true,
+            "pad_color": true,
+            "channels": true,
+            "upload": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "vid_00004-audio.mp4 [input]",
+        0,
+        "uniform",
+        1,
+        0,
+        "fixed",
+        0,
+        "fill and crop",
+        1280,
+        720,
+        0,
+        215,
+        0,
+        "lanczos",
+        "middle center",
+        "#000000",
+        "RGB",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "vid_00004-audio.mp4 [input]",
+        "num_frames": 0,
+        "strategy": "uniform",
+        "nth": 1,
+        "seed": 0,
+        "control_after_generate": "fixed",
+        "target_fps": 0,
+        "resize_mode": "fill and crop",
+        "width": 1280,
+        "height": 720,
+        "start": 0,
+        "end": 215,
+        "max_size": 0,
+        "interpolation": "lanczos",
+        "align": "middle center",
+        "pad_color": "#000000",
+        "channels": "RGB",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "GetVideoComponents",
+      "pos": [
+        420,
+        120
+      ],
+      "size": [
+        194,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "video",
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        },
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            15
+          ]
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "links": [
+            3,
+            5,
+            7,
+            9,
+            11,
+            13,
+            16
+          ]
+        },
+        {
+          "localized_name": "bit_depth",
+          "name": "bit_depth",
+          "type": "COMBO",
+          "links": null
+        },
+        {
+          "localized_name": "color_space",
+          "name": "color_space",
+          "type": "COMBO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetVideoComponents",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "WASVideoLowerThird",
+      "pos": [
+        40,
+        1032
+      ],
+      "size": [
+        300,
+        696
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 3
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "title",
+          "name": "title",
+          "type": "STRING",
+          "widget": {
+            "name": "title"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start",
+          "name": "start",
+          "type": "FLOAT",
+          "widget": {
+            "name": "start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration",
+          "name": "duration",
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "style",
+          "name": "style",
+          "type": "COMBO",
+          "widget": {
+            "name": "style"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position",
+          "name": "position",
+          "type": "COMBO",
+          "widget": {
+            "name": "position"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "motion",
+          "name": "motion",
+          "type": "COMBO",
+          "widget": {
+            "name": "motion"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "transition",
+          "name": "transition",
+          "type": "FLOAT",
+          "widget": {
+            "name": "transition"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "accent_color",
+          "name": "accent_color",
+          "type": "STRING",
+          "widget": {
+            "name": "accent_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "font",
+          "name": "font",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "font"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "FLOAT",
+          "widget": {
+            "name": "size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "text_color",
+          "name": "text_color",
+          "type": "STRING",
+          "widget": {
+            "name": "text_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bar_color",
+          "name": "bar_color",
+          "type": "STRING",
+          "widget": {
+            "name": "bar_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "offset",
+          "name": "offset",
+          "type": "FLOAT",
+          "widget": {
+            "name": "offset"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "safe_margin",
+          "name": "safe_margin",
+          "type": "FLOAT",
+          "widget": {
+            "name": "safe_margin"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASVideoLowerThird",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "fps": true,
+            "name": true,
+            "title": true,
+            "start": true,
+            "duration": true,
+            "style": true,
+            "position": true,
+            "motion": true,
+            "transition": true,
+            "accent_color": true,
+            "font": true,
+            "size": true,
+            "text_color": true,
+            "bar_color": true,
+            "offset": true,
+            "safe_margin": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0,
+        "Ada Moreno",
+        "Field engineer, northern line",
+        0.2,
+        2.7,
+        "stripe",
+        "bottom left",
+        "slide",
+        0.5,
+        "#3D8BFD",
+        "DejaVu Sans",
+        4,
+        "#FFFFFF",
+        "#101318E0",
+        15,
+        5
+      ],
+      "widgets_values_named": {
+        "fps": 0,
+        "name": "Ada Moreno",
+        "title": "Field engineer, northern line",
+        "start": 0.2,
+        "duration": 2.7,
+        "style": "stripe",
+        "position": "bottom left",
+        "motion": "slide",
+        "transition": 0.5,
+        "accent_color": "#3D8BFD",
+        "font": "DejaVu Sans",
+        "size": 4,
+        "text_color": "#FFFFFF",
+        "bar_color": "#101318E0",
+        "offset": 15,
+        "safe_margin": 5
+      }
+    },
+    {
+      "id": 4,
+      "type": "WASVideoLowerThird",
+      "pos": [
+        420,
+        1032
+      ],
+      "size": [
+        300,
+        696
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 5
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "title",
+          "name": "title",
+          "type": "STRING",
+          "widget": {
+            "name": "title"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start",
+          "name": "start",
+          "type": "FLOAT",
+          "widget": {
+            "name": "start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration",
+          "name": "duration",
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "style",
+          "name": "style",
+          "type": "COMBO",
+          "widget": {
+            "name": "style"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position",
+          "name": "position",
+          "type": "COMBO",
+          "widget": {
+            "name": "position"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "motion",
+          "name": "motion",
+          "type": "COMBO",
+          "widget": {
+            "name": "motion"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "transition",
+          "name": "transition",
+          "type": "FLOAT",
+          "widget": {
+            "name": "transition"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "accent_color",
+          "name": "accent_color",
+          "type": "STRING",
+          "widget": {
+            "name": "accent_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "font",
+          "name": "font",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "font"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "FLOAT",
+          "widget": {
+            "name": "size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "text_color",
+          "name": "text_color",
+          "type": "STRING",
+          "widget": {
+            "name": "text_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bar_color",
+          "name": "bar_color",
+          "type": "STRING",
+          "widget": {
+            "name": "bar_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "offset",
+          "name": "offset",
+          "type": "FLOAT",
+          "widget": {
+            "name": "offset"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "safe_margin",
+          "name": "safe_margin",
+          "type": "FLOAT",
+          "widget": {
+            "name": "safe_margin"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASVideoLowerThird",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "fps": true,
+            "name": true,
+            "title": true,
+            "start": true,
+            "duration": true,
+            "style": true,
+            "position": true,
+            "motion": true,
+            "transition": true,
+            "accent_color": true,
+            "font": true,
+            "size": true,
+            "text_color": true,
+            "bar_color": true,
+            "offset": true,
+            "safe_margin": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0,
+        "Northern Line",
+        "Day 3 of the survey",
+        0.2,
+        2.7,
+        "split",
+        "top right",
+        "rise",
+        0.5,
+        "#E8A33D",
+        "DejaVu Sans",
+        4,
+        "#FFFFFF",
+        "#101318E0",
+        15,
+        5
+      ],
+      "widgets_values_named": {
+        "fps": 0,
+        "name": "Northern Line",
+        "title": "Day 3 of the survey",
+        "start": 0.2,
+        "duration": 2.7,
+        "style": "split",
+        "position": "top right",
+        "motion": "rise",
+        "transition": 0.5,
+        "accent_color": "#E8A33D",
+        "font": "DejaVu Sans",
+        "size": 4,
+        "text_color": "#FFFFFF",
+        "bar_color": "#101318E0",
+        "offset": 15,
+        "safe_margin": 5
+      }
+    },
+    {
+      "id": 5,
+      "type": "WASVideoLowerThird",
+      "pos": [
+        800,
+        1032
+      ],
+      "size": [
+        300,
+        696
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 6
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 7
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "title",
+          "name": "title",
+          "type": "STRING",
+          "widget": {
+            "name": "title"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start",
+          "name": "start",
+          "type": "FLOAT",
+          "widget": {
+            "name": "start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration",
+          "name": "duration",
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "style",
+          "name": "style",
+          "type": "COMBO",
+          "widget": {
+            "name": "style"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position",
+          "name": "position",
+          "type": "COMBO",
+          "widget": {
+            "name": "position"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "motion",
+          "name": "motion",
+          "type": "COMBO",
+          "widget": {
+            "name": "motion"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "transition",
+          "name": "transition",
+          "type": "FLOAT",
+          "widget": {
+            "name": "transition"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "accent_color",
+          "name": "accent_color",
+          "type": "STRING",
+          "widget": {
+            "name": "accent_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "font",
+          "name": "font",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "font"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "FLOAT",
+          "widget": {
+            "name": "size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "text_color",
+          "name": "text_color",
+          "type": "STRING",
+          "widget": {
+            "name": "text_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bar_color",
+          "name": "bar_color",
+          "type": "STRING",
+          "widget": {
+            "name": "bar_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "offset",
+          "name": "offset",
+          "type": "FLOAT",
+          "widget": {
+            "name": "offset"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "safe_margin",
+          "name": "safe_margin",
+          "type": "FLOAT",
+          "widget": {
+            "name": "safe_margin"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASVideoLowerThird",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "fps": true,
+            "name": true,
+            "title": true,
+            "start": true,
+            "duration": true,
+            "style": true,
+            "position": true,
+            "motion": true,
+            "transition": true,
+            "accent_color": true,
+            "font": true,
+            "size": true,
+            "text_color": true,
+            "bar_color": true,
+            "offset": true,
+            "safe_margin": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0,
+        "Tomas Reyes",
+        "Harbour master since 2009",
+        3.1,
+        2.7,
+        "banner",
+        "bottom left",
+        "slide",
+        0.5,
+        "#D93A3A",
+        "DejaVu Sans",
+        4,
+        "#FFFFFF",
+        "#101318E0",
+        15,
+        5
+      ],
+      "widgets_values_named": {
+        "fps": 0,
+        "name": "Tomas Reyes",
+        "title": "Harbour master since 2009",
+        "start": 3.1,
+        "duration": 2.7,
+        "style": "banner",
+        "position": "bottom left",
+        "motion": "slide",
+        "transition": 0.5,
+        "accent_color": "#D93A3A",
+        "font": "DejaVu Sans",
+        "size": 4,
+        "text_color": "#FFFFFF",
+        "bar_color": "#101318E0",
+        "offset": 15,
+        "safe_margin": 5
+      }
+    },
+    {
+      "id": 6,
+      "type": "WASVideoLowerThird",
+      "pos": [
+        1180,
+        1032
+      ],
+      "size": [
+        300,
+        696
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 8
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 9
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "title",
+          "name": "title",
+          "type": "STRING",
+          "widget": {
+            "name": "title"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start",
+          "name": "start",
+          "type": "FLOAT",
+          "widget": {
+            "name": "start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration",
+          "name": "duration",
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "style",
+          "name": "style",
+          "type": "COMBO",
+          "widget": {
+            "name": "style"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position",
+          "name": "position",
+          "type": "COMBO",
+          "widget": {
+            "name": "position"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "motion",
+          "name": "motion",
+          "type": "COMBO",
+          "widget": {
+            "name": "motion"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "transition",
+          "name": "transition",
+          "type": "FLOAT",
+          "widget": {
+            "name": "transition"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "accent_color",
+          "name": "accent_color",
+          "type": "STRING",
+          "widget": {
+            "name": "accent_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "font",
+          "name": "font",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "font"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "FLOAT",
+          "widget": {
+            "name": "size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "text_color",
+          "name": "text_color",
+          "type": "STRING",
+          "widget": {
+            "name": "text_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bar_color",
+          "name": "bar_color",
+          "type": "STRING",
+          "widget": {
+            "name": "bar_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "offset",
+          "name": "offset",
+          "type": "FLOAT",
+          "widget": {
+            "name": "offset"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "safe_margin",
+          "name": "safe_margin",
+          "type": "FLOAT",
+          "widget": {
+            "name": "safe_margin"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASVideoLowerThird",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "fps": true,
+            "name": true,
+            "title": true,
+            "start": true,
+            "duration": true,
+            "style": true,
+            "position": true,
+            "motion": true,
+            "transition": true,
+            "accent_color": true,
+            "font": true,
+            "size": true,
+            "text_color": true,
+            "bar_color": true,
+            "offset": true,
+            "safe_margin": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0,
+        "Live from the river",
+        "Wednesday, 06:40",
+        3.1,
+        2.7,
+        "card",
+        "top center",
+        "rise",
+        0.5,
+        "#3D8BFD",
+        "DejaVu Sans",
+        4,
+        "#FFFFFF",
+        "#101318E0",
+        15,
+        5
+      ],
+      "widgets_values_named": {
+        "fps": 0,
+        "name": "Live from the river",
+        "title": "Wednesday, 06:40",
+        "start": 3.1,
+        "duration": 2.7,
+        "style": "card",
+        "position": "top center",
+        "motion": "rise",
+        "transition": 0.5,
+        "accent_color": "#3D8BFD",
+        "font": "DejaVu Sans",
+        "size": 4,
+        "text_color": "#FFFFFF",
+        "bar_color": "#101318E0",
+        "offset": 15,
+        "safe_margin": 5
+      }
+    },
+    {
+      "id": 7,
+      "type": "WASVideoLowerThird",
+      "pos": [
+        1560,
+        1032
+      ],
+      "size": [
+        300,
+        696
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 10
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 11
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "title",
+          "name": "title",
+          "type": "STRING",
+          "widget": {
+            "name": "title"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start",
+          "name": "start",
+          "type": "FLOAT",
+          "widget": {
+            "name": "start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration",
+          "name": "duration",
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "style",
+          "name": "style",
+          "type": "COMBO",
+          "widget": {
+            "name": "style"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position",
+          "name": "position",
+          "type": "COMBO",
+          "widget": {
+            "name": "position"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "motion",
+          "name": "motion",
+          "type": "COMBO",
+          "widget": {
+            "name": "motion"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "transition",
+          "name": "transition",
+          "type": "FLOAT",
+          "widget": {
+            "name": "transition"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "accent_color",
+          "name": "accent_color",
+          "type": "STRING",
+          "widget": {
+            "name": "accent_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "font",
+          "name": "font",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "font"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "FLOAT",
+          "widget": {
+            "name": "size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "text_color",
+          "name": "text_color",
+          "type": "STRING",
+          "widget": {
+            "name": "text_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bar_color",
+          "name": "bar_color",
+          "type": "STRING",
+          "widget": {
+            "name": "bar_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "offset",
+          "name": "offset",
+          "type": "FLOAT",
+          "widget": {
+            "name": "offset"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "safe_margin",
+          "name": "safe_margin",
+          "type": "FLOAT",
+          "widget": {
+            "name": "safe_margin"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASVideoLowerThird",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "fps": true,
+            "name": true,
+            "title": true,
+            "start": true,
+            "duration": true,
+            "style": true,
+            "position": true,
+            "motion": true,
+            "transition": true,
+            "accent_color": true,
+            "font": true,
+            "size": true,
+            "text_color": true,
+            "bar_color": true,
+            "offset": true,
+            "safe_margin": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0,
+        "Lena Ortiz",
+        "Night shift supervisor",
+        6.1,
+        2.7,
+        "underline",
+        "bottom right",
+        "slide",
+        0.5,
+        "#E8A33D",
+        "DejaVu Sans",
+        4,
+        "#FFFFFF",
+        "#101318E0",
+        15,
+        5
+      ],
+      "widgets_values_named": {
+        "fps": 0,
+        "name": "Lena Ortiz",
+        "title": "Night shift supervisor",
+        "start": 6.1,
+        "duration": 2.7,
+        "style": "underline",
+        "position": "bottom right",
+        "motion": "slide",
+        "transition": 0.5,
+        "accent_color": "#E8A33D",
+        "font": "DejaVu Sans",
+        "size": 4,
+        "text_color": "#FFFFFF",
+        "bar_color": "#101318E0",
+        "offset": 15,
+        "safe_margin": 5
+      }
+    },
+    {
+      "id": 8,
+      "type": "WASVideoLowerThird",
+      "pos": [
+        1940,
+        1032
+      ],
+      "size": [
+        300,
+        696
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 12
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 13
+        },
+        {
+          "localized_name": "name",
+          "name": "name",
+          "type": "STRING",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "title",
+          "name": "title",
+          "type": "STRING",
+          "widget": {
+            "name": "title"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start",
+          "name": "start",
+          "type": "FLOAT",
+          "widget": {
+            "name": "start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration",
+          "name": "duration",
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "style",
+          "name": "style",
+          "type": "COMBO",
+          "widget": {
+            "name": "style"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "position",
+          "name": "position",
+          "type": "COMBO",
+          "widget": {
+            "name": "position"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "motion",
+          "name": "motion",
+          "type": "COMBO",
+          "widget": {
+            "name": "motion"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "transition",
+          "name": "transition",
+          "type": "FLOAT",
+          "widget": {
+            "name": "transition"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "accent_color",
+          "name": "accent_color",
+          "type": "STRING",
+          "widget": {
+            "name": "accent_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "font",
+          "name": "font",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "font"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "FLOAT",
+          "widget": {
+            "name": "size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "text_color",
+          "name": "text_color",
+          "type": "STRING",
+          "widget": {
+            "name": "text_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bar_color",
+          "name": "bar_color",
+          "type": "STRING",
+          "widget": {
+            "name": "bar_color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "offset",
+          "name": "offset",
+          "type": "FLOAT",
+          "widget": {
+            "name": "offset"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "safe_margin",
+          "name": "safe_margin",
+          "type": "FLOAT",
+          "widget": {
+            "name": "safe_margin"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASVideoLowerThird",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "fps": true,
+            "name": true,
+            "title": true,
+            "start": true,
+            "duration": true,
+            "style": true,
+            "position": true,
+            "motion": true,
+            "transition": true,
+            "accent_color": true,
+            "font": true,
+            "size": true,
+            "text_color": true,
+            "bar_color": true,
+            "offset": true,
+            "safe_margin": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0,
+        "Archive footage",
+        "Courtesy of the city",
+        6.1,
+        2.7,
+        "minimal",
+        "top left",
+        "fade",
+        0.5,
+        "#FFFFFF",
+        "DejaVu Sans",
+        4,
+        "#FFFFFF",
+        "#101318E0",
+        15,
+        5
+      ],
+      "widgets_values_named": {
+        "fps": 0,
+        "name": "Archive footage",
+        "title": "Courtesy of the city",
+        "start": 6.1,
+        "duration": 2.7,
+        "style": "minimal",
+        "position": "top left",
+        "motion": "fade",
+        "transition": 0.5,
+        "accent_color": "#FFFFFF",
+        "font": "DejaVu Sans",
+        "size": 4,
+        "text_color": "#FFFFFF",
+        "bar_color": "#101318E0",
+        "offset": 15,
+        "safe_margin": 5
+      }
+    },
+    {
+      "id": 9,
+      "type": "WASSaveVideo",
+      "pos": [
+        2400,
+        1032
+      ],
+      "size": [
+        315,
+        568
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 14
+        },
+        {
+          "localized_name": "video",
+          "name": "video",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        },
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 15
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 16
+        },
+        {
+          "localized_name": "root",
+          "name": "root",
+          "type": "COMBO",
+          "widget": {
+            "name": "root"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_delimiter",
+          "name": "filename_delimiter",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_delimiter"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_number_padding",
+          "name": "filename_number_padding",
+          "type": "INT",
+          "widget": {
+            "name": "filename_number_padding"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "container",
+          "name": "container",
+          "type": "COMBO",
+          "widget": {
+            "name": "container"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "codec",
+          "name": "codec",
+          "type": "COMBO",
+          "widget": {
+            "name": "codec"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "crf",
+          "name": "crf",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "crf"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overwrite",
+          "name": "overwrite",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "overwrite"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color_space",
+          "name": "color_space",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "color_space"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dither",
+          "name": "dither",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "dither"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "video",
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "localized_name": "file_path",
+          "name": "file_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "filename",
+          "name": "filename",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASSaveVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "fps": true,
+            "root": true,
+            "filename_prefix": true,
+            "filename_delimiter": true,
+            "filename_number_padding": true,
+            "container": true,
+            "codec": true,
+            "crf": true,
+            "overwrite": true,
+            "color_space": true,
+            "dither": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        24,
+        "output",
+        "was_demo/lower_third_styles",
+        "_",
+        4,
+        "mp4",
+        "ComfyUI H264",
+        0,
+        false,
+        "SDR sRGB",
+        false
+      ],
+      "widgets_values_named": {
+        "fps": 24,
+        "root": "output",
+        "filename_prefix": "was_demo/lower_third_styles",
+        "filename_delimiter": "_",
+        "filename_number_padding": 4,
+        "container": "mp4",
+        "codec": "ComfyUI H264",
+        "crf": 0,
+        "overwrite": false,
+        "color_space": "SDR sRGB",
+        "dither": false
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "VIDEO"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      2,
+      2,
+      3,
+      1,
+      "FLOAT"
+    ],
+    [
+      4,
+      3,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      2,
+      2,
+      4,
+      1,
+      "FLOAT"
+    ],
+    [
+      6,
+      4,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      2,
+      2,
+      5,
+      1,
+      "FLOAT"
+    ],
+    [
+      8,
+      5,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      9,
+      2,
+      2,
+      6,
+      1,
+      "FLOAT"
+    ],
+    [
+      10,
+      6,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      11,
+      2,
+      2,
+      7,
+      1,
+      "FLOAT"
+    ],
+    [
+      12,
+      7,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      13,
+      2,
+      2,
+      8,
+      1,
+      "FLOAT"
+    ],
+    [
+      14,
+      8,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      15,
+      2,
+      1,
+      9,
+      2,
+      "AUDIO"
+    ],
+    [
+      16,
+      2,
+      2,
+      9,
+      3,
+      "FLOAT"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Clip",
+      "bounding": [
+        0,
+        0,
+        654,
+        792
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Six styles, top and bottom",
+      "bounding": [
+        0,
+        912,
+        2280,
+        886
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Result",
+      "bounding": [
+        2360,
+        912,
+        395,
+        758
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.39662676822633297,
+      "offset": [
+        252.12620027434843,
+        266.91358024691357
+      ]
+    }
+  },
+  "version": 0.4
+}

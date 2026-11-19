@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **723** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **757** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-637 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+671 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 479 |
+| [Always loaded](#always-loaded) | always on | 513 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,12 +41,12 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-479 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+513 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/3D/Character](#was-suite3dcharacter) (4)
 - [WAS Suite/3D/Mesh](#was-suite3dmesh) (13)
 - [WAS Suite/3D/Model](#was-suite3dmodel) (6)
-- [WAS Suite/Animation](#was-suiteanimation) (24)
+- [WAS Suite/Animation](#was-suiteanimation) (34)
 - [WAS Suite/Archive](#was-suitearchive) (9)
 - [WAS Suite/Conditioning](#was-suiteconditioning) (3)
 - [WAS Suite/Dataset](#was-suitedataset) (8)
@@ -56,15 +56,18 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/IO](#was-suiteio) (19)
 - [WAS Suite/Image](#was-suiteimage) (12)
 - [WAS Suite/Image/Adjustment](#was-suiteimageadjustment) (11)
-- [WAS Suite/Image/Analyze](#was-suiteimageanalyze) (5)
+- [WAS Suite/Image/Analyze](#was-suiteimageanalyze) (7)
 - [WAS Suite/Image/Bound](#was-suiteimagebound) (17)
+- [WAS Suite/Image/Color Management](#was-suiteimagecolor-management) (2)
+- [WAS Suite/Image/Develop](#was-suiteimagedevelop) (6)
 - [WAS Suite/Image/Edit](#was-suiteimageedit) (3)
-- [WAS Suite/Image/Filter](#was-suiteimagefilter) (23)
+- [WAS Suite/Image/Film](#was-suiteimagefilm) (6)
+- [WAS Suite/Image/Filter](#was-suiteimagefilter) (24)
 - [WAS Suite/Image/Generate](#was-suiteimagegenerate) (6)
 - [WAS Suite/Image/HDR](#was-suiteimagehdr) (8)
-- [WAS Suite/Image/LUT](#was-suiteimagelut) (1)
+- [WAS Suite/Image/LUT](#was-suiteimagelut) (3)
 - [WAS Suite/Image/Layers](#was-suiteimagelayers) (20)
-- [WAS Suite/Image/Masking](#was-suiteimagemasking) (29)
+- [WAS Suite/Image/Masking](#was-suiteimagemasking) (33)
 - [WAS Suite/Image/Process](#was-suiteimageprocess) (24)
 - [WAS Suite/Image/Transform](#was-suiteimagetransform) (10)
 - [WAS Suite/Latent](#was-suitelatent) (4)
@@ -79,7 +82,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (19)
-- [WAS Suite/Sampling](#was-suitesampling) (35)
+- [WAS Suite/Sampling](#was-suitesampling) (36)
 - [WAS Suite/Text](#was-suitetext) (13)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (12)
@@ -1198,6 +1201,40 @@ The datamosh glitch of a video with its keyframes removed: the picture already o
 
 </details>
 
+<a id="node-wasvideodenoise"></a>
+<details>
+<summary><b>Video Denoise</b></summary>
+
+Remove noise and grain from a clip: each frame is averaged with the frames around it, lined up along the motion, wherever they truly match, and a light pass within the frame cleans what no neighbour covers. Answers the cleaned frames, the clip, and a picture of what was removed.
+
+| | |
+|---|---|
+| Node id | `WASVideoDenoise` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO,IMAGE` | Yes |  |  | The clip, as a VIDEO or IMAGE frames in picture codes, two frames or more. A VIDEO gives the video output its frame rate and audio. |
+| `neighbours` | `INT` | Yes | 2 |  | Frames averaged on each side of every frame: 1 = fastest; 2 = default; 3 to 5 = cleaner, slower. |
+| `luma_strength` | `FLOAT` | Yes | 1.0 |  | Share of the brightness noise removed: 0 = brightness untouched; 0.8 = leaves a fine grain; 1.0 = all of it. |
+| `chroma_strength` | `FLOAT` | Yes | 1.0 |  | Share of the colour noise removed: 0 = colour untouched; 1.0 = all of it. Coloured speckle in the shadows is colour noise. |
+| `detail` | `FLOAT` | Yes | 0.5 |  | How closely the frames must match before they are averaged: 0 = smoothest; 0.5 = default; 1 = keeps the finest texture and removes less. Raise it when the noise output shows outlines. |
+| `noise_level` | `FLOAT` | Yes | 0.0 |  | Noise per colour channel, in levels of 255: 0 = measured on every frame; 6 = treat the noise as 6 levels. The log states what was measured; set it lower to remove less. |
+| `motion_resolution` | `INT` | Yes | 768 |  | Long side, in pixels, the motion is measured at: 0 = the clip's own size; 512 = fastest; 768 = default; 1280 = small, fine motion. |
+| `motion_model` | `WAS_MOTION_MODEL` | No |  |  | A SEA-RAFT or FlowSeek network from Video Motion Model Loader to line the frames up with. Empty = the built-in texture flow, slower and less exact under heavy grain. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The cleaned frames, the same size and count as the clip, in picture codes. |
+| `video` | `VIDEO` | The cleaned frames as a clip, at the source's frame rate and with its audio when it is a VIDEO, otherwise at 24 fps with none. |
+| `noise` | `IMAGE` | What was removed, magnified 4 times about mid grey: even grain = only noise went; outlines = detail went too, so raise detail. |
+
+</details>
+
 <a id="node-video-dump-frames"></a>
 <details>
 <summary><b>Video Dump Frames</b></summary>
@@ -1257,6 +1294,112 @@ Keep a smaller set of frames from a video: evenly spaced, the first, middle or l
 | Name | Type | What it is |
 |---|---|---|
 | `video` | `VIDEO` | The frames that were kept, as a video at the source's rate. |
+
+</details>
+
+<a id="node-wasvideojoin"></a>
+<details>
+<summary><b>Video Join</b></summary>
+
+Join clips end to end with a cut, dissolve, dip or wipe at each join, the incoming clip's head laid over the outgoing clip's tail. Takes the clip so far and the next one, or the list Video Split Scenes answers. Every clip is brought to the first one's size and frame rate, its audio crossfaded under each join.
+
+| | |
+|---|---|
+| Node id | `WASVideoJoin` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO` | Yes |  |  | The clip so far, or the first clip; a list from Video Split Scenes joins in order. The first clip sets the joined clip's size, frame rate and sample rate. |
+| `transition` | `COMBO` | Yes | dissolve | `cut`, `dissolve`, `dip to black`, `dip to white`, `wipe` | `cut` = straight join; `dissolve` = mixes across; `dip to black`, `dip to white` = out to the colour at the middle, then in; `wipe` = an edge sweeps the next clip on. Used at every join. |
+| `duration` | `INT` | Yes | 12 |  | Frames each transition lasts at the first clip's rate: 12 = half a second at 24 fps; 0 = a cut. The joined clip holds every clip's frames less every transition's. Held to the frames each clip has. |
+| `wipe_direction` | `COMBO` | Yes | left to right | `left to right`, `right to left`, `top to bottom`, `bottom to top`, `top left to bottom right`, `top right to bottom left`, `bottom left to top right`, `bottom right to top left` | Which way a wipe's edge travels: `left to right` shows the next clip at the left edge first. Read only by `wipe`. |
+| `wipe_softness` | `FLOAT` | Yes | 0.1 |  | Width of a wipe's edge as a share of the frame: 0 = a hard line; 0.1 = soft; 1 = as wide as the frame. Read only by `wipe`. |
+| `mix` | `COMBO` | Yes | codes | `codes`, `light` | `codes` = mixes the values as they arrive, an editor's default and right for linear-light frames; `light` = decodes sRGB codes to light, mixes, encodes again: a film dissolve, brighter through the middle. |
+| `fit` | `COMBO` | Yes | fit and pad | `fit and pad`, `fill and crop`, `stretch`, `crop or pad` | How a clip of another size meets the first clip's: `fit and pad` = whole frame inside black bars; `fill and crop` = fills, trims the overhang; `stretch` = distorts; `crop or pad` = never resamples. |
+| `frame_rate` | `COMBO` | Yes | hold | `hold`, `blend`, `interpolate` | How a clip at another frame rate meets the first clip's, its running time kept: `hold` = repeats or drops whole frames; `blend` = mixes neighbours; `interpolate` = draws new ones with EMA-VFI. |
+| `next_video` | `VIDEO` | No |  |  | The clip joined after video, or a list joined in order. Leave empty to join only the list on video. |
+| `ema_vfi_model` | `EMA_VFI_MODEL` | No |  |  | The interpolation network from EMA-VFI Video Model Loader, for frame_rate `interpolate`. A rate change other than doubling needs an 'ours_t' checkpoint. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `video` | `VIDEO` | Every clip joined, at the first clip's size and frame rate, with the audio crossfaded under each transition. |
+| `frames` | `INT` | How many frames the joined clip holds. |
+| `starts` | `INT` | The frame each clip starts on in the joined clip, counting from 0: [0, 36, 84]. |
+
+</details>
+
+<a id="node-wasvideolooktransition"></a>
+<details>
+<summary><b>Video Look Transition</b></summary>
+
+Move a clip from one look to another over time, such as a day grade into a night grade, along keyframes set on a curve drawn over the clip's frames. A mask limits the change to part of the frame, such as a tracked subject's matte.
+
+| | |
+|---|---|
+| Node id | `WASVideoLookTransition` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `image_a` | `IMAGE` | Yes |  |  | The clip graded the first way, shown where the amount is 0. |
+| `image_b` | `IMAGE` | Yes |  |  | The same clip graded the second way, shown where the amount is 1. Same frame count, size and channels as image_a. |
+| `keyframes` | `STRING` | Yes | 0:0:ease_in_out_sine; -1:1 |  | frame:amount:easing entries split by ';'. 0:0; -1:1 = the whole clip from image_a to image_b; -1 = the last frame. An easing shapes the move to the next keyframe; hold = jumps there. Drag the curve on the node. |
+| `mix` | `COMBO` | Yes | codes | `codes`, `light` | `codes` = mixes the values as they arrive, an editor's default and right for linear-light frames; `light` = decodes sRGB codes to light, mixes, encodes again, brighter through the middle. |
+| `mask` | `MASK` | No |  |  | Where the change happens: 1 = the full amount, 0 = image_a kept. One plane per frame, or one for the whole clip, such as Image Track Subject's matte. Resized to the frames. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The clip moving between the two looks: image_a's frames exactly where the amount is 0, image_b's where it is 1. |
+| `amounts` | `ARRAY` | The amount at every frame, 0 to 1, such as [0.0, 0.25, 0.75, 1.0]. |
+
+</details>
+
+<a id="node-wasvideolowerthird"></a>
+<details>
+<summary><b>Video Lower Third</b></summary>
+
+Introduce a speaker with a name and title, drawn as a bar, boxes, a banner, a card or plain text, at the top or bottom of the frame. It slides, rises or fades in and out at the times given and stays inside the safe area.
+
+| | |
+|---|---|
+| Node id | `WASVideoLowerThird` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The frames to draw on, in playback order, frame 0 at 0 seconds. |
+| `fps` | `FLOAT` | Yes | 0.0 |  | The clip's frame rate: 23.976, 25, 29.97. The graphic shows on frame n when start <= n / fps < start + duration. Wire Video Metadata's fps; 0 = not set, refused. |
+| `name` | `STRING` | Yes |  |  | The first line, drawn bold: `Dr Amira Haddad`. Arabic and Hebrew are joined right to left. |
+| `title` | `STRING` | Yes |  |  | The second line, smaller: `Climate Scientist, Oxford`. Empty draws the name alone. |
+| `start` | `FLOAT` | Yes | 1.0 |  | Seconds into the batch the graphic starts to enter: 1 = frame 24 at 24 fps. |
+| `duration` | `FLOAT` | Yes | 5.0 |  | Seconds from start until the graphic has left, transitions included: 5 = a usual hold; 0 = never shown. |
+| `style` | `COMBO` | Yes | stripe | `stripe`, `split`, `banner`, `card`, `underline`, `minimal` | 'stripe' = bar with an accent edge; 'split' = name on an accent box, title on a dark box; 'banner' = band across the frame, accent name block; 'card' = rounded card, accent title; 'underline' = accent rule, no bar; 'minimal' = text only. |
+| `position` | `COMBO` | Yes | bottom left | `bottom left`, `bottom center`, `bottom right`, `top left`, `top center`, `top right` | Frame edge and side the graphic keeps to. Text aligns to the side; 'right' suits Arabic and Hebrew names. 'top' = an upper third, clear of subtitles. |
+| `motion` | `COMBO` | Yes | slide | `slide`, `rise`, `fade` | 'slide' = the graphic wipes open from its side and the text glides in with it, from the middle when centred; 'rise' = it moves into place from below, or from above at the top, as it fades in; 'fade' = it fades. |
+| `transition` | `FLOAT` | Yes | 0.5 |  | Seconds each entrance and exit takes, inside duration: 0.5 = brisk; 1 = gentle; 0 = cut. |
+| `accent_color` | `STRING` | Yes | #3D8BFD |  | The style's accent: stripe, name box, banner block, rule or card title. #3D8BFD blue, #E8A33D amber, #D93A3A red. |
+| `font` | `COMBO,STRING` | Yes | DejaVu Sans |  | Typeface, from the same menu as Image Draw Text. The name uses the face's Bold file where one exists. A wired path, such as `E:\images\cat.png`, works too. |
+| `size` | `FLOAT` | Yes | 4.0 |  | Name size as percent of the frame height: 4 = 43 px at 1080p. The title is 62% of it. |
+| `text_color` | `STRING` | Yes | #FFFFFF |  | Name colour; the title is drawn in it at 82%: #FFFFFF, #F2F2F2. |
+| `bar_color` | `STRING` | Yes | #101318E0 |  | Bar, box or card colour, #RRGGBBAA for its strength, and the shadow colour for 'underline' and 'minimal': #101318E0 = near black at 88%; #FFFFFFE6 = light. |
+| `offset` | `FLOAT` | Yes | 15.0 |  | Distance from the top or bottom frame edge to the graphic, as percent of the frame height: 15 = clear of subtitles; 5 = on the safe line. |
+| `safe_margin` | `FLOAT` | Yes | 5.0 |  | Space kept clear at every edge, as percent of the frame: 5 = EBU R95 graphics safe; 10 = title safe. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The frames with the graphic drawn on; same size, count and rate. |
 
 </details>
 
@@ -1417,6 +1560,72 @@ Crop a clip to another aspect, such as 9:16 for a phone, with the window followi
 
 </details>
 
+<a id="node-wasvideoremovedust"></a>
+<details>
+<summary><b>Video Remove Dust</b></summary>
+
+Remove dust and dirt that lands on single frames of a scanned film. A speck is found where a frame differs from both neighbours the same way while they agree, and is repaired with their own pixels lined up along the motion. Fast-moving edges are left alone.
+
+| | |
+|---|---|
+| Node id | `WASVideoRemoveDust` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO,IMAGE` | Yes |  |  | The clip, as a VIDEO or IMAGE frames in picture codes, three frames or more. A VIDEO gives the video output its frame rate and audio. |
+| `sensitivity` | `FLOAT` | Yes | 0.5 |  | How faint a speck may be and still be found: 0.2 = bold specks only; 0.5 = default; 0.9 = faint specks too, and more risk on busy motion. |
+| `max_size` | `INT` | Yes | 24 |  | Widest speck repaired, in pixels: 8 = pinpricks only; 24 = default; 96 = large blotches on a 4K scan. |
+| `polarity` | `COMBO` | Yes | light and dark | `light and dark`, `light`, `dark` | Which specks to look for: 'light' = dust printed from a negative; 'dark' = dust on a slide or print; 'light and dark' = both. |
+| `motion_resolution` | `INT` | Yes | 768 |  | Long side, in pixels, the motion is measured at: 0 = the clip's own size; 512 = fastest; 768 = default; 1280 = small, fine motion. |
+| `motion_model` | `WAS_MOTION_MODEL` | No |  |  | A SEA-RAFT or FlowSeek network from Video Motion Model Loader to line the frames up with. Empty = the built-in texture flow, slower and finding fewer specks on moving areas. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The repaired frames, the same size and count as the clip, in picture codes. |
+| `video` | `VIDEO` | The repaired frames as a clip, at the source's frame rate and with its audio when it is a VIDEO, otherwise at 24 fps with none. |
+| `mask` | `MASK` | White where a speck was repaired, soft at its edge, one mask per frame. |
+
+</details>
+
+<a id="node-wasvideoremoveobject"></a>
+<details>
+<summary><b>Video Remove Object</b></summary>
+
+Remove a masked object from a clip with background other frames really show, carried along its motion. Suits locked-off shots, pans and subjects moving off their background; parallax, changing light, motion behind the object and shadows outside the mask degrade it. What no frame shows comes out as remaining: edit it on edit_frame and wire the result back as fill.
+
+| | |
+|---|---|
+| Node id | `WASVideoRemoveObject` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `IMAGE,VIDEO` | Yes |  |  | The clip, as IMAGE frames or a VIDEO, at least two frames. Picture codes or linear light, kept as given. |
+| `mask` | `MASK` | Yes |  |  | The object, white: one mask per frame, such as Image Track Subject's, or one for every frame. Include its shadow and reflection, or they stay. |
+| `grow` | `FLOAT` | Yes | 1.0 |  | Grows the mask, in hundredths of the short side: 0 = as drawn; 1 = 7 px at 720p, past a soft edge; 3 = motion blur and halos. |
+| `reach` | `INT` | Yes | 0 |  | Frames searched before and after each frame: 0 = the whole clip; 24 = one second, when the light changes; 6 = near frames only, when the background itself moves (crowds, water, machines), leaving the rest as remaining. |
+| `motion_model` | `WAS_MOTION_MODEL` | No |  |  | A SEA-RAFT or FlowSeek network from Video Motion Model Loader to measure the motion with. Empty = the built-in texture flow. |
+| `fill` | `IMAGE` | No |  |  | Second pass: frame edit_frame of this node's images after an image edit filled its remaining area. Carried along the motion into every frame's remaining area. |
+| `fill_frames` | `STRING,INT` | No | 0 |  | Clip frame each fill picture shows, counting from 0: 12 for one; 0, 40, 80 for three. Wire edit_frame here. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The clip with the object filled: same size and count as video. |
+| `remaining` | `MASK` | 1 where no frame showed the background and a smooth placeholder stands. Hand it to an image edit or inpaint on edit_frame. |
+| `edit_frame` | `INT` | The frame to fill with an image edit and wire back as fill: central among the frames with the most remaining area, so the fill travels least. 0 when none is left. |
+| `video` | `VIDEO` | images as a clip, at video's frame rate and with its audio when it is a VIDEO, otherwise at 24 fps with none. |
+
+</details>
+
 <a id="node-wasvideoretime"></a>
 <details>
 <summary><b>Video Retime</b></summary>
@@ -1570,6 +1779,47 @@ Take the shake out of a clip: the camera's own movement is fitted from the motio
 
 </details>
 
+<a id="node-wasvideosubtitles"></a>
+<details>
+<summary><b>Video Subtitles</b></summary>
+
+Burn subtitles from an .srt or .vtt file, or from typed SubRip text, into a frame batch, each cue on exactly the frames its times cover. Captions wrap to two balanced lines inside the safe area, with an outline, shadow or box, and right-to-left text joined.
+
+| | |
+|---|---|
+| Node id | `WASVideoSubtitles` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The frames to caption, in playback order, frame 0 at 0 seconds. |
+| `fps` | `FLOAT` | Yes | 0.0 |  | The clip's frame rate: 23.976, 25, 29.97. A cue shows on frame n when start <= n / fps < end. Wire Video Metadata's fps; 0 = not set, refused. |
+| `subtitle_file` | `COMBO,STRING` | Yes | none (use subtitle_text) |  | Which .srt or .vtt file to burn in, from input, output, temp or paths.allow_read. 'none (use subtitle_text)' reads the text box instead. Files over 4 MB are refused. A wired path, such as `E:\images\cat.png`, works too. |
+| `subtitle_text` | `STRING` | Yes |  |  | SubRip or WebVTT text read when subtitle_file is 'none': `1`, `00:00:01,000 --> 00:00:03,500`, `Hello.`, then a blank line per cue. <i>, <b>, <u> and <font color> are drawn. |
+| `offset` | `FLOAT` | Yes | 0.0 |  | Seconds added to every cue time: 2 = cues 2 s later; -600 = a batch cut from 10 minutes into the film. 0 = frame 0 is 00:00:00,000. |
+| `font` | `COMBO,STRING` | Yes | DejaVu Sans |  | Typeface, from the same menu as Image Draw Text. Bold uses the face's Bold file where one exists; italic is slanted. Arabic and Hebrew fall back to DejaVu Sans. A wired path, such as `E:\images\cat.png`, works too. |
+| `size` | `FLOAT` | Yes | 5.0 |  | Text size as percent of the frame height: 5 = 54 px at 1080p; 4 = smaller, for vertical video; 7 = large print. |
+| `text_color` | `STRING` | Yes | #FFFFFF |  | Glyph colour where a cue sets none: #FFFFFF, #FFFF00 or a name such as 'white'. |
+| `outline` | `FLOAT` | Yes | 6.0 |  | Outline width as percent of the text size: 0 = none; 6 = thin edge; 12 = heavy. |
+| `box` | `COMBO` | Yes | none | `none`, `lines`, `block` | Background box in box_color: 'none'; 'lines' = one box behind each line, the broadcast style; 'block' = one box round the whole caption. |
+| `position` | `COMBO` | Yes | bottom | `bottom`, `top` | Where captions sit inside the safe area. A cue carrying {\an8} or a WebVTT line: setting keeps its own place. |
+| `fade` | `FLOAT` | Yes | 0.0 |  | Seconds each cue fades in and out, inside its own time: 0 = cut, as broadcast does; 0.2 = soft. The first and last frames are faint, never empty. |
+| `outline_color` | `STRING` | Yes | #000000 |  | Outline colour: #000000, or #000000AA for a half-transparent edge. |
+| `shadow` | `FLOAT` | Yes | 4.0 |  | Drop shadow offset as percent of the text size, blurred by half of it: 0 = none; 4 = soft; 10 = deep. |
+| `shadow_color` | `STRING` | Yes | #000000B4 |  | Shadow colour, #RRGGBBAA for its strength: #000000B4 = black at 70%. |
+| `box_color` | `STRING` | Yes | #000000A0 |  | Box colour, #RRGGBBAA for its strength: #000000A0 = black at 63%; #000000 = solid. |
+| `safe_margin` | `FLOAT` | Yes | 5.0 |  | Space kept clear at every edge, as percent of the frame: 5 = EBU R95 graphics safe; 10 = the older title safe; 0 = to the edge. |
+| `max_width` | `FLOAT` | Yes | 80.0 |  | Widest a caption may be, as percent of the frame width, never past the safe area: 80 = about 45 characters at size 5 in 16:9. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The frames with the subtitles burned in; same size, count and rate. |
+
+</details>
+
 <a id="node-wasvideotemporalconsistency"></a>
 <details>
 <summary><b>Video Temporal Consistency</b></summary>
@@ -1633,6 +1883,109 @@ Upscale a clip with an upscale model, holding the added detail steady along its 
 |---|---|---|
 | `video` | `VIDEO` | The upscaled clip as an h264 file, with the source's audio. Save Video on 'auto' keeps it without encoding it again. |
 | `frames` | `INT` | How many frames the upscaled clip holds. |
+
+</details>
+
+<a id="node-wasvideotimecode"></a>
+<details>
+<summary><b>Video Timecode</b></summary>
+
+Burn a running SMPTE timecode, a frame number or both into every frame, in a monospaced box at a corner of the safe area. Drop-frame timecode is written at 29.97 and 59.94. For review copies and edit references.
+
+| | |
+|---|---|
+| Node id | `WASVideoTimecode` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The frames to stamp, in playback order. |
+| `fps` | `FLOAT` | Yes | 0.0 |  | The clip's frame rate: 23.976, 25, 29.97, 59.94. Wire Video Metadata's fps; 0 = not set, refused. |
+| `start` | `STRING` | Yes | 00:00:00:00 |  | The first frame's timecode, 01:00:00:00, or its frame number, 1001. Drop-frame labels such as 00:01:00;00 that do not exist are refused. |
+| `display` | `COMBO` | Yes | timecode | `timecode`, `frame number`, `timecode and frame number` | 'timecode' = 01:00:00:00; 'frame number' = 86400; 'timecode and frame number' = both. Frame numbers count from 00:00:00:00. |
+| `drop_frame` | `BOOLEAN` | Yes | True |  | At 29.97 and 59.94, true = drop-frame 00:01:00;02 that keeps pace with the clock; false = 00:01:00:00, which drifts 3.6 s an hour. Ignored at other rates. |
+| `corner` | `COMBO` | Yes | bottom center | `top left`, `top center`, `top right`, `bottom left`, `bottom center`, `bottom right` | Where the box sits inside the safe area: 'bottom center' = the usual window burn; 'top right' = clear of subtitles. |
+| `size` | `FLOAT` | Yes | 3.5 |  | Text size as percent of the frame height: 3.5 = 38 px at 1080p; 2.5 = discreet; 6 = large. |
+| `label` | `STRING` | Yes |  |  | Text before the timecode, such as `SRC` or `CAM A`. Empty draws none. |
+| `text_color` | `STRING` | Yes | #FFFFFF |  | Digit colour: #FFFFFF, #FFD000 or a name such as 'white'. |
+| `box_color` | `STRING` | Yes | #000000C0 |  | Box colour, #RRGGBBAA for its strength: #000000C0 = black at 75%; #00000000 = no box. |
+| `safe_margin` | `FLOAT` | Yes | 5.0 |  | Space kept clear at every edge, as percent of the frame: 5 = EBU R95 graphics safe; 0 = in the corner. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The frames with the timecode burned in; same size, count and rate. |
+| `end_timecode` | `STRING` | The last frame's timecode, as 00:00:14;29, for a log or a filename. |
+
+</details>
+
+<a id="node-wasvideotrackcrop"></a>
+<details>
+<summary><b>Video Track Crop</b></summary>
+
+Cut the subject a mask follows, such as a face, out of every frame at one fixed size, centred and steadied, however far away it is. Restore or edit the crops as their own clip, then lay them back with Video Track Paste.
+
+| | |
+|---|---|
+| Node id | `WASVideoTrackCrop` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO` | Yes |  |  | The clip to crop from. |
+| `mask` | `MASK` | Yes |  |  | The subject on every frame: white = subject. Wire Image Track Subject's mask; frames where it is empty take the window from the frames around them. |
+| `width` | `INT` | Yes | 512 |  | Width of every crop in pixels: 512 = MiniMax H3 at a fast size; 768 = more detail. |
+| `height` | `INT` | Yes | 512 |  | Height of every crop in pixels: 512 with width 512 = square. |
+| `margin` | `FLOAT` | Yes | 2.0 |  | Window size against the subject's: 1.3 = the face alone; 2 = face, hair and neck; 4 = head and shoulders. |
+| `smoothing` | `FLOAT` | Yes | 0.25 |  | Seconds of movement averaged in the window's path and size: 0 = locked to the mask; 0.25 = steady; 1 = slow drift. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `crops` | `IMAGE` | Every frame's window at width x height, the subject centred at one size. |
+| `masks` | `MASK` | The mask cut out alongside, at the crop's size: wire it to Video Track Paste's masks. |
+| `reference` | `IMAGE` | The subject from the frame that shows it in most detail, whole and in frame, cut at that frame's own resolution up to 2048 px: the identity reference for a restore. |
+| `track` | `WAS_VIDEO_TRACK` | Where the window sat on every frame, for Video Track Paste. |
+| `preview` | `VIDEO` | The clip with the window outlined and the rest dimmed. |
+
+</details>
+
+<a id="node-wasvideotrackpaste"></a>
+<details>
+<summary><b>Video Track Paste</b></summary>
+
+Lay crops cut by Video Track Crop back into the clip they came from, such as a restored face, each through its soft mask at the size and place it was cut. Frames where the original subject was already as sharp as the crop keep their own.
+
+| | |
+|---|---|
+| Node id | `WASVideoTrackPaste` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO` | Yes |  |  | The clip the crops were cut from, or an upscaled copy of it, such as 2x, where the crops land with more pixels. |
+| `crops` | `IMAGE` | Yes |  |  | The crops to lay back, one per frame from the first, at any size of the same shape: the restored or edited crops. |
+| `track` | `WAS_VIDEO_TRACK` | Yes |  |  | Video Track Crop's track. |
+| `grow` | `FLOAT` | Yes | 12.0 |  | Pixels of the crop the mask is grown by before its edge is softened: 12 = past the hairline; 0 = as cut; -8 = inside it. |
+| `feather` | `FLOAT` | Yes | 12.0 |  | Softness of the edge in pixels of the crop: 12 = a soft join; 0 = hard. |
+| `color_match` | `BOOLEAN` | Yes | True |  | `true` = each crop takes the original's colour and light, blurred over an eighth of the crop, and keeps all its own features; `false` = laid back as it is. |
+| `align` | `BOOLEAN` | Yes | True |  | `true` = each crop is shifted onto the original crop before it is laid back, so a restored face that drifted lands on the face; `false` = laid back where it is. |
+| `keep_original` | `FLOAT` | Yes | 1.0 |  | Magnification at or below which a frame keeps its own subject, fading to the crop in full by 1.5 times it: 1 = wherever the frame held as many pixels as the crop; 0 = every frame takes the crop. |
+| `masks` | `MASK` | No |  |  | What of each crop is laid back: Video Track Crop's masks. Empty = an ellipse filling the crop. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The clip's frames with the crops laid back. |
+| `video` | `VIDEO` | The same as a clip, with the source's frame rate and sound. |
 
 </details>
 
@@ -3228,8 +3581,10 @@ Write a video file from an image batch or a video, with an optional sound track.
 | `images` | `IMAGE` | No |  |  | Frames to encode, in order, at the rate below. Leave unconnected when a video is wired instead. |
 | `video` | `VIDEO` | No |  |  | A whole video to write out. Used in preference to images when both are wired. |
 | `audio` | `AUDIO` | No |  |  | Sound laid under the frames. Read only when images are encoded, since a video already carries its own. |
-| `crf` | `FLOAT` | No | 0.0 |  | Quality, lower is better and larger. 0 leaves the encoder's default; 18 is near-lossless, 23 typical, 28 small. |
+| `crf` | `FLOAT` | No | 0.0 |  | Quality for H.264, H.265, AV1 and VP9, lower is better and larger. 0 leaves the encoder's default; 18 is near-lossless, 23 typical, 28 small. |
 | `overwrite` | `BOOLEAN` | No | False |  | Write prefix.mp4 every run instead of a new number, so the file is replaced rather than added to. |
+| `color_space` | `COMBO` | No | SDR sRGB |  | Tags only, no conversion. SDR sRGB = ordinary pictures; Rec.709 (BT.1886) = gamma 2.4 codes; Display P3 = P3, sRGB curve; PQ (HDR10) and HLG = Rec.2020 codes from Image Color Space, written 10-bit by H265, PRORES or AV01. |
+| `dither` | `BOOLEAN` | No | False |  | false = plain rounding; true = an ordered dither, so slow gradients such as skies band less while pure black and white stay exact. Strongest on FFV1, weakest on H.264 at crf 18 to 23. Read by the pack's 8-bit codecs only. |
 
 **Outputs**
 
@@ -4068,6 +4423,31 @@ Compare two images on the node, with a divider you drag across to reveal one und
 
 </details>
 
+<a id="node-wasimagefalsecolor"></a>
+<details>
+<summary><b>Image False Color</b></summary>
+
+Paint a picture in ARRI exposure false colour: purple and red where it clips, blue and yellow just inside, green and pink at ARRI's levels for 18% grey and one stop over, grey elsewhere. Shows on the node with a legend and each band's share of the frame.
+
+| | |
+|---|---|
+| Node id | `WASImageFalseColor` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `image` | `IMAGE` | Yes |  |  | The pictures to check, in picture codes. Bands read Rec.709 luma: 0 = 0%, 1 = 100%, so 0.40 is green and 0.995 is clipped. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The false colour pictures, the input's size. Purple under 2.5%, blue 2.5 to 4, green 38 to 42, pink 52 to 56, yellow 97 to 99, red 99 and up. |
+
+</details>
+
 <a id="node-image-analyze"></a>
 <details>
 <summary><b>Image Histogram Chart</b></summary>
@@ -4131,6 +4511,32 @@ Measure brightness, contrast, sharpness, saturation, clipping and entropy for ev
 | `entropy` | `FLOAT` | How much of the tonal range is in use, in bits, 0.0 to 8.0. A detailed photograph sits around 7; a flat or nearly empty frame sits far below it, which makes this a good test for a render that collapsed. |
 | `stats` | `DICT` | Every measurement for that image in one dictionary, for Dictionary to Console, Text Dictionary Get or writing out beside the image. |
 | `summary` | `STRING` | The measurements as one line of text per image, for a log or a caption burnt in with Image Draw Text. |
+
+</details>
+
+<a id="node-wasimagevectorscope"></a>
+<details>
+<summary><b>Image Vectorscope</b></summary>
+
+Plot a picture's colour on a Rec.709 vectorscope: hue as the angle, saturation as the distance from the centre, against 75% and 100% bar targets and the skin tone line. Shows on the node and hands the scope on as a picture.
+
+| | |
+|---|---|
+| Node id | `WASImageVectorscope` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `image` | `IMAGE` | Yes |  |  | The pictures to plot, in picture codes. Each frame of a batch gets its own scope; the node shows the first. |
+| `size` | `INT` | Yes | 512 |  | Side of the scope in pixels. 512 = the usual; 1024 = a finer trace for a large picture; 256 = compact. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `scope` | `IMAGE` | The vectorscope, size by size, one per frame: +Cb to the right, +Cr up, trace brightness the log of how many pixels land there. |
 
 </details>
 
@@ -4658,6 +5064,285 @@ Measure the tightest rectangle around everything a mask marks and answer it as b
 
 </details>
 
+### WAS Suite/Image/Color Management
+
+<a id="node-wasimageacesoutput"></a>
+<details>
+<summary><b>Image ACES Output</b></summary>
+
+Render scene-linear light for a screen through the Academy's ACES 2.0 Output Transform: its tone scale, chroma compression and gamut mapping. Pick the display, SDR or HDR, and the node hands on that display's code values, ready to save as a picture or video in the same color space.
+
+| | |
+|---|---|
+| Node id | `WASImageACESOutput` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | Scene-linear light, not picture codes: 0.18 = mid grey, 1.0 = diffuse white, highlights above. Wire EXR Load, HDR VAE Decode or Linear Light; log footage goes through Image Color Space to Linear first. |
+| `source` | `COMBO` | Yes | Linear Rec.709 (sRGB) |  | Gamut of the scene-linear input. Linear Rec.709 (sRGB) = Linear Light, HDR VAE Decode and most EXRs; ACEScg = AP1 renders and comps; ACES2065-1 = AP0 archive files; Linear P3-D65 and Linear Rec.2020 for those gamuts. |
+| `preset` | `COMBO` | Yes | SDR 100 nit sRGB |  | The display and its encoding, from the ACES 2.0 reference outputs. sRGB = web, PNG and most monitors; Rec.709 BT.1886 = broadcast video; Display P3 = Apple screens; PQ = HDR10; HLG = broadcast HDR; nit = the peak highlights roll off to. |
+| `white` | `COMBO` | Yes | D65 | `D65`, `D60 sim` | D65 = ACES white shows as the display's own white; D60 sim = ACES white held at D60, a touch warmer, scaled to fit the display, for matching a D60 cinema master. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | Display code values: gamma codes for SDR, PQ or HLG codes for HDR, up to 2.70 for Display P3 extended. Save tagged as the preset's space in Save Video (Advanced) or as an image; PQ and HLG look flat in an SDR preview. |
+
+</details>
+
+<a id="node-wasimagecolorspace"></a>
+<details>
+<summary><b>Image Color Space</b></summary>
+
+Convert pictures between camera log, scene-linear, ACES and display color spaces, like a grading tool's color space transform. Decode camera footage to linear light, move between gamuts, or encode Rec.2100 PQ or HLG for HDR video. Nothing is clamped on the way.
+
+| | |
+|---|---|
+| Node id | `WASImageColorSpace` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | Pictures in the source space: codes on the source curve, or light when it is Linear. Values above 1 and below 0 are read as they are. |
+| `source_color_space` | `COMBO` | Yes | Rec.709 / sRGB |  | Gamut the pictures were recorded in. Rec.709 / sRGB = ordinary pictures and sampler output; a camera's own gamut for its log footage, such as Sony S-Gamut3.Cine or ARRI Wide Gamut 4. Apple Log is Rec.2020. |
+| `source_gamma` | `COMBO` | Yes | sRGB |  | Curve the pictures carry. Linear = light, 1.0 white and 0.18 mid grey; sRGB = PNG, JPEG and sampler output; a camera log = that camera's codes; Rec.2100 PQ or HLG = HDR video codes. |
+| `target_color_space` | `COMBO` | Yes | Rec.2020 |  | Gamut to convert into. Rec.2020 = HDR10 and HLG delivery; Rec.709 / sRGB = SDR screens and ordinary nodes; ACEScg (AP1) = compositing and grading in light. Colors outside it come out below 0 or above 1. |
+| `target_gamma` | `COMBO` | Yes | Rec.2100 PQ (ST 2084) |  | Curve to encode with. Linear = light for EXR Save and light-linear blending; Rec.2100 PQ or HLG = HDR codes for Save Video (Advanced) in the same mode; sRGB or Gamma 2.4 (BT.1886) = SDR display codes. |
+| `chromatic_adaptation` | `COMBO` | No | Bradford | `Bradford`, `CAT02`, `CAT16`, `Von Kries`, `XYZ Scaling`, `None` | How white is carried between different white points, read only when they differ: ACES spaces and Blackmagic Wide Gamut Gen 5. Bradford = the usual choice; CAT02 and CAT16 = CIECAM02 and CAM16; None = XYZ passed across unadapted. |
+| `source_levels` | `COMBO` | No | full | `full`, `legal` | full = codes are the curve's own values, as an EXR, a DPX or a render holds them; legal = a camera clip decoded from video levels, 10-bit code 64 to 940 read as 0 to 1. S-Log3 18% grey reads 0.406 legal, 0.411 full. |
+| `target_levels` | `COMBO` | No | full | `full`, `legal` | full = write the curve's own values; legal = write 10-bit code values as video levels, code 64 landing on 0 and 940 on 1, the way a camera clip decodes. |
+| `hdr_reference_white` | `FLOAT` | No | 203.0 |  | cd/m2 that linear 1.0 stands for at a PQ or HLG end. 203 = BT.2408 HDR reference white, where 75% HLG lands; 100 = SDR reference white. HLG is read through its 1000 cd/m2 reference display. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The converted pictures: light when the target is Linear, otherwise codes on the target curve. Values above 1 and below 0 are kept; log and PQ codes look flat or dark in an ordinary preview. |
+
+</details>
+
+### WAS Suite/Image/Develop
+
+<a id="node-wasimagecolorgrade"></a>
+<details>
+<summary><b>Image Color Grading</b></summary>
+
+Tint the shadows, midtones and highlights each their own colour, plus the whole picture, by dragging four colour wheels on the node. Teal shadows under warm highlights, a cool night or a golden glow take a drag each.
+
+| | |
+|---|---|
+| Node id | `WASImageColorGrade` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The pictures to grade. An alpha channel passes through. |
+| `shadows_hue` | `FLOAT` | Yes | 0.0 |  | Colour the shadows lean to, in degrees. 0 = red, 30 = orange, 60 = yellow, 120 = green, 190 = teal, 240 = blue, 300 = magenta. |
+| `shadows_saturation` | `FLOAT` | Yes | 0.0 |  | How strongly the shadows take that colour. 0 = untinted; 15 = subtle; 40 = strong. |
+| `shadows_luminance` | `FLOAT` | Yes | 0.0 |  | -100 = shadows deeper; 0 = unchanged; 100 = shadows lifted. |
+| `midtones_hue` | `FLOAT` | Yes | 0.0 |  | Colour the midtones lean to, in degrees. 0 = red, 30 = orange, 60 = yellow, 120 = green, 190 = teal, 240 = blue, 300 = magenta. |
+| `midtones_saturation` | `FLOAT` | Yes | 0.0 |  | How strongly the midtones take that colour. 0 = untinted; 10 = subtle; 30 = strong. |
+| `midtones_luminance` | `FLOAT` | Yes | 0.0 |  | -100 = midtones darker; 0 = unchanged; 100 = midtones brighter. |
+| `highlights_hue` | `FLOAT` | Yes | 0.0 |  | Colour the highlights lean to, in degrees. 0 = red, 30 = orange, 45 = gold, 60 = yellow, 190 = teal, 240 = blue. |
+| `highlights_saturation` | `FLOAT` | Yes | 0.0 |  | How strongly the highlights take that colour. 0 = untinted; 15 = subtle; 40 = strong. |
+| `highlights_luminance` | `FLOAT` | Yes | 0.0 |  | -100 = highlights darker; 0 = unchanged; 100 = highlights brighter. |
+| `global_hue` | `FLOAT` | Yes | 0.0 |  | Colour the whole picture leans to, in degrees. 0 = red, 30 = orange, 60 = yellow, 190 = teal, 240 = blue. |
+| `global_saturation` | `FLOAT` | Yes | 0.0 |  | How strongly the whole picture takes that colour. 0 = untinted; 10 = a wash; 30 = a strong cast. |
+| `global_luminance` | `FLOAT` | Yes | 0.0 |  | -100 = the whole picture darker; 0 = unchanged; 100 = brighter. |
+| `blending` | `FLOAT` | Yes | 50.0 |  | How far the three ranges overlap. 0 = they meet sharply; 50 = a smooth handover; 100 = each tint reaches across most of the picture. |
+| `balance` | `FLOAT` | Yes | 0.0 |  | Where shadows end and highlights begin. -100 = most of the picture counts as shadow; 0 = even; 100 = most counts as highlight. |
+| `mask` | `MASK` | No |  |  | Where the grade applies: white = fully, black = untouched, grey = partly. One mask per frame or one for all; unwired = the whole picture. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The graded pictures. |
+
+</details>
+
+<a id="node-wasimagecolormixer"></a>
+<details>
+<summary><b>Image Color Mixer</b></summary>
+
+Change the hue, saturation and brightness of eight colour ranges, red to magenta, without touching the rest: darken a blue sky, mute green foliage, warm skin. In black and white the luminance sliders set how light each colour prints.
+
+| | |
+|---|---|
+| Node id | `WASImageColorMixer` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The pictures to mix. Greys and near-greys are left alone, and an alpha channel passes through. |
+| `mode` | `COMBO` | Yes |  | `color`, `black and white` | `color` = adjust each band; `black and white` = render grey, each band as light or dark as its luminance slider says. Hue and saturation do nothing in black and white. |
+| `red_hue` | `FLOAT` | Yes | 0.0 |  | Turns reds toward magenta at -100 or toward orange at 100. 0 = unchanged. |
+| `orange_hue` | `FLOAT` | Yes | 0.0 |  | Turns oranges toward red at -100 or toward yellow at 100. 0 = unchanged. |
+| `yellow_hue` | `FLOAT` | Yes | 0.0 |  | Turns yellows toward orange at -100 or toward green at 100. 0 = unchanged. |
+| `green_hue` | `FLOAT` | Yes | 0.0 |  | Turns greens toward yellow at -100 or toward aqua at 100. 0 = unchanged. |
+| `aqua_hue` | `FLOAT` | Yes | 0.0 |  | Turns aquas toward green at -100 or toward blue at 100. 0 = unchanged. |
+| `blue_hue` | `FLOAT` | Yes | 0.0 |  | Turns blues toward aqua at -100 or toward purple at 100. 0 = unchanged. |
+| `purple_hue` | `FLOAT` | Yes | 0.0 |  | Turns purples toward blue at -100 or toward magenta at 100. 0 = unchanged. |
+| `magenta_hue` | `FLOAT` | Yes | 0.0 |  | Turns magentas toward purple at -100 or toward red at 100. 0 = unchanged. |
+| `red_saturation` | `FLOAT` | Yes | 0.0 |  | How strong reds are. -100 = grey; 0 = unchanged; 100 = twice as strong. |
+| `orange_saturation` | `FLOAT` | Yes | 0.0 |  | How strong oranges are. -100 = grey; 0 = unchanged; 100 = twice as strong. -15 calms skin that reads too orange. |
+| `yellow_saturation` | `FLOAT` | Yes | 0.0 |  | How strong yellows are. -100 = grey; 0 = unchanged; 100 = twice as strong. |
+| `green_saturation` | `FLOAT` | Yes | 0.0 |  | How strong greens are. -100 = grey; 0 = unchanged; 100 = twice as strong. -40 mutes foliage. |
+| `aqua_saturation` | `FLOAT` | Yes | 0.0 |  | How strong aquas are. -100 = grey; 0 = unchanged; 100 = twice as strong. |
+| `blue_saturation` | `FLOAT` | Yes | 0.0 |  | How strong blues are. -100 = grey; 0 = unchanged; 100 = twice as strong. -30 calms a loud sky. |
+| `purple_saturation` | `FLOAT` | Yes | 0.0 |  | How strong purples are. -100 = grey; 0 = unchanged; 100 = twice as strong. |
+| `magenta_saturation` | `FLOAT` | Yes | 0.0 |  | How strong magentas are. -100 = grey; 0 = unchanged; 100 = twice as strong. |
+| `red_luminance` | `FLOAT` | Yes | 0.0 |  | How light reds are. -100 = about a stop darker; 100 = a stop lighter. In black and white it sets their grey. |
+| `orange_luminance` | `FLOAT` | Yes | 0.0 |  | How light oranges are. -100 = about a stop darker; 100 = a stop lighter. In black and white it sets their grey. 15 brightens skin. |
+| `yellow_luminance` | `FLOAT` | Yes | 0.0 |  | How light yellows are. -100 = about a stop darker; 100 = a stop lighter. In black and white it sets their grey. |
+| `green_luminance` | `FLOAT` | Yes | 0.0 |  | How light greens are. -100 = about a stop darker; 100 = a stop lighter. In black and white it sets their grey. 20 lifts foliage. |
+| `aqua_luminance` | `FLOAT` | Yes | 0.0 |  | How light aquas are. -100 = about a stop darker; 100 = a stop lighter. In black and white it sets their grey. |
+| `blue_luminance` | `FLOAT` | Yes | 0.0 |  | How light blues are. -100 = about a stop darker; 100 = a stop lighter. In black and white it sets their grey. -40 darkens a blue sky. |
+| `purple_luminance` | `FLOAT` | Yes | 0.0 |  | How light purples are. -100 = about a stop darker; 100 = a stop lighter. In black and white it sets their grey. |
+| `magenta_luminance` | `FLOAT` | Yes | 0.0 |  | How light magentas are. -100 = about a stop darker; 100 = a stop lighter. In black and white it sets their grey. |
+| `mask` | `MASK` | No |  |  | Where the mix applies: white = fully, black = untouched, grey = partly. One mask per frame or one for all; unwired = the whole picture. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The mixed pictures. |
+
+</details>
+
+<a id="node-wasimagedevelop"></a>
+<details>
+<summary><b>Image Develop</b></summary>
+
+Develop a picture the way a raw editor's basic panel does: white balance, exposure, contrast, highlights, shadows, whites, blacks, texture, clarity, dehaze, vibrance and saturation. Every slider at 0 hands the picture on unchanged.
+
+| | |
+|---|---|
+| Node id | `WASImageDevelop` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The pictures to develop. Light above white is kept, and an alpha channel passes through. |
+| `temperature` | `FLOAT` | Yes | 0.0 |  | -100 = much cooler and bluer; 0 = unchanged; 100 = much warmer and more amber. 10 to 20 warms a cold render. |
+| `tint` | `FLOAT` | Yes | 0.0 |  | -100 = toward green; 0 = unchanged; 100 = toward magenta. Corrects a green cast from fluorescent light. |
+| `exposure` | `FLOAT` | Yes | 0.0 |  | Stops of light. 1 = twice as bright; -1 = half; 0 = unchanged. Light pushed past white clips unless the picture carries more. |
+| `contrast` | `FLOAT` | Yes | 0.0 |  | -100 = flat; 0 = unchanged; 100 = twice as steep through the midtones. Black and white stay put. |
+| `highlights` | `FLOAT` | Yes | 0.0 |  | -100 = bright areas pulled down to recover a sky or a face in sun; 100 = bright areas lifted. Detail is held, so edges keep no halo. |
+| `shadows` | `FLOAT` | Yes | 0.0 |  | 100 = dark areas opened up to show what is in them; -100 = deepened. Pure black stays black; that is the blacks slider. |
+| `whites` | `FLOAT` | Yes | 0.0 |  | Sets the white point. 100 = brightest tones pushed to white; -100 = white pulled down to light grey. |
+| `blacks` | `FLOAT` | Yes | 0.0 |  | Sets the black point. -100 = deep tones crushed to black; 100 = black lifted to a matte grey, as on faded film. |
+| `texture` | `FLOAT` | Yes | 0.0 |  | Fine detail such as pores, fabric and foliage. -50 = smoother skin; 50 = crisper surfaces. Leaves larger shapes alone. |
+| `clarity` | `FLOAT` | Yes | 0.0 |  | Midtone local contrast. 30 = punchier, more defined; -30 = a soft, dreamy glow. Edges are followed, so it adds no halo. |
+| `dehaze` | `FLOAT` | Yes | 0.0 |  | 50 = haze, fog and flare cut out, colour and depth back; -50 = a soft veil of haze laid over the frame. |
+| `vibrance` | `FLOAT` | Yes | 0.0 |  | Raises muted colours most and skin tones least. 30 = livelier without orange faces; -30 = quieter colour. |
+| `saturation` | `FLOAT` | Yes | 0.0 |  | Every colour alike. -100 = black and white; 0 = unchanged; 100 = twice the colour. |
+| `mask` | `MASK` | No |  |  | Where the develop applies: white = fully, black = untouched, grey = partly. One mask per frame or one for all; unwired = the whole picture. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The developed pictures. |
+
+</details>
+
+<a id="node-wasimagenaturalfinish"></a>
+<details>
+<summary><b>Image Natural Finish</b></summary>
+
+Take the generated look off a render: crushed blacks and hard highlights eased, neon and orange-heavy colour calmed, and over-sharpened, crunchy texture softened. A first step before developing or adding a film look.
+
+| | |
+|---|---|
+| Node id | `WASImageNaturalFinish` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The renders to calm. An alpha channel passes through. |
+| `amount` | `FLOAT` | Yes | 0.5 |  | Tone and colour. 0 = unchanged; 0.5 = calmer contrast and colour, skin less orange; 1 = strongly muted, like an unedited photograph. |
+| `detail` | `FLOAT` | Yes | 0.3 |  | Over-sharpened texture and local contrast. 0 = unchanged; 0.3 = the crunch taken off; 1 = soft, as from a lens rather than a sharpening pass. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The calmer pictures. |
+
+</details>
+
+<a id="node-wasimageportraitretouch"></a>
+<details>
+<summary><b>Image Portrait Retouch</b></summary>
+
+Retouch the skin inside a skin mask: blotchy redness and patchy tone evened, small spots healed with nearby skin, pore texture kept, everything outside the mask untouched. It leaves large acne fields, wrinkles, deep shadows and face shape alone. On video the evening holds steady but healed spots flicker, so heal stills.
+
+| | |
+|---|---|
+| Node id | `WASImagePortraitRetouch` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The portraits to retouch, as picture codes. A batch is retouched frame by frame; an alpha channel passes through. |
+| `mask` | `MASK` | Yes |  |  | The skin to retouch: white = retouched, black = left exactly as it was. Wire Image Skin Mask or Image Simple Skin Mask; mouth = 'remove lips' keeps lip colour whole. One mask per frame or one for all. |
+| `even_tone` | `FLOAT` | Yes | 0.5 |  | Blotchy redness and patchy colour evened toward the skin around them. 0 = off; 0.5 = calmer, still natural; 1 = most blotches, flush and dark marks gone. Shading deeper than a blotch, such as cheekbones and the nose's side, stays. |
+| `texture` | `FLOAT` | Yes | 1.0 |  | Fine texture kept: pores, fine lines, grain. 1 = all of it; 0.5 = a little softer; 0 = fine texture at about half its strength on smooth skin. Deep lines and feature edges stay crisp at every setting. |
+| `blemishes` | `COMBO` | Yes | red spots | `off`, `red spots`, `all spots` | 'red spots' = heal small red spots such as pimples, keeping freckles and moles; 'all spots' = small dark spots, freckles and moles too; 'off' = no healing. Each spot is replaced by nearby skin, texture and all. |
+| `blemish_size` | `FLOAT` | Yes | 0.03 |  | Largest spot healed, as a share of the skin region's size, the square root of its area. 0.03 on a face mask 600 px across heals spots up to about 18 px; 0.06 = twice as wide. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The retouched pictures. Every pixel outside the mask is the input's own. |
+| `healed` | `MASK` | Where spots were healed: 1 = replaced by nearby skin, 0 = untouched by healing, soft at each edge. Preview it to check every heal. |
+
+</details>
+
+<a id="node-wasimagespotlight"></a>
+<details>
+<summary><b>Image Spotlight</b></summary>
+
+Draw the eye to a subject: brighten and open it up, dim and quiet everything around it, and if wanted let its light spill past its edge. Takes a matte per frame, so a subject followed by Image Track Subject stays lit through a whole shot.
+
+| | |
+|---|---|
+| Node id | `WASImageSpotlight` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The pictures or video frames to light. An alpha channel passes through. |
+| `mask` | `MASK` | Yes |  |  | The subject: one matte per frame, or one for every frame. White = subject. |
+| `subject_exposure` | `FLOAT` | Yes | 0.6 |  | Stops of light on the subject. 0.6 = clearly lifted; 1 = twice as bright; 0 = unchanged. |
+| `subject_shadows` | `FLOAT` | Yes | 30.0 |  | Opens the subject's dark areas. 30 = faces and clothing read in a dim scene; 0 = unchanged. |
+| `subject_clarity` | `FLOAT` | Yes | 15.0 |  | Local contrast on the subject. 15 = it separates from murk or haze; -20 = softer. |
+| `surround_exposure` | `FLOAT` | Yes | -0.5 |  | Stops of light on everything else. -0.5 = held back; -1 = half as bright; 0 = unchanged. |
+| `surround_saturation` | `FLOAT` | Yes | -20.0 |  | Colour of everything else. -20 = quieter, so the subject's colour stands out; -100 = grey. |
+| `spill` | `FLOAT` | Yes | 0.0 |  | How far the subject's light reaches past it, in hundredths of the short side. 0 = it stops at the subject's edge; 10 = a soft pool; 40 = a broad glow. |
+| `softness` | `FLOAT` | Yes | 0.3 |  | Softens the subject's own edge, in hundredths of the short side. 0 = the matte as it is; 0.3 = just off crisp; 2 = very soft. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The lit pictures. |
+| `light` | `MASK` | Where the subject's light fell, 1 on the subject fading to 0. Reuse it for a matching grade. |
+
+</details>
+
 ### WAS Suite/Image/Edit
 
 <a id="node-wasimageeditcrop"></a>
@@ -4758,6 +5443,186 @@ Put the crops an edit model changed back into the picture Image Edit Crop cut th
 |---|---|---|
 | `image` | `IMAGE` | The picture with every edit pasted back; outside the regions it is the original exactly. |
 | `changed` | `MASK` | How much of the edit each pixel took: 0 = untouched, 1 = fully replaced. |
+
+</details>
+
+### WAS Suite/Image/Film
+
+<a id="node-wasimagedarkroomprint"></a>
+<details>
+<summary><b>Image Darkroom Print</b></summary>
+
+Print a picture in black and white as a darkroom would: a coloured lens filter for the grey mix, a paper grade for contrast, then sepia, selenium, gold, platinum or cyanotype toning on a paper base.
+
+| | |
+|---|---|
+| Node id | `WASImageDarkroomPrint` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The pictures to print, in colour or already black and white. An alpha channel passes through. |
+| `lens_filter` | `COMBO` | Yes |  | `none`, `yellow`, `orange`, `red`, `green`, `blue` | Coloured filter the scene is read through. `yellow` = skies a little darker; `orange` = darker, skin smoother; `red` = dramatic black skies; `green` = foliage lighter; `blue` = skies pale, skin darker. No effect on a picture already black and white. |
+| `paper_grade` | `FLOAT` | Yes | 2.0 |  | Contrast of the paper. 0 = very soft; 2 = normal; 3.5 = punchy; 5 = hard, near graphic. |
+| `exposure` | `FLOAT` | Yes | 0.0 |  | Stops of print exposure. 0.5 = a darker, heavier print; -0.5 = lighter. 0 = as the picture is. |
+| `toner` | `COMBO` | Yes |  | `none`, `sepia`, `selenium`, `split`, `gold`, `platinum`, `cyanotype`, `copper`, `blue` | `sepia` = warm brown highlights; `selenium` = cool purple-brown shadows; `split` = both; `gold` = blue-black; `platinum` = soft warm neutral; `cyanotype` = Prussian blue; `copper` = red brown; `blue` = cool blue. |
+| `toner_amount` | `FLOAT` | Yes | 0.6 |  | How deeply the print is toned. 0 = untoned; 0.6 = clearly toned; 1 = fully. Ignored with toner `none`. |
+| `sabattier` | `FLOAT` | Yes | 0.0 |  | Solarisation, as from fogging the print mid-development. 0 = none; 0.4 = highlights turned silvery grey; 1 = the brightest tones reversed toward dark. |
+| `paper` | `COMBO` | Yes |  | `neutral white`, `warm fibre`, `cream`, `cool white` | The paper's white. `neutral white` = modern resin paper; `warm fibre` = classic fibre paper; `cream` = old stock; `cool white` = a cold-tone paper. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The prints, in three colour channels. |
+
+</details>
+
+<a id="node-wasimagediffusionfilter"></a>
+<details>
+<summary><b>Image Diffusion Filter</b></summary>
+
+Soften a picture the way a filter in front of the lens does: black mist halos the highlights, white mist veils the whole frame, glimmer sparkles, soft focus and Orton glow. Soft corners blur the edges like an old or cheap lens.
+
+| | |
+|---|---|
+| Node id | `WASImageDiffusionFilter` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The pictures to soften. An alpha channel passes through. |
+| `style` | `COMBO` | Yes |  | `black mist`, `white mist`, `glimmer`, `soft focus`, `orton` | `black mist` = glow round highlights, blacks kept; `white mist` = a veil that lifts shadows; `glimmer` = small sparkling halos; `soft focus` = highlights bleed over detail; `orton` = a bright dreamy glow. |
+| `strength` | `FLOAT` | Yes | 0.25 |  | Matches the grades sold: 0.125 = 1/8, subtle; 0.25 = 1/4; 0.5 = 1/2, obvious; 1 = full. 0 leaves only soft corners. |
+| `size` | `FLOAT` | Yes | 1.0 |  | How far the glow spreads, in hundredths of the long edge. 0.5 = tight; 1 = a lens filter; 3 = a wide bloom. |
+| `corners` | `FLOAT` | Yes | 0.0 |  | Blur toward the corners, centre left sharp. 0 = none; 0.4 = a vintage lens; 1 = toy camera softness. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The softened pictures. |
+
+</details>
+
+<a id="node-wasimagefilmdamage"></a>
+<details>
+<summary><b>Image Film Damage</b></summary>
+
+Make a picture look printed from old or handled film: dust specks, stray hairs, running scratches and uneven density. Specks change every frame while scratches run through a whole batch, as on projected film.
+
+| | |
+|---|---|
+| Node id | `WASImageFilmDamage` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The pictures to mark. An alpha channel passes through. |
+| `dust` | `FLOAT` | Yes | 0.3 |  | Dust specks. 0 = none; 0.3 = a lightly dusty print, about 120 specks; 1 = about 400 on the frame, at any resolution. |
+| `hairs` | `FLOAT` | Yes | 0.2 |  | Stray hairs and fibres. 0 = none; 0.2 = two or three; 1 = about twelve on the frame. |
+| `scratches` | `FLOAT` | Yes | 0.0 |  | Long running scratches, top to bottom. 0 = none; 0.2 = one faint line; 1 = five strong lines. |
+| `mottle` | `FLOAT` | Yes | 0.0 |  | Uneven density, as from tired chemistry. 0 = even; 0.3 = faint blotches; 1 = strongly patchy. |
+| `tone` | `COMBO` | Yes |  | `light`, `dark`, `mixed` | `light` = white marks, as dust on a negative prints; `dark` = black marks, as on a slide or a print; `mixed` = some of each. |
+| `seed` | `INT` | Yes | 0 |  | Which marks: `0` and `1` give two different sets, and one seed always gives the same. Each frame of a batch draws its own specks. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The marked pictures. |
+
+</details>
+
+<a id="node-wasimagefilmstock"></a>
+<details>
+<summary><b>Image Film Stock</b></summary>
+
+Develop a picture as one of 70 film stocks: colour negative, slide, cinema, instant, black and white, lab processes and camera film simulations. Picking a stock brings its tone curve, colour, highlight latitude, halation and grain together.
+
+| | |
+|---|---|
+| Node id | `WASImageFilmStock` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The pictures to develop. An alpha channel passes through. |
+| `stock` | `COMBO` | Yes | Color Negative: Kodak Portra 400 |  | The film. Looks are authored after each stock's character, not measured from it. `None` = no look, so exposure, grain and halation can be used alone. |
+| `strength` | `FLOAT` | Yes | 1.0 |  | How far the stock's tone and colour apply. 0 = none; 0.5 = halfway; 1 = the stock; 2 = exaggerated. Grain and halation have their own. |
+| `exposure` | `FLOAT` | Yes | 0.0 |  | Stops over or under. 1 = overexposed a stop: brighter, pastel on a negative, washed out on a slide. -1 = underexposed: darker and denser. |
+| `grain` | `FLOAT` | Yes | 1.0 |  | 0 = none; 1 = the stock's own grain, coarser for faster film and sized to the frame; 2 = twice as strong. |
+| `halation` | `FLOAT` | Yes | 1.0 |  | Red glow round bright lights. 0 = none; 1 = the stock's own, strong on CineStill, faint elsewhere; 3 = heavy. |
+| `seed` | `INT` | Yes | 0 |  | Which grain pattern: `0` and `1` give two different ones, and one seed always gives the same. Each frame of a batch draws its own. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The pictures as the stock. |
+
+</details>
+
+<a id="node-wasimagehalation"></a>
+<details>
+<summary><b>Image Halation</b></summary>
+
+Add the warm red glow that bleeds round lamps, neon and bright windows on film shot without an anti-halation layer. Only light above the threshold spreads, so the rest of the picture keeps its contrast.
+
+| | |
+|---|---|
+| Node id | `WASImageHalation` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The pictures to add halation to. Light above white glows further, and an alpha channel passes through. |
+| `amount` | `FLOAT` | Yes | 0.5 |  | 0 = none; 0.5 = a visible fringe round lights; 1 = strong, as on CineStill at night; 3 = heavy. |
+| `radius` | `FLOAT` | Yes | 1.0 |  | How far it spreads, in hundredths of the long edge. 0.5 = a tight fringe; 1 = a halo; 3 = a wide bloom. |
+| `threshold` | `FLOAT` | Yes | 0.75 |  | Brightness the glow starts at. 0.75 = lamps, sky and specular light; 0.9 = only the brightest; 0.5 = bright skin and walls too. |
+| `color` | `STRING` | Yes | #ff4b1f |  | Colour of the glow as hexadecimal. #ff4b1f = film's red orange; #ff8c40 = warmer amber; #ffffff = a neutral glow for black and white. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The pictures with halation. |
+
+</details>
+
+<a id="node-wasimagelightleak"></a>
+<details>
+<summary><b>Image Light Leak</b></summary>
+
+Burn light leaking into the camera into a picture: a glow along an edge, a corner flare, the burned end of a roll, a streak or a prism rainbow. Each seed draws a different leak.
+
+| | |
+|---|---|
+| Node id | `WASImageLightLeak` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The pictures to leak light into. An alpha channel passes through. |
+| `style` | `COMBO` | Yes |  | `edge glow`, `corner flare`, `end of roll`, `streak`, `prism` | `edge glow` = a soft blotchy glow along an edge; `corner flare` = a round flare from a corner; `end of roll` = a burned-out region; `streak` = a bar of light; `prism` = a rainbow arc. |
+| `position` | `COMBO` | Yes |  | `random`, `top`, `bottom`, `left`, `right`, `top left`, `top right`, `bottom left`, `bottom right` | Where the light comes in. `random` = an edge or corner chosen by the seed. |
+| `color` | `STRING` | Yes | #ff6a2b |  | Colour of the leak as hexadecimal; its core burns toward warm white. #ff6a2b = orange; #ff2a3c = red; #ff3fb0 = magenta; #ffc24a = gold. `prism` ignores it. |
+| `amount` | `FLOAT` | Yes | 0.6 |  | 0 = none; 0.6 = a clear leak; 1 = bright; 2 = burned out to white where it enters. |
+| `size` | `FLOAT` | Yes | 0.5 |  | How far it reaches in, as a share of the short side. 0.2 = a thin edge; 0.5 = a third of the frame; 1.5 = across it. |
+| `seed` | `INT` | Yes | 0 |  | Which leak. Each seed gives a different shape, and for `random` a different edge. |
+| `each_frame` | `BOOLEAN` | Yes | False |  | `false` = every frame of a batch shares one leak; `true` = each frame draws its own, so the leak flickers on video. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The pictures with the leak. |
 
 </details>
 
@@ -5100,6 +5965,43 @@ Keep only the fine detail of an image and throw away the broad shapes and tones.
 | Name | Type | What it is |
 |---|---|---|
 | `images` | `IMAGE` | The extracted detail, as an RGB image the size of the source. |
+
+</details>
+
+<a id="node-wasimagelensblur"></a>
+<details>
+<summary><b>Image Lens Blur</b></summary>
+
+Defocus a picture the way a fast lens does, from a depth map: what lies at the focus stays sharp, nearer and farther things blur by their distance from it, and small lights open into discs. Click the picture on the node to choose what stays sharp.
+
+| | |
+|---|---|
+| Node id | `WASImageLensBlur` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The pictures to defocus, as picture codes; the blur is worked out in linear light. A batch runs frame by frame, and video needs a depth map that holds steady from frame to frame. |
+| `depth` | `IMAGE,MASK` | Yes |  |  | Grey depth map of the same pictures, as an IMAGE or a MASK: Power Preprocessor's depth_map, Depth Anything or Marigold. One map for all frames or one per frame. A map past 0 to 1 is stretched to it over the batch. |
+| `near_is` | `COMBO` | Yes | bright | `bright`, `dark` | Which end of the depth map is near the camera. `bright` = Depth Anything, Marigold and Power Preprocessor's depth_map; `dark` = a Z pass or a distance render. |
+| `focus_from` | `COMBO` | Yes | picked point | `picked point`, `focus depth` | `picked point` = sharp at the depth under focus_x and focus_y, set by clicking the picture on the node; `focus depth` = sharp at the focus_depth value. |
+| `focus_depth` | `FLOAT` | Yes | 0.5 |  | Depth kept sharp when focus_from is `focus depth`: 1 = the nearest thing in the map; 0 = the farthest; 0.5 = halfway. |
+| `blur_amount` | `FLOAT` | Yes | 0.03 |  | Widest blur, as a share of the short side, reached a full depth range from the focus. 0 = off; 0.02 = 22 px on a 1080 frame, a portrait lens; 0.08 = very shallow. |
+| `focus_range` | `FLOAT` | Yes | 0.1 |  | Depth of the sharp zone, in depth map units across both sides of the focus. 0 = only the focus depth is sharp; 0.1 = a tenth of the depth range; 1 = nothing blurs. |
+| `aperture` | `COMBO` | Yes | circle | `circle`, `5 blades`, `6 blades`, `7 blades`, `8 blades`, `9 blades` | Shape of the lens opening, which is the shape out-of-focus lights take: `circle` = round discs; `6 blades` = hexagons; more blades = rounder polygons. |
+| `blade_rotation` | `FLOAT` | Yes | 0.0 |  | Turn of the blade polygon in degrees. 0 = one flat edge at the bottom; 30 = a corner at the bottom on `6 blades`. No effect on `circle`. |
+| `highlight_bloom` | `FLOAT` | Yes | 0.5 |  | Lift given to lights, near-white points standing above their surroundings, before they blur, so they open into bright discs rather than grey smudges. 0 = off; 0.5 = 4x on a clipped light; 1 = 16x. Sharp pixels are never lifted. |
+| `focus_x` | `FLOAT` | Yes | 0.5 |  | Focus point across the picture: 0 = left edge; 1 = right edge. Set by clicking the picture on the node. |
+| `focus_y` | `FLOAT` | Yes | 0.5 |  | Focus point down the picture: 0 = top edge; 1 = bottom edge. Set by clicking the picture on the node. |
+| `subject_mask` | `MASK` | No |  |  | Optional subject matte, white on the subject, from Image Matte or Image Track Subject. Its edge replaces the depth map's soft one, so hair stays sharp over a blurred background with no halo. One matte per frame or one for all. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The defocused pictures as picture codes, held to 0 to 1 unless the input carried light above white. |
+| `focus_mask` | `MASK` | 1 where the picture stayed sharp, falling to 0 at the widest blur. Wire it into a sharpen or a grade to touch only what is in focus. |
 
 </details>
 
@@ -5829,6 +6731,32 @@ Convert between the sRGB curve a picture is stored with and the linear light it 
 
 ### WAS Suite/Image/LUT
 
+<a id="node-waslutfromlattice"></a>
+<details>
+<summary><b>LUT from Lattice</b></summary>
+
+Read a lattice from LUT Lattice, graded by a chain of colour nodes, back into a LUT for Apply LUT or Save LUT (.cube). It refuses a lattice whose size changed, and a chain with grain, clarity, a vignette or any other spatial effect, which no LUT can hold.
+
+| | |
+|---|---|
+| Node id | `WASLUTFromLattice` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `lattice` | `IMAGE` | Yes |  |  | The lattice after the colour chain. A bare Hald square of any level, such as one graded in another app, is read too, with no spatial check. |
+| `tolerance` | `FLOAT` | Yes | 0.5 |  | Largest CIEDE2000 difference allowed between copies of one probe colour. 0 = identical; 0.5 = half a just-noticeable difference, which refuses clarity at 5, grain at 0.2 and a vignette at 0.1. |
+| `title` | `STRING` | No |  |  | Name written into the LUT's TITLE line, which Save LUT (.cube) puts in the file. Empty = 'LUT from Lattice'. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `lut` | `LUT` | The chain as a 3D table at the lattice's own steps, for inputs 0 to 1, with values below 0 or above 1 kept as the chain answered them. For Apply LUT, LUT Blender or Save LUT (.cube). |
+
+</details>
+
 <a id="node-waslutfromreference"></a>
 <details>
 <summary><b>LUT from Reference</b></summary>
@@ -5856,6 +6784,31 @@ Work out the colour grade that takes one image to another and bake it into a LUT
 | Name | Type | What it is |
 |---|---|---|
 | `lut` | `LUT` | The grade as a 3D lookup table, for Apply LUT, LUT Blender or Save LUT (.cube). |
+
+</details>
+
+<a id="node-waslutlattice"></a>
+<details>
+<summary><b>LUT Lattice</b></summary>
+
+Make an identity colour lattice for baking a chain of colour nodes into a LUT. Wire it through the chain, then into LUT from Lattice. The square is a standard Hald CLUT, and the probe band under it lets LUT from Lattice refuse a chain holding a spatial effect.
+
+| | |
+|---|---|
+| Node id | `WASLUTLattice` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `size` | `COMBO` | Yes |  |  | Steps per channel. `25 steps` = Hald level 5, 125 px; `36` = level 6, 216 px; `49` = level 7, 343 px; `64` = level 8, 512 px. More steps follow a strong grade more closely. |
+| `probes` | `BOOLEAN` | Yes | True |  | `true` = a band of probe patches under the square, so LUT from Lattice refuses grain, clarity, a vignette or a blur. `false` = the bare Hald square, 512x512 at 64 steps, for an app that grades Hald CLUT pictures. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `lattice` | `IMAGE` | The identity lattice in picture codes, 0 to 1. Grade it as the pictures the LUT is for, then wire it into LUT from Lattice. |
 
 </details>
 
@@ -6506,6 +7459,41 @@ Flatten a run of layers into one, baking in each layer's opacity, blend mode, ma
 
 ### WAS Suite/Image/Masking
 
+<a id="node-wasimagecolorrangemask"></a>
+<details>
+<summary><b>Image Color Range Mask</b></summary>
+
+Selects colours, or a band of lightness, clicked on the picture on the node, like a photo editor's Color Range and Luminance Range masks. Every frame is measured on its own, so the selection follows the colour through a video. Feed the mask to Image Develop or another adjustment's mask.
+
+| | |
+|---|---|
+| Node id | `WASImageColorRangeMask` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The pictures to select from. Each frame is measured on its own. |
+| `mode` | `COMBO` | Yes |  | `color`, `luminance` | `color` = the colours clicked on the picture; `luminance` = a band of lightness, set on the bar under the picture. |
+| `range` | `FLOAT` | Yes | 0.15 |  | Color mode: how far from a sampled colour the selection reaches, as Oklab distance. 0.05 = that colour only; 0.15 = its shades; 0.4 = neighbouring hues too. |
+| `smoothness` | `FLOAT` | Yes | 0.5 |  | How gradually the selection fades. 0 = a hard edge; 0.5 = over the outer half of `range`, or 0.125 of lightness past the band; 1 = widest. |
+| `lightness_weight` | `FLOAT` | Yes | 0.5 |  | Color mode: how much a difference in lightness counts. 1 = plain Oklab distance; 0.5 = lighter and darker shades still match; 0 = hue and saturation only. |
+| `refine` | `FLOAT` | Yes | 0.3 |  | Snaps the selection's edge to the picture's own edges, over this many hundredths of the short side. 0 = off; 0.3 = tidy; 1 = also smooths speckle in noise. |
+| `invert` | `BOOLEAN` | Yes | False |  | `true` = everything but the selected colours or lightness; `false` = the selection itself. |
+| `combine` | `COMBO` | Yes |  | `replace`, `add`, `subtract`, `intersect` | How this selection joins `mask`. `replace` = the selection alone; `add` = the larger of the two; `subtract` = mask x (1 - selection); `intersect` = mask x selection. |
+| `samples` | `STRING` | Yes |  |  | Colours to select, set by clicking the picture: x,y or an area x,y,w,h in shares of the picture, then @frame, or #rrggbb; split by ;. Example: 0.42,0.18@0; #6fa0e8 |
+| `luminance_low` | `FLOAT` | Yes | 0.5 |  | Luminance mode: the darkest Oklab lightness fully selected. 0 = black; 0.6 = middle grey; 1 = white. Drag the band under the picture. |
+| `luminance_high` | `FLOAT` | Yes | 1.0 |  | Luminance mode: the lightest Oklab lightness fully selected. 1 = up to white; 0.3 = shadows only with luminance_low at 0. |
+| `mask` | `MASK` | No |  |  | A mask to join this selection to, as `combine` says, such as a Graduated or Radial mask. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `mask` | `MASK` | One mask per frame at the pictures' size: 1 = selected, 0 = not. |
+
+</details>
+
 <a id="node-wasimagecropbymask"></a>
 <details>
 <summary><b>Image Crop by Mask</b></summary>
@@ -6535,6 +7523,106 @@ Crop each image to the area its mask marks, padded and clamped to the picture, a
 | `crop_data` | `CROP_DATA` | The crop window, for Image Paste Crop to put the finished region back in the right place at its original size. In per_frame mode it holds the union rectangle, so a paste stretches every crop across it. |
 | `bounds` | `IMAGE_BOUNDS` | One row per image giving the rectangle it was cropped from, as top, bottom, left and right pixel positions, to wire into Draw Image Bounds. |
 | `cropped_mask` | `MASK` | The mask cut to the same rectangle as the crop and carried at the crop's own size, so an inpainting pass knows which pixels were marked. |
+
+</details>
+
+<a id="node-wasimagegraduatedmask"></a>
+<details>
+<summary><b>Image Graduated Mask</b></summary>
+
+A linear gradient mask, like a photo editor's graduated filter: full effect on the start line, fading to none at the end line. Drag the lines on the node to place and turn it, then feed the mask to Image Develop or another adjustment's mask.
+
+| | |
+|---|---|
+| Node id | `WASImageGraduatedMask` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The pictures the mask is for. One mask is made per frame, at the pictures' size. |
+| `profile` | `COMBO` | Yes |  | `smooth`, `linear` | How the fade runs between the lines. `smooth` = eases in and out, 0.5 on the middle line; `linear` = an even ramp. |
+| `invert` | `BOOLEAN` | Yes | False |  | Turns the mask over: 0 before the start line, 1 past the end line. |
+| `combine` | `COMBO` | Yes |  | `replace`, `add`, `subtract`, `intersect` | How this gradient joins `mask`. `replace` = the gradient alone; `add` = the larger of the two; `subtract` = mask x (1 - gradient); `intersect` = mask x gradient. |
+| `start_x` | `FLOAT` | Yes | 0.5 |  | Where the start line (full effect) crosses, as a share of the width: 0 = left edge, 1 = right edge. Drag it on the node. |
+| `start_y` | `FLOAT` | Yes | 0.2 |  | Where the start line crosses, as a share of the height: 0 = top, 1 = bottom. Below 0 sits above the picture. |
+| `end_x` | `FLOAT` | Yes | 0.5 |  | Where the end line (no effect) crosses, as a share of the width: 0.5 = the middle. Both lines stand square to the way from start to end. |
+| `end_y` | `FLOAT` | Yes | 0.6 |  | Where the end line crosses, as a share of the height. 0.2 to 0.6 = full at the top fifth, gone by 60% down. |
+| `mask` | `MASK` | No |  |  | A mask to join this gradient to, as `combine` says, such as another Graduated, Radial or Color Range mask. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `mask` | `MASK` | One mask per frame at the pictures' size: 1 = full effect, 0 = none. |
+
+</details>
+
+<a id="node-wasimageradialmask"></a>
+<details>
+<summary><b>Image Radial Mask</b></summary>
+
+An elliptical mask, like a photo editor's radial gradient: full effect inside, fading to none at the ellipse's edge. Drag its centre, edges, turn and feather on the node, then feed the mask to Image Develop or another adjustment's mask.
+
+| | |
+|---|---|
+| Node id | `WASImageRadialMask` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The pictures the mask is for. One mask is made per frame, at the pictures' size. |
+| `feather` | `FLOAT` | Yes | 50.0 |  | How much of the radius the fade spans, inward from the edge. 0 = hard edge; 50 = full inside half the radius; 100 = fades from the centre. |
+| `profile` | `COMBO` | Yes |  | `smooth`, `linear` | How the fade runs across the feather. `smooth` = eases in and out; `linear` = an even ramp. |
+| `invert` | `BOOLEAN` | Yes | False |  | `true` = full effect outside the ellipse and none inside, as for a vignette; `false` = full inside. |
+| `combine` | `COMBO` | Yes |  | `replace`, `add`, `subtract`, `intersect` | How this ellipse joins `mask`. `replace` = the ellipse alone; `add` = the larger of the two; `subtract` = mask x (1 - ellipse); `intersect` = mask x ellipse. |
+| `centre_x` | `FLOAT` | Yes | 0.5 |  | The ellipse's centre across, as a share of the width: 0 = left edge, 1 = right edge. Drag the centre on the node. |
+| `centre_y` | `FLOAT` | Yes | 0.5 |  | The ellipse's centre down, as a share of the height: 0 = top, 1 = bottom. |
+| `radius_x` | `FLOAT` | Yes | 0.3 |  | Half the ellipse's width before turning, as a share of the picture's width. 0.5 = reaches both side edges. |
+| `radius_y` | `FLOAT` | Yes | 0.3 |  | Half the ellipse's height before turning, as a share of the picture's height. 0.5 = reaches the top and bottom. |
+| `angle` | `FLOAT` | Yes | 0.0 |  | Degrees the ellipse is turned clockwise. 0 = radius_x lies across; 90 = radius_x runs down. |
+| `mask` | `MASK` | No |  |  | A mask to join this ellipse to, as `combine` says, such as another Radial, Graduated or Color Range mask. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `mask` | `MASK` | One mask per frame at the pictures' size: 1 = full effect, 0 = none. |
+
+</details>
+
+<a id="node-wasimagetracksubject"></a>
+<details>
+<summary><b>Image Track Subject</b></summary>
+
+Pick a subject on any frame, by clicking it on the node or naming it, and follow it forward and backward through a video or batch as a soft matte. Feed the matte to Image Spotlight, or to a grade's mask, to change only the subject.
+
+| | |
+|---|---|
+| Node id | `WASImageTrackSubject` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | The frames to follow the subject through: a video's frames or a single picture. |
+| `model` | `MODEL` | Yes |  |  | SAM 3, from Load Checkpoint with sam3.1_multiplex_fp16.safetensors. |
+| `subject` | `STRING` | Yes | person |  | What to look for when nothing is clicked: `person`, `the robot`, `red car`. Needs `clip`. Every find is outlined on the panel. |
+| `key_frame` | `INT` | Yes | 0 |  | The frame the subject is picked on, counting from 0. Pick a frame where it is clear and whole; 0 = the first. |
+| `pick` | `INT` | Yes | 0 |  | Which find of `subject` to follow. 0 = the largest, 1 = the next. Click an outline on the panel to set it. |
+| `points` | `STRING` | Yes |  |  | Points clicked on the key frame, such as [{"x": 0.5, "y": 0.4, "keep": true}]. Set from the panel; shift-click excludes. Empty = use `subject`. |
+| `track` | `COMBO` | Yes |  | `both ways`, `forward`, `backward` | `both ways` = from the key frame to both ends; `forward` = on to the last frame; `backward` = back to the first. Frames not reached get no matte. |
+| `grow` | `FLOAT` | Yes | 0.0 |  | Grows the matte, in hundredths of the short side. 0.3 = a little past the edge, to keep hair; -0.3 = pulled in. |
+| `feather` | `FLOAT` | Yes | 0.3 |  | Softens the matte's edge, in hundredths of the short side. 0 = crisp; 0.3 = natural; 2 = a soft glow. |
+| `clip` | `CLIP` | No |  |  | SAM 3's text encoder, the CLIP from the same Load Checkpoint. Needed for `subject` and the outlines on the panel. |
+| `mask` | `MASK` | No |  |  | A mask of the subject on the key frame, from a brush or another node. Used in place of points and `subject`. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `mask` | `MASK` | The subject's matte on every frame: 1 = the subject, 0 = everything else. |
 
 </details>
 
@@ -12333,6 +13421,38 @@ Give a FLUX 3 Image Klein base model the distilled checkpoint's target-time bran
 | Name | Type | What it is |
 |---|---|---|
 | `model` | `MODEL` | The model with the branch, for a KSampler at 16 steps: CFG 1 for the distilled picture, 2.5 to 3.5 for more contrast and colour. |
+
+</details>
+
+<a id="node-wash3imageblankguidance"></a>
+<details>
+<summary><b>H3 Image Blank Guidance</b></summary>
+
+Make MiniMax H3 Image text to image more photographic, with crisper skin, fur and stone, by reading the prompt beside a blank picture. Wire its guider and latent into Sampler Custom Advanced in place of MiniMax H3 Image Conditioning.
+
+| | |
+|---|---|
+| Node id | `WASH3ImageBlankGuidance` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The MiniMax H3 Image model. |
+| `clip` | `CLIP` | Yes |  |  | The MiniMax H3 Image text encoder. |
+| `vae` | `VAE` | Yes |  |  | The MiniMax H3 Image VAE. |
+| `prompt` | `STRING` | Yes |  |  | What to make, as for MiniMax H3 Image Conditioning: `A portrait of a woman in a garden`. |
+| `width` | `INT` | Yes | 2048 |  | Width of the picture: `2048`; wire Resolution Selector for 16 MP. |
+| `height` | `INT` | Yes | 2048 |  | Height of the picture: `2048`. |
+| `mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `blank` = every step reads the prompt beside the blank, as adding an empty picture does; `subtraction` = the first steps pushed past the change the blank makes. Both change the composition. |
+| `colour` | `STRING` | Yes | #808080 |  | Colour of the blank: `#808080` mid grey, `#000000`, `#FFFFFF`. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `guider` | `GUIDER` | For Sampler Custom Advanced, with H3 Image Sampler as its sampler. |
+| `latent` | `LATENT` | An empty latent at width x height, for Sampler Custom Advanced. |
 
 </details>
 
@@ -20074,7 +21194,7 @@ Grade pictures through a colour lookup table from Load LUT or LUT Blender. Each 
 
 | Name | Type | What it is |
 |---|---|---|
-| `image` | `IMAGE` | The graded pictures, same size and batch order as the input. |
+| `image` | `IMAGE` | The graded pictures, same size and batch order as the input, in three channels. Held to 0 to 1 unless the input or the table reaches past it. |
 
 </details>
 
@@ -20161,7 +21281,7 @@ Write a colour lookup table to a .cube file, the format DaVinci Resolve, Premier
 |---|---|---|---|---|---|
 | `lut` | `LUT` | Yes |  |  | The table to write, from Load LUT or LUT Blender. A table stored as curves is converted to a cube first, since .cube files hold cubes. |
 | `filename` | `STRING` | Yes | CustomLUT |  | Name of the file to write, such as 'WarmFilm'. The .cube extension is added when it is missing. This is a name, not a path: it may name a subfolder, but it cannot step outside the luts directory. |
-| `output_size` | `INT` | Yes | 33 |  | Edge length of the cube written to the file, in samples. 33 is the industry-standard size and is what most grading tools expect; 65 is finer and produces a file eight times the size. |
+| `output_size` | `INT` | Yes | 33 |  | Edge length of the cube written, in samples. 33 = the usual size; 65 = finer, eight times the file. A table already this size is written as it is: 64 keeps a 64-step LUT from Lattice exact. |
 | `overwrite` | `BOOLEAN` | Yes | True |  | Whether an existing file of the same name may be replaced. Turn it off to have the node stop rather than overwrite a look already saved under that name. |
 
 **Outputs**

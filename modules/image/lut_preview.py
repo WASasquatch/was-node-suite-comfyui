@@ -114,4 +114,5 @@ def graded_strip(table) -> torch.Tensor:
     if table is None or table.size() == 0:
         return strip
     cube = table if table.table_3d is not None else lut_module.convert_to_3d(table, 33)
-    return lut_module.apply_lut_3d(strip, cube.table_3d, cube.domain_min, cube.domain_max)
+    graded = lut_module.apply_lut_3d(strip, cube.table_3d, cube.domain_min, cube.domain_max)
+    return graded.clamp(0.0, 1.0)

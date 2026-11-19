@@ -1,0 +1,1557 @@
+{
+  "id": "3c075922-1593-4eec-8247-371d77469132",
+  "revision": 0,
+  "last_node_id": 9,
+  "last_link_id": 12,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        120
+      ],
+      "size": [
+        340,
+        440
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1,
+            2,
+            4,
+            7,
+            8
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "image": true,
+            "upload": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "angel_lighthouse_2048.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "angel_lighthouse_2048.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "WASImageGraduatedMask",
+      "pos": [
+        540,
+        120
+      ],
+      "size": [
+        300,
+        580
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "localized_name": "profile",
+          "name": "profile",
+          "type": "COMBO",
+          "widget": {
+            "name": "profile"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "invert",
+          "name": "invert",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "invert"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "combine",
+          "name": "combine",
+          "type": "COMBO",
+          "widget": {
+            "name": "combine"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start_x",
+          "name": "start_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "start_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start_y",
+          "name": "start_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "start_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "end_x",
+          "name": "end_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "end_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "end_y",
+          "name": "end_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "end_y"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageGraduatedMask",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "profile": true,
+            "invert": true,
+            "combine": true,
+            "start_x": true,
+            "start_y": true,
+            "end_x": true,
+            "end_y": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "smooth",
+        false,
+        "replace",
+        0.5,
+        0,
+        0.5,
+        0.4
+      ],
+      "widgets_values_named": {
+        "profile": "smooth",
+        "invert": false,
+        "combine": "replace",
+        "start_x": 0.5,
+        "start_y": 0,
+        "end_x": 0.5,
+        "end_y": 0.4
+      }
+    },
+    {
+      "id": 3,
+      "type": "WASImageDevelop",
+      "pos": [
+        920,
+        120
+      ],
+      "size": [
+        300,
+        570
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 3
+        },
+        {
+          "localized_name": "temperature",
+          "name": "temperature",
+          "type": "FLOAT",
+          "widget": {
+            "name": "temperature"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tint",
+          "name": "tint",
+          "type": "FLOAT",
+          "widget": {
+            "name": "tint"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "exposure",
+          "name": "exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "contrast",
+          "name": "contrast",
+          "type": "FLOAT",
+          "widget": {
+            "name": "contrast"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights",
+          "name": "highlights",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows",
+          "name": "shadows",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "whites",
+          "name": "whites",
+          "type": "FLOAT",
+          "widget": {
+            "name": "whites"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blacks",
+          "name": "blacks",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blacks"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture",
+          "name": "texture",
+          "type": "FLOAT",
+          "widget": {
+            "name": "texture"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "clarity",
+          "name": "clarity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "clarity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dehaze",
+          "name": "dehaze",
+          "type": "FLOAT",
+          "widget": {
+            "name": "dehaze"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "vibrance",
+          "name": "vibrance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "vibrance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "saturation",
+          "name": "saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "saturation"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageDevelop",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "temperature": true,
+            "tint": true,
+            "exposure": true,
+            "contrast": true,
+            "highlights": true,
+            "shadows": true,
+            "whites": true,
+            "blacks": true,
+            "texture": true,
+            "clarity": true,
+            "dehaze": true,
+            "vibrance": true,
+            "saturation": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        -6,
+        0,
+        -0.6,
+        10,
+        -40,
+        0,
+        0,
+        0,
+        0,
+        10,
+        20,
+        25,
+        0
+      ],
+      "widgets_values_named": {
+        "temperature": -6,
+        "tint": 0,
+        "exposure": -0.6,
+        "contrast": 10,
+        "highlights": -40,
+        "shadows": 0,
+        "whites": 0,
+        "blacks": 0,
+        "texture": 0,
+        "clarity": 10,
+        "dehaze": 20,
+        "vibrance": 25,
+        "saturation": 0
+      }
+    },
+    {
+      "id": 4,
+      "type": "WASImageRadialMask",
+      "pos": [
+        40,
+        1010
+      ],
+      "size": [
+        300,
+        604
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "localized_name": "feather",
+          "name": "feather",
+          "type": "FLOAT",
+          "widget": {
+            "name": "feather"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "profile",
+          "name": "profile",
+          "type": "COMBO",
+          "widget": {
+            "name": "profile"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "invert",
+          "name": "invert",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "invert"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "combine",
+          "name": "combine",
+          "type": "COMBO",
+          "widget": {
+            "name": "combine"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "centre_x",
+          "name": "centre_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "centre_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "centre_y",
+          "name": "centre_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "centre_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "radius_x",
+          "name": "radius_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "radius_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "radius_y",
+          "name": "radius_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "radius_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "angle",
+          "name": "angle",
+          "type": "FLOAT",
+          "widget": {
+            "name": "angle"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageRadialMask",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "feather": true,
+            "profile": true,
+            "invert": true,
+            "combine": true,
+            "centre_x": true,
+            "centre_y": true,
+            "radius_x": true,
+            "radius_y": true,
+            "angle": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        70,
+        "smooth",
+        true,
+        "replace",
+        0.42,
+        0.42,
+        0.62,
+        0.62,
+        0
+      ],
+      "widgets_values_named": {
+        "feather": 70,
+        "profile": "smooth",
+        "invert": true,
+        "combine": "replace",
+        "centre_x": 0.42,
+        "centre_y": 0.42,
+        "radius_x": 0.62,
+        "radius_y": 0.62,
+        "angle": 0
+      }
+    },
+    {
+      "id": 5,
+      "type": "WASImageDevelop",
+      "pos": [
+        460,
+        1010
+      ],
+      "size": [
+        300,
+        570
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 5
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 6
+        },
+        {
+          "localized_name": "temperature",
+          "name": "temperature",
+          "type": "FLOAT",
+          "widget": {
+            "name": "temperature"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tint",
+          "name": "tint",
+          "type": "FLOAT",
+          "widget": {
+            "name": "tint"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "exposure",
+          "name": "exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "contrast",
+          "name": "contrast",
+          "type": "FLOAT",
+          "widget": {
+            "name": "contrast"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights",
+          "name": "highlights",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows",
+          "name": "shadows",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "whites",
+          "name": "whites",
+          "type": "FLOAT",
+          "widget": {
+            "name": "whites"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blacks",
+          "name": "blacks",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blacks"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture",
+          "name": "texture",
+          "type": "FLOAT",
+          "widget": {
+            "name": "texture"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "clarity",
+          "name": "clarity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "clarity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dehaze",
+          "name": "dehaze",
+          "type": "FLOAT",
+          "widget": {
+            "name": "dehaze"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "vibrance",
+          "name": "vibrance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "vibrance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "saturation",
+          "name": "saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "saturation"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageDevelop",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "temperature": true,
+            "tint": true,
+            "exposure": true,
+            "contrast": true,
+            "highlights": true,
+            "shadows": true,
+            "whites": true,
+            "blacks": true,
+            "texture": true,
+            "clarity": true,
+            "dehaze": true,
+            "vibrance": true,
+            "saturation": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0,
+        0,
+        -0.55,
+        0,
+        0,
+        -15,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -10
+      ],
+      "widgets_values_named": {
+        "temperature": 0,
+        "tint": 0,
+        "exposure": -0.55,
+        "contrast": 0,
+        "highlights": 0,
+        "shadows": -15,
+        "whites": 0,
+        "blacks": 0,
+        "texture": 0,
+        "clarity": 0,
+        "dehaze": 0,
+        "vibrance": 0,
+        "saturation": -10
+      }
+    },
+    {
+      "id": 6,
+      "type": "WASImageRadialMask",
+      "pos": [
+        40,
+        1924
+      ],
+      "size": [
+        300,
+        604
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 7
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "localized_name": "feather",
+          "name": "feather",
+          "type": "FLOAT",
+          "widget": {
+            "name": "feather"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "profile",
+          "name": "profile",
+          "type": "COMBO",
+          "widget": {
+            "name": "profile"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "invert",
+          "name": "invert",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "invert"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "combine",
+          "name": "combine",
+          "type": "COMBO",
+          "widget": {
+            "name": "combine"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "centre_x",
+          "name": "centre_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "centre_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "centre_y",
+          "name": "centre_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "centre_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "radius_x",
+          "name": "radius_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "radius_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "radius_y",
+          "name": "radius_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "radius_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "angle",
+          "name": "angle",
+          "type": "FLOAT",
+          "widget": {
+            "name": "angle"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageRadialMask",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "feather": true,
+            "profile": true,
+            "invert": true,
+            "combine": true,
+            "centre_x": true,
+            "centre_y": true,
+            "radius_x": true,
+            "radius_y": true,
+            "angle": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        25,
+        "smooth",
+        false,
+        "replace",
+        0.207,
+        0.35,
+        0.06,
+        0.115,
+        0
+      ],
+      "widgets_values_named": {
+        "feather": 25,
+        "profile": "smooth",
+        "invert": false,
+        "combine": "replace",
+        "centre_x": 0.207,
+        "centre_y": 0.35,
+        "radius_x": 0.06,
+        "radius_y": 0.115,
+        "angle": 0
+      }
+    },
+    {
+      "id": 7,
+      "type": "WASImageColorRangeMask",
+      "pos": [
+        460,
+        1924
+      ],
+      "size": [
+        300,
+        676
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 8
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 9
+        },
+        {
+          "localized_name": "mode",
+          "name": "mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "range",
+          "name": "range",
+          "type": "FLOAT",
+          "widget": {
+            "name": "range"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "smoothness",
+          "name": "smoothness",
+          "type": "FLOAT",
+          "widget": {
+            "name": "smoothness"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lightness_weight",
+          "name": "lightness_weight",
+          "type": "FLOAT",
+          "widget": {
+            "name": "lightness_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "refine",
+          "name": "refine",
+          "type": "FLOAT",
+          "widget": {
+            "name": "refine"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "invert",
+          "name": "invert",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "invert"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "combine",
+          "name": "combine",
+          "type": "COMBO",
+          "widget": {
+            "name": "combine"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "samples",
+          "name": "samples",
+          "type": "STRING",
+          "widget": {
+            "name": "samples"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "luminance_low",
+          "name": "luminance_low",
+          "type": "FLOAT",
+          "widget": {
+            "name": "luminance_low"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "luminance_high",
+          "name": "luminance_high",
+          "type": "FLOAT",
+          "widget": {
+            "name": "luminance_high"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageColorRangeMask",
+        "was_show_advanced": false,
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "mode": true,
+            "range": true,
+            "smoothness": true,
+            "lightness_weight": true,
+            "refine": true,
+            "invert": true,
+            "combine": true,
+            "samples": true,
+            "luminance_low": true,
+            "luminance_high": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "color",
+        0.15,
+        0.5,
+        0.5,
+        0.3,
+        false,
+        "intersect",
+        "0.205,0.37@0",
+        0.5,
+        1
+      ],
+      "widgets_values_named": {
+        "mode": "color",
+        "range": 0.15,
+        "smoothness": 0.5,
+        "lightness_weight": 0.5,
+        "refine": 0.3,
+        "invert": false,
+        "combine": "intersect",
+        "samples": "0.205,0.37@0",
+        "luminance_low": 0.5,
+        "luminance_high": 1
+      }
+    },
+    {
+      "id": 8,
+      "type": "WASImageDevelop",
+      "pos": [
+        840,
+        1924
+      ],
+      "size": [
+        300,
+        800
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 10
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 11
+        },
+        {
+          "localized_name": "temperature",
+          "name": "temperature",
+          "type": "FLOAT",
+          "widget": {
+            "name": "temperature"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tint",
+          "name": "tint",
+          "type": "FLOAT",
+          "widget": {
+            "name": "tint"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "exposure",
+          "name": "exposure",
+          "type": "FLOAT",
+          "widget": {
+            "name": "exposure"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "contrast",
+          "name": "contrast",
+          "type": "FLOAT",
+          "widget": {
+            "name": "contrast"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "highlights",
+          "name": "highlights",
+          "type": "FLOAT",
+          "widget": {
+            "name": "highlights"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "shadows",
+          "name": "shadows",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shadows"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "whites",
+          "name": "whites",
+          "type": "FLOAT",
+          "widget": {
+            "name": "whites"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blacks",
+          "name": "blacks",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blacks"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "texture",
+          "name": "texture",
+          "type": "FLOAT",
+          "widget": {
+            "name": "texture"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "clarity",
+          "name": "clarity",
+          "type": "FLOAT",
+          "widget": {
+            "name": "clarity"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dehaze",
+          "name": "dehaze",
+          "type": "FLOAT",
+          "widget": {
+            "name": "dehaze"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "vibrance",
+          "name": "vibrance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "vibrance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "saturation",
+          "name": "saturation",
+          "type": "FLOAT",
+          "widget": {
+            "name": "saturation"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WASImageDevelop",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "temperature": true,
+            "tint": true,
+            "exposure": true,
+            "contrast": true,
+            "highlights": true,
+            "shadows": true,
+            "whites": true,
+            "blacks": true,
+            "texture": true,
+            "clarity": true,
+            "dehaze": true,
+            "vibrance": true,
+            "saturation": true
+          },
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        0,
+        0,
+        0.3,
+        10,
+        0,
+        25,
+        0,
+        0,
+        0,
+        15,
+        0,
+        0,
+        30
+      ],
+      "widgets_values_named": {
+        "temperature": 0,
+        "tint": 0,
+        "exposure": 0.3,
+        "contrast": 10,
+        "highlights": 0,
+        "shadows": 25,
+        "whites": 0,
+        "blacks": 0,
+        "texture": 0,
+        "clarity": 15,
+        "dehaze": 0,
+        "vibrance": 0,
+        "saturation": 30
+      }
+    },
+    {
+      "id": 9,
+      "type": "PreviewImage",
+      "pos": [
+        1380,
+        120
+      ],
+      "size": [
+        460,
+        420
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      1,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      2,
+      0,
+      3,
+      1,
+      "MASK"
+    ],
+    [
+      4,
+      1,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      3,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      4,
+      0,
+      5,
+      1,
+      "MASK"
+    ],
+    [
+      7,
+      1,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      8,
+      1,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      9,
+      6,
+      0,
+      7,
+      1,
+      "MASK"
+    ],
+    [
+      10,
+      5,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      11,
+      7,
+      0,
+      8,
+      1,
+      "MASK"
+    ],
+    [
+      12,
+      8,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Picture",
+      "bounding": [
+        0,
+        0,
+        420,
+        630
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Sky: graduated mask",
+      "bounding": [
+        500,
+        0,
+        760,
+        770
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Result",
+      "bounding": [
+        1340,
+        0,
+        540,
+        610
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Edges: radial mask, inverted",
+      "bounding": [
+        0,
+        890,
+        800,
+        794
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Tower: colour range inside a small radial",
+      "bounding": [
+        0,
+        1804,
+        1180,
+        990
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "ds": {
+      "scale": 0.3093249826026444,
+      "offset": [
+        129.31383577052867,
+        129.31383577052867
+      ]
+    }
+  },
+  "version": 0.4
+}

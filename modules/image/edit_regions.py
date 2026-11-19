@@ -31,6 +31,8 @@ __all__ = [
     "label_layers",
     "names_from",
     "read_edits",
+    "sam_network",
+    "segment_mask",
 ]
 
 logger = log.get_logger("image.edit_regions")
@@ -427,6 +429,41 @@ def _pointed(sam, picture: torch.Tensor, points: list, device, dtype) -> torch.T
         for _ in range(REFINE_PASSES - 1):
             logits = sam.forward_segment(frame, mask_inputs=logits)
     return (F.interpolate(logits.float(), size=(height, width), mode="bilinear", align_corners=False)[0, 0].cpu() > 0).float()
+
+
+def sam_network(model, node: str):
+    """SAM 3's network inside a MODEL, refusing anything else.
+
+    Args:
+        model: SAM 3 as a MODEL.
+        node: The node's name, for the message.
+
+    Returns:
+        The network, with ``forward_segment`` and ``forward_video``.
+
+    Raises:
+        ValueError: ``model`` is not SAM 3.
+    """
+    return _sam(model, node)
+
+
+def segment_mask(model, picture: torch.Tensor, segment: Segment, node: str) -> torch.Tensor:
+    """A find's mask at the picture's size, refined by SAM 3's decoder.
+
+    Args:
+        model: SAM 3 as a MODEL.
+        picture: ``(height, width, channels)``.
+        segment: A find from :func:`find` on that picture.
+        node: The node's name, for messages.
+
+    Returns:
+        ``(height, width)`` float mask, 0 or 1.
+    """
+    import comfy.model_management as management
+
+    sam = _sam(model, node)
+    management.load_model_gpu(model)
+    return _refined(sam, picture, segment, management.get_torch_device(), model.model.get_dtype())
 
 
 def _share(value) -> float | None:

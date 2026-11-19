@@ -76,7 +76,10 @@ class ApplyLUT(io.ComfyNode):
             outputs=[
                 io.Image.Output(
                     display_name="image",
-                    tooltip="The graded pictures, same size and batch order as the input.",
+                    tooltip=(
+                        "The graded pictures, same size and batch order as the input, in three "
+                        "channels. Held to 0 to 1 unless the input or the table reaches past it."
+                    ),
                 ),
             ],
         )
@@ -101,18 +104,25 @@ class ApplyLUT(io.ComfyNode):
 
         require_input(lut, "Apply LUT", "lut", "table", "Load LUT or LUT Blender")
 
+        from ....modules.image import dynamic
+
         size = lut.size() if lut.size() > 1 else FALLBACK_SIZE
         cube = tables.convert_to_3d(lut, size)
         frames = int(image.shape[0])
         progress = ProgressBar(frames)
+        # A table holding values outside 0 to 1 hands them on, as an input carrying them does.
+        held = not dynamic.carries(image[..., :3]) and not dynamic.carries(
+            torch.from_numpy(cube.table_3d)
+        )
 
         def grade(source):
+            source = source[..., :3]
             graded = tables.apply_lut_3d(
                 source, cube.table_3d, cube.domain_min, cube.domain_max
-            ).clamp(0, 1)
+            )
             if strength < 1.0:
                 graded = source * (1.0 - strength) + graded * strength
-            return graded.clamp(0, 1)
+            return graded.clamp(0, 1) if held else graded
 
         shape = tuple(image.shape[:-1]) + (3,)
         if image.device.type == "cpu":

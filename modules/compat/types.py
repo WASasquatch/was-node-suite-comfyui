@@ -58,6 +58,7 @@ __all__ = [
     "MODEL_3D",
     "MOTION",
     "MOTION_MODEL",
+    "VIDEO_TRACK",
     "NUMBER",
     "REMBG_MODEL",
     "SAM_MODEL",
@@ -152,6 +153,10 @@ MOTION = io.Custom("WAS_MOTION")
 #: `modules.model.flow_networks.FlowNetwork`: a SEA-RAFT or FlowSeek network and the refinement
 #: passes it runs.
 MOTION_MODEL = io.Custom("WAS_MOTION_MODEL")
+
+#: `Video Track Crop` -> `Video Track Paste`. Carries a `modules.media.track_crop.Track`: the
+#: window's centre and height on every frame, the frame size and the crop size.
+VIDEO_TRACK = io.Custom("WAS_VIDEO_TRACK")
 
 #: `EMA-VFI Video Model Loader` -> `EMA-VFI Frame Interpolation`, `Video Retime`. Carries a
 #: `modules.model.Backend` holding the interpolation network and the checkpoint it was
