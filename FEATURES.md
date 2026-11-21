@@ -469,6 +469,11 @@ MOSS-Image prompt enhancer skill has it write them, into the prompt MOSS-Image r
 boxes are placed on the size being generated, and its summary tags, canvas and box tags are kept.
 The panel lists the caption and every box.
 
+The whole chain is ready made as **MOSS Prompt-Enhancement Skill**, in the Node Library under
+Subgraph Blueprints › WAS Suite › Text › Prompt Enhancers: an idea and a size in, a MOSS-Image
+prompt out, written by Qwen3 32B with the built-in skill. It needs `features.llm` on in
+`config.yaml`.
+
 For prompt enhancement that places subjects and lettering where the model is told to, on the
 model already loaded for the generation.
 

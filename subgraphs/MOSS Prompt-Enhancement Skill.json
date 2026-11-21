@@ -1,0 +1,1454 @@
+{
+  "id": "a8170c3c-27b1-4230-a092-4b4bea34964e",
+  "revision": 0,
+  "last_node_id": 102,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 102,
+      "type": "12bf553c-e108-459f-b14d-48c4f339ec7f",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        310.36849525259447,
+        636
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model_name",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "model_name"
+          },
+          "link": null
+        },
+        {
+          "label": "temperature",
+          "name": "sampling_mode.temperature",
+          "type": "FLOAT",
+          "widget": {
+            "name": "sampling_mode.temperature"
+          },
+          "link": null
+        },
+        {
+          "label": "top_k",
+          "name": "sampling_mode.top_k",
+          "type": "INT",
+          "widget": {
+            "name": "sampling_mode.top_k"
+          },
+          "link": null
+        },
+        {
+          "name": "max_tokens",
+          "type": "INT",
+          "widget": {
+            "name": "max_tokens"
+          },
+          "link": null
+        },
+        {
+          "name": "thinking",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "thinking"
+          },
+          "link": null
+        },
+        {
+          "name": "fast_decode",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "fast_decode"
+          },
+          "link": null
+        },
+        {
+          "name": "source.model",
+          "type": "COMBO,STRING",
+          "widget": {
+            "name": "source.model"
+          },
+          "link": null
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "label": "prompt",
+          "name": "STRING",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "previewExposures": [],
+        "models": [
+          {
+            "name": "qwen3_32b_w4a8.safetensors",
+            "url": "https://huggingface.co/WAS/LLM/resolve/main/Qwen3-32B/qwen3_32b_w4a8.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "qwen3_32b_w4a8.safetensors",
+        0.7,
+        64,
+        2048,
+        false,
+        true,
+        "BAAI/bge-small-en-v1.5",
+        1024,
+        1536,
+        "A vintage railway travel poster, 1930s lithograph style, flat colour shapes and soft paper grain. A green steam locomotive crosses a curved stone viaduct over a deep valley at golden hour, with fells and a lake behind. The title \"LAKE DISTRICT\" in large cream capitals across the top, and \"by rail from London\" in smaller lettering along the bottom."
+      ],
+      "widgets_values_named": {
+        "model_name": "qwen3_32b_w4a8.safetensors",
+        "sampling_mode.temperature": 0.7,
+        "sampling_mode.top_k": 64,
+        "max_tokens": 2048,
+        "thinking": false,
+        "fast_decode": true,
+        "source.model": "BAAI/bge-small-en-v1.5",
+        "width": 1024,
+        "height": 1536,
+        "value": "A vintage railway travel poster, 1930s lithograph style, flat colour shapes and soft paper grain. A green steam locomotive crosses a curved stone viaduct over a deep valley at golden hour, with fells and a lake behind. The title \"LAKE DISTRICT\" in large cream capitals across the top, and \"by rail from London\" in smaller lettering along the bottom."
+      },
+      "title": "MOSS Prompt-Enhancement Skill"
+    }
+  ],
+  "links": [],
+  "version": 0.4,
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "12bf553c-e108-459f-b14d-48c4f339ec7f",
+        "version": 1,
+        "state": {
+          "lastGroupId": 1,
+          "lastNodeId": 104,
+          "lastLinkId": 217,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "MOSS Prompt-Enhancement Skill",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -503.66438765503824,
+            188.68141087209295,
+            128,
+            268
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            3091.95400089691,
+            -12.59222243577397,
+            128,
+            68
+          ]
+        },
+        "inputs": [
+          {
+            "id": "cafc6014-ac94-44d4-aed9-727ee6252c1a",
+            "name": "model_name",
+            "type": "COMBO,STRING",
+            "linkIds": [
+              217
+            ],
+            "pos": [
+              -399.66438765503824,
+              212.68141087209295
+            ]
+          },
+          {
+            "id": "bca81711-2a00-474a-b695-25052ea74afd",
+            "name": "sampling_mode.temperature",
+            "type": "FLOAT",
+            "linkIds": [
+              15
+            ],
+            "label": "temperature",
+            "pos": [
+              -399.66438765503824,
+              252.68141087209295
+            ]
+          },
+          {
+            "id": "f29d042d-0dfd-484c-a99b-77b41305201a",
+            "name": "sampling_mode.top_k",
+            "type": "INT",
+            "linkIds": [
+              16
+            ],
+            "label": "top_k",
+            "pos": [
+              -399.66438765503824,
+              272.68141087209295
+            ]
+          },
+          {
+            "id": "837e113c-2400-458d-b479-11470be2095f",
+            "name": "max_tokens",
+            "type": "INT",
+            "linkIds": [
+              19
+            ],
+            "pos": [
+              -399.66438765503824,
+              292.68141087209295
+            ]
+          },
+          {
+            "id": "39f79e5e-1cb0-4adb-9455-913ae4ed42b1",
+            "name": "thinking",
+            "type": "BOOLEAN",
+            "linkIds": [
+              213
+            ],
+            "pos": [
+              -399.66438765503824,
+              312.68141087209295
+            ]
+          },
+          {
+            "id": "d8f4c313-f5cd-4940-8864-a8ec31019738",
+            "name": "fast_decode",
+            "type": "BOOLEAN",
+            "linkIds": [
+              214
+            ],
+            "pos": [
+              -399.66438765503824,
+              332.68141087209295
+            ]
+          },
+          {
+            "id": "6194029a-c5f3-44f0-b0d3-56b3498b09d9",
+            "name": "source.model",
+            "type": "COMBO,STRING",
+            "linkIds": [
+              22
+            ],
+            "pos": [
+              -399.66438765503824,
+              352.68141087209295
+            ]
+          },
+          {
+            "id": "b0d8c850-007a-4354-a51e-c6ac891e0e51",
+            "name": "width",
+            "type": "INT",
+            "linkIds": [
+              23
+            ],
+            "pos": [
+              -399.66438765503824,
+              372.68141087209295
+            ]
+          },
+          {
+            "id": "7fffdd4d-11a4-48c8-9730-3881082d364f",
+            "name": "height",
+            "type": "INT",
+            "linkIds": [
+              24
+            ],
+            "pos": [
+              -399.66438765503824,
+              392.68141087209295
+            ]
+          },
+          {
+            "id": "f1ba1aa4-94f0-4d49-8771-96ba319efc9e",
+            "name": "value",
+            "type": "STRING",
+            "linkIds": [
+              26
+            ],
+            "pos": [
+              -399.66438765503824,
+              412.68141087209295
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "b9e64760-28e1-4473-a00b-99cd1cd774ae",
+            "name": "STRING",
+            "type": "STRING",
+            "linkIds": [
+              25
+            ],
+            "label": "prompt",
+            "pos": [
+              3115.95400089691,
+              11.40777756422603
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 96,
+            "type": "WASLLMFromCLIP",
+            "pos": [
+              470,
+              0
+            ],
+            "size": [
+              390,
+              462
+            ],
+            "flags": {},
+            "order": 7,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "clip",
+                "name": "clip",
+                "type": "CLIP",
+                "link": 216
+              },
+              {
+                "localized_name": "Sampling Mode",
+                "name": "sampling_mode",
+                "type": "COMFY_DYNAMICCOMBO_V3",
+                "widget": {
+                  "name": "sampling_mode"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "temperature",
+                "name": "sampling_mode.temperature",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "sampling_mode.temperature"
+                },
+                "link": 15
+              },
+              {
+                "localized_name": "top_k",
+                "name": "sampling_mode.top_k",
+                "type": "INT",
+                "widget": {
+                  "name": "sampling_mode.top_k"
+                },
+                "link": 16
+              },
+              {
+                "localized_name": "top_p",
+                "name": "sampling_mode.top_p",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "sampling_mode.top_p"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "min_p",
+                "name": "sampling_mode.min_p",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "sampling_mode.min_p"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "repetition_penalty",
+                "name": "sampling_mode.repetition_penalty",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "sampling_mode.repetition_penalty"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "seed",
+                "name": "sampling_mode.seed",
+                "type": "INT",
+                "widget": {
+                  "name": "sampling_mode.seed"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "presence_penalty",
+                "name": "sampling_mode.presence_penalty",
+                "shape": 7,
+                "type": "FLOAT",
+                "widget": {
+                  "name": "sampling_mode.presence_penalty"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "max_tokens",
+                "name": "max_tokens",
+                "type": "INT",
+                "widget": {
+                  "name": "max_tokens"
+                },
+                "link": 19
+              },
+              {
+                "localized_name": "thinking",
+                "name": "thinking",
+                "shape": 7,
+                "type": "BOOLEAN",
+                "widget": {
+                  "name": "thinking"
+                },
+                "link": 213
+              },
+              {
+                "localized_name": "fast_decode",
+                "name": "fast_decode",
+                "shape": 7,
+                "type": "BOOLEAN",
+                "widget": {
+                  "name": "fast_decode"
+                },
+                "link": 214
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "llm",
+                "name": "llm",
+                "type": "WAS_LLM",
+                "links": [
+                  6
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLLMFromCLIP"
+            },
+            "widgets_values": [
+              "on",
+              0.7,
+              64,
+              0.95,
+              0.05,
+              1.05,
+              7,
+              0,
+              2048,
+              false,
+              true
+            ],
+            "widgets_values_named": {
+              "sampling_mode": "on",
+              "sampling_mode.temperature": 0.7,
+              "sampling_mode.top_k": 64,
+              "sampling_mode.top_p": 0.95,
+              "sampling_mode.min_p": 0.05,
+              "sampling_mode.repetition_penalty": 1.05,
+              "sampling_mode.seed": 7,
+              "sampling_mode.presence_penalty": 0,
+              "max_tokens": 2048,
+              "thinking": false,
+              "fast_decode": true
+            }
+          },
+          {
+            "id": 97,
+            "type": "WASLLMVectorIndex",
+            "pos": [
+              940,
+              0
+            ],
+            "size": [
+              390,
+              388
+            ],
+            "flags": {},
+            "order": 8,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "documents",
+                "name": "documents",
+                "type": "WAS_LLM_DOCUMENTS",
+                "link": 210
+              },
+              {
+                "localized_name": "embedding",
+                "name": "embedding",
+                "type": "WAS_LLM_EMBEDDING",
+                "link": 211
+              },
+              {
+                "localized_name": "vector_store",
+                "name": "vector_store",
+                "shape": 7,
+                "type": "WAS_LLM_VECTOR_STORE",
+                "link": null
+              },
+              {
+                "localized_name": "batch_size",
+                "name": "batch_size",
+                "type": "INT",
+                "widget": {
+                  "name": "batch_size"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "chunk_size",
+                "name": "chunk_size",
+                "shape": 7,
+                "type": "INT",
+                "widget": {
+                  "name": "chunk_size"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "chunk_overlap",
+                "name": "chunk_overlap",
+                "shape": 7,
+                "type": "INT",
+                "widget": {
+                  "name": "chunk_overlap"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "index",
+                "name": "index",
+                "type": "WAS_LLM_INDEX",
+                "links": [
+                  4
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLLMVectorIndex",
+              "was_show_advanced": false
+            },
+            "widgets_values": [
+              64,
+              1024,
+              20
+            ],
+            "widgets_values_named": {
+              "batch_size": 64,
+              "chunk_size": 1024,
+              "chunk_overlap": 20
+            }
+          },
+          {
+            "id": 98,
+            "type": "WASLoadSystemPrompt",
+            "pos": [
+              0,
+              196
+            ],
+            "size": [
+              390,
+              498
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "system_prompt",
+                "name": "system_prompt",
+                "type": "COMBO,STRING",
+                "widget": {
+                  "name": "system_prompt"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "system_prompt",
+                "name": "system_prompt",
+                "type": "STRING",
+                "links": [
+                  7
+                ]
+              },
+              {
+                "localized_name": "name",
+                "name": "name",
+                "type": "STRING",
+                "links": null
+              },
+              {
+                "localized_name": "documents",
+                "name": "documents",
+                "type": "WAS_LLM_DOCUMENTS",
+                "links": [
+                  210
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLoadSystemPrompt"
+            },
+            "widgets_values": [
+              "Built-in/MOSS-Image/moss-image-prompt-enhancer/SKILL.md"
+            ],
+            "widgets_values_named": {
+              "system_prompt": "Built-in/MOSS-Image/moss-image-prompt-enhancer/SKILL.md"
+            }
+          },
+          {
+            "id": 8,
+            "type": "WASLLMQueryEngine",
+            "pos": [
+              1410,
+              0
+            ],
+            "size": [
+              390,
+              523.0055071073684
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "retriever",
+                "name": "retriever",
+                "type": "WAS_LLM_RETRIEVER",
+                "link": 5
+              },
+              {
+                "localized_name": "llm",
+                "name": "llm",
+                "type": "WAS_LLM",
+                "link": 6
+              },
+              {
+                "localized_name": "postprocessors",
+                "name": "postprocessors",
+                "shape": 7,
+                "type": "WAS_LLM_POSTPROCESSORS",
+                "link": null
+              },
+              {
+                "localized_name": "system_prompt",
+                "name": "system_prompt",
+                "shape": 7,
+                "type": "STRING",
+                "link": 7
+              },
+              {
+                "localized_name": "response_mode",
+                "name": "response_mode",
+                "type": "COMBO",
+                "widget": {
+                  "name": "response_mode"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "citations",
+                "name": "citations",
+                "type": "BOOLEAN",
+                "widget": {
+                  "name": "citations"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "citation_chunk_size",
+                "name": "citation_chunk_size",
+                "type": "INT",
+                "widget": {
+                  "name": "citation_chunk_size"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "qa_prompt",
+                "name": "qa_prompt",
+                "shape": 7,
+                "type": "STRING",
+                "widget": {
+                  "name": "qa_prompt"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "query_engine",
+                "name": "query_engine",
+                "type": "WAS_LLM_QUERY_ENGINE",
+                "links": [
+                  8
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLLMQueryEngine",
+              "was_panel_heights": {
+                "was_llm_report_ui": 166
+              }
+            },
+            "widgets_values": [
+              "compact",
+              false,
+              512,
+              "Reference files from this skill, found for the request:\n---------------------\n{context_str}\n---------------------\n\nRequest: {query_str}\n\nReply with the JSON draft only: a caption draft or a Layout draft, as the skill describes. The workflow compiles it after you answer."
+            ],
+            "widgets_values_named": {
+              "response_mode": "compact",
+              "citations": false,
+              "citation_chunk_size": 512,
+              "qa_prompt": "Reference files from this skill, found for the request:\n---------------------\n{context_str}\n---------------------\n\nRequest: {query_str}\n\nReply with the JSON draft only: a caption draft or a Layout draft, as the skill describes. The workflow compiles it after you answer."
+            }
+          },
+          {
+            "id": 7,
+            "type": "WASLLMIndexRetriever",
+            "pos": [
+              940,
+              478
+            ],
+            "size": [
+              390,
+              366
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "index",
+                "name": "index",
+                "type": "WAS_LLM_INDEX",
+                "link": 4
+              },
+              {
+                "localized_name": "llm",
+                "name": "llm",
+                "shape": 7,
+                "type": "WAS_LLM",
+                "link": null
+              },
+              {
+                "localized_name": "embedding",
+                "name": "embedding",
+                "shape": 7,
+                "type": "WAS_LLM_EMBEDDING",
+                "link": null
+              },
+              {
+                "localized_name": "top_k",
+                "name": "top_k",
+                "type": "INT",
+                "widget": {
+                  "name": "top_k"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "Mode",
+                "name": "mode",
+                "type": "COMFY_DYNAMICCOMBO_V3",
+                "widget": {
+                  "name": "mode"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "metadata_filters",
+                "name": "metadata_filters",
+                "type": "STRING",
+                "widget": {
+                  "name": "metadata_filters"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "filters_match",
+                "name": "filters_match",
+                "shape": 7,
+                "type": "COMBO",
+                "widget": {
+                  "name": "filters_match"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "retriever",
+                "name": "retriever",
+                "type": "WAS_LLM_RETRIEVER",
+                "links": [
+                  5
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLLMIndexRetriever",
+              "was_show_advanced": false
+            },
+            "widgets_values": [
+              2,
+              "default",
+              "",
+              "all"
+            ],
+            "widgets_values_named": {
+              "top_k": 2,
+              "mode": "default",
+              "metadata_filters": "",
+              "filters_match": "all"
+            }
+          },
+          {
+            "id": 99,
+            "type": "WASLLMEmbeddingModel",
+            "pos": [
+              470,
+              552
+            ],
+            "size": [
+              390,
+              470
+            ],
+            "flags": {},
+            "order": 9,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "source",
+                "name": "source",
+                "type": "COMFY_DYNAMICCOMBO_V3",
+                "widget": {
+                  "name": "source"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "model",
+                "name": "source.model",
+                "type": "COMBO,STRING",
+                "widget": {
+                  "name": "source.model"
+                },
+                "link": 22
+              },
+              {
+                "localized_name": "pooling",
+                "name": "source.pooling",
+                "type": "COMBO",
+                "widget": {
+                  "name": "source.pooling"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "normalize",
+                "name": "source.normalize",
+                "type": "BOOLEAN",
+                "widget": {
+                  "name": "source.normalize"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "query_instruction",
+                "name": "source.query_instruction",
+                "type": "STRING",
+                "widget": {
+                  "name": "source.query_instruction"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "text_instruction",
+                "name": "source.text_instruction",
+                "type": "STRING",
+                "widget": {
+                  "name": "source.text_instruction"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "max_length",
+                "name": "source.max_length",
+                "type": "INT",
+                "widget": {
+                  "name": "source.max_length"
+                },
+                "link": null
+              },
+              {
+                "localized_name": "batch_size",
+                "name": "source.batch_size",
+                "type": "INT",
+                "widget": {
+                  "name": "source.batch_size"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "embedding",
+                "name": "embedding",
+                "type": "WAS_LLM_EMBEDDING",
+                "links": [
+                  211
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLLMEmbeddingModel"
+            },
+            "widgets_values": [
+              "local",
+              "BAAI/bge-small-en-v1.5",
+              "auto",
+              true,
+              "",
+              "",
+              512,
+              32
+            ],
+            "widgets_values_named": {
+              "source": "local",
+              "source.model": "BAAI/bge-small-en-v1.5",
+              "source.pooling": "auto",
+              "source.normalize": true,
+              "source.query_instruction": "",
+              "source.text_instruction": "",
+              "source.max_length": 512,
+              "source.batch_size": 32
+            }
+          },
+          {
+            "id": 9,
+            "type": "WASLLMQuery",
+            "pos": [
+              1880,
+              0
+            ],
+            "size": [
+              390,
+              472
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "query_engine",
+                "name": "query_engine",
+                "type": "WAS_LLM_QUERY_ENGINE",
+                "link": 8
+              },
+              {
+                "localized_name": "question",
+                "name": "question",
+                "type": "STRING",
+                "widget": {
+                  "name": "question"
+                },
+                "link": 9
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "answer",
+                "name": "answer",
+                "type": "STRING",
+                "links": [
+                  10
+                ]
+              },
+              {
+                "localized_name": "sources_text",
+                "name": "sources_text",
+                "type": "STRING",
+                "links": null
+              },
+              {
+                "localized_name": "sources",
+                "name": "sources",
+                "type": "WAS_LLM_SOURCES",
+                "links": null
+              },
+              {
+                "localized_name": "thinking",
+                "name": "thinking",
+                "type": "STRING",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLLMQuery"
+            },
+            "widgets_values": [
+              ""
+            ],
+            "widgets_values_named": {
+              "question": ""
+            }
+          },
+          {
+            "id": 100,
+            "type": "PrimitiveStringMultiline",
+            "pos": [
+              0,
+              784
+            ],
+            "size": [
+              390,
+              88
+            ],
+            "flags": {},
+            "order": 10,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "value",
+                "name": "value",
+                "type": "STRING",
+                "widget": {
+                  "name": "value"
+                },
+                "link": 26
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  9
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "PrimitiveStringMultiline"
+            },
+            "widgets_values": [
+              "A vintage railway travel poster, 1930s lithograph style, flat colour shapes and soft paper grain. A green steam locomotive crosses a curved stone viaduct over a deep valley at golden hour, with fells and a lake behind. The title \"LAKE DISTRICT\" in large cream capitals across the top, and \"by rail from London\" in smaller lettering along the bottom."
+            ],
+            "widgets_values_named": {
+              "value": "A vintage railway travel poster, 1930s lithograph style, flat colour shapes and soft paper grain. A green steam locomotive crosses a curved stone viaduct over a deep valley at golden hour, with fells and a lake behind. The title \"LAKE DISTRICT\" in large cream capitals across the top, and \"by rail from London\" in smaller lettering along the bottom."
+            }
+          },
+          {
+            "id": 101,
+            "type": "WASMOSSImageCompilePrompt",
+            "pos": [
+              2350,
+              0
+            ],
+            "size": [
+              390,
+              524
+            ],
+            "flags": {},
+            "order": 11,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "draft",
+                "name": "draft",
+                "type": "STRING",
+                "widget": {
+                  "name": "draft"
+                },
+                "link": 10
+              },
+              {
+                "localized_name": "width",
+                "name": "width",
+                "type": "INT",
+                "widget": {
+                  "name": "width"
+                },
+                "link": 23
+              },
+              {
+                "localized_name": "height",
+                "name": "height",
+                "type": "INT",
+                "widget": {
+                  "name": "height"
+                },
+                "link": 24
+              },
+              {
+                "localized_name": "on_resize",
+                "name": "on_resize",
+                "type": "COMBO",
+                "widget": {
+                  "name": "on_resize"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "prompt",
+                "name": "prompt",
+                "type": "STRING",
+                "links": [
+                  11
+                ]
+              },
+              {
+                "localized_name": "caption",
+                "name": "caption",
+                "type": "STRING",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASMOSSImageCompilePrompt"
+            },
+            "widgets_values": [
+              "",
+              1024,
+              1536,
+              "fit"
+            ],
+            "widgets_values_named": {
+              "draft": "",
+              "width": 1024,
+              "height": 1536,
+              "on_resize": "fit"
+            }
+          },
+          {
+            "id": 11,
+            "type": "PreviewAny",
+            "pos": [
+              2820,
+              0
+            ],
+            "size": [
+              210,
+              122
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "source",
+                "name": "source",
+                "type": "*",
+                "link": 11
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  25
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "PreviewAny"
+            },
+            "widgets_values": [],
+            "widgets_values_named": {}
+          },
+          {
+            "id": 104,
+            "type": "WASLanguageModelLoader",
+            "pos": [
+              21.60633495367329,
+              -288.9718310017006
+            ],
+            "size": [
+              354.3951550387597,
+              219.0872093023256
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "model_name",
+                "name": "model_name",
+                "type": "COMBO,STRING",
+                "widget": {
+                  "name": "model_name"
+                },
+                "link": 217
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "CLIP",
+                "name": "CLIP",
+                "type": "CLIP",
+                "links": [
+                  216
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WASLanguageModelLoader",
+              "was_panel_heights": {
+                "was_llm_report_ui": 157
+              },
+              "models": [
+                {
+                  "name": "qwen3_32b_w4a8.safetensors",
+                  "url": "https://huggingface.co/WAS/LLM/resolve/main/Qwen3-32B/qwen3_32b_w4a8.safetensors",
+                  "directory": "text_encoders"
+                }
+              ]
+            },
+            "widgets_values": [
+              "qwen3_32b_w4a8.safetensors"
+            ],
+            "widgets_values_named": {
+              "model_name": "qwen3_32b_w4a8.safetensors"
+            }
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 210,
+            "origin_id": 98,
+            "origin_slot": 2,
+            "target_id": 97,
+            "target_slot": 0,
+            "type": "WAS_LLM_DOCUMENTS"
+          },
+          {
+            "id": 211,
+            "origin_id": 99,
+            "origin_slot": 0,
+            "target_id": 97,
+            "target_slot": 1,
+            "type": "WAS_LLM_EMBEDDING"
+          },
+          {
+            "id": 5,
+            "origin_id": 7,
+            "origin_slot": 0,
+            "target_id": 8,
+            "target_slot": 0,
+            "type": "WAS_LLM_RETRIEVER"
+          },
+          {
+            "id": 6,
+            "origin_id": 96,
+            "origin_slot": 0,
+            "target_id": 8,
+            "target_slot": 1,
+            "type": "WAS_LLM"
+          },
+          {
+            "id": 7,
+            "origin_id": 98,
+            "origin_slot": 0,
+            "target_id": 8,
+            "target_slot": 3,
+            "type": "STRING"
+          },
+          {
+            "id": 8,
+            "origin_id": 8,
+            "origin_slot": 0,
+            "target_id": 9,
+            "target_slot": 0,
+            "type": "WAS_LLM_QUERY_ENGINE"
+          },
+          {
+            "id": 9,
+            "origin_id": 100,
+            "origin_slot": 0,
+            "target_id": 9,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 10,
+            "origin_id": 9,
+            "origin_slot": 0,
+            "target_id": 101,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 11,
+            "origin_id": 101,
+            "origin_slot": 0,
+            "target_id": 11,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 23,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 101,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 24,
+            "origin_id": -10,
+            "origin_slot": 8,
+            "target_id": 101,
+            "target_slot": 2,
+            "type": "INT"
+          },
+          {
+            "id": 25,
+            "origin_id": 11,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 26,
+            "origin_id": -10,
+            "origin_slot": 9,
+            "target_id": 100,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 15,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 96,
+            "target_slot": 2,
+            "type": "FLOAT"
+          },
+          {
+            "id": 16,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 96,
+            "target_slot": 3,
+            "type": "INT"
+          },
+          {
+            "id": 19,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 96,
+            "target_slot": 9,
+            "type": "INT"
+          },
+          {
+            "id": 213,
+            "origin_id": -10,
+            "origin_slot": 4,
+            "target_id": 96,
+            "target_slot": 10,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 214,
+            "origin_id": -10,
+            "origin_slot": 5,
+            "target_id": 96,
+            "target_slot": 11,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 4,
+            "origin_id": 97,
+            "origin_slot": 0,
+            "target_id": 7,
+            "target_slot": 0,
+            "type": "WAS_LLM_INDEX"
+          },
+          {
+            "id": 22,
+            "origin_id": -10,
+            "origin_slot": 6,
+            "target_id": 99,
+            "target_slot": 1,
+            "type": "COMBO,STRING"
+          },
+          {
+            "id": 216,
+            "origin_id": 104,
+            "origin_slot": 0,
+            "target_id": 96,
+            "target_slot": 0,
+            "type": "CLIP"
+          },
+          {
+            "id": 217,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 104,
+            "target_slot": 0,
+            "type": "COMBO,STRING"
+          }
+        ],
+        "extra": {},
+        "category": "WAS Suite/Text/Prompt Enhancers",
+        "description": "Turns a short idea into a finished MOSS-Image prompt with a local language model and OpenMOSS' prompt enhancer skill. The model writes a detailed caption, or a box layout when the idea places text or objects, compiled for the width and height given. Needs the language model nodes, switched on with features.llm in config.yaml."
+      }
+    ]
+  },
+  "extra": {},
+  "models": [
+    {
+      "name": "qwen3_32b_w4a8.safetensors",
+      "url": "https://huggingface.co/WAS/LLM/resolve/main/Qwen3-32B/qwen3_32b_w4a8.safetensors",
+      "directory": "text_encoders"
+    }
+  ]
+}
