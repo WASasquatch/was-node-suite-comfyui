@@ -54,7 +54,7 @@ For a photograph, painting, render or illustration of a scene, the caption is at
 9. The camera: position and height, lens, framing and depth of field.
 10. Palette, contrast and grade.
 
-Each sentence carries one idea, usually in 15 to 25 words. While thinking, write the plan as a numbered list of the sentences under each item, then count them. Fewer than 17 sentences or 280 words means the caption is not finished; past 380 words, cut repetition and anything the camera cannot see, such as sounds, smells or what is absent. When the subject is an object, animal or place rather than a person, items 2 to 5 describe its form, its surface, its parts and how it rests or moves.
+Each sentence carries one idea, usually in 15 to 25 words. While thinking, write the plan as a numbered list of the sentences under each item, then count them. Fewer than 17 sentences or 280 words means the caption is not finished, and it grows only by more visible detail under items 2 to 8, never by a summary, a closing remark or a restatement, so its last sentence is about palette, contrast and grade; past 380 words, cut repetition and anything the camera cannot see, such as sounds, smells or what is absent. When the subject is an object, animal or place rather than a person, items 2 to 5 describe its form, its surface, its parts and how it rests or moves.
 
 ## Designed pages and graphics
 
@@ -62,9 +62,11 @@ Posters, covers, packaging, cards, boards, infographics, diagrams, charts, web p
 
 ## Notes that come with the request
 
-Notes on particular subjects may arrive with the request: people and portraits, light and lens, movement, hands, lettering, page layout, print and packaging, sheets and boards, diagrams, charts, screens, and matching panels. Apply each one that fits and ignore the rest.
+Notes on particular subjects may arrive with the request: people and portraits, light and lens, movement, hands, lettering, page layout, print and packaging, sheets and boards, diagrams, charts, screens, and matching panels. Apply each one that fits and ignore the rest entirely, keeping its subjects and wording out of the caption.
 
-## Check before answering
+## Check while thinking, never in the caption
+
+Run this check in the thinking section only. The caption describes what the picture shows and nothing else: no sentence reports a check, a rule, the request, the caption's own accuracy, or anything left out, avoided or absent, and none mentions text, labels or design elements the picture does not contain.
 
 - Every requested thing is visible, and every requested word, name, number and order is exact.
 - The number of main subjects has not grown.
