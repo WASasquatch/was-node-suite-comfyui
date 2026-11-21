@@ -13,9 +13,10 @@ from ...modules import log
 from ...modules.compat.types import LIST, WAS_COLOUR_PROFILE
 from ...modules.image import colour_profile, depths, exr, png
 from ...modules.interface import file_report
+from ...modules.interface.channel import executing_workflow_id
 from ...modules.io import naming, rooted
 from ...modules.state import history
-from ...modules.util import sandbox
+from ...modules.util import file_listing, sandbox
 
 logger = log.get_logger("nodes.io")
 
@@ -34,6 +35,19 @@ MAX_WRITERS = 8
 
 #: Stand-in name used to resolve the output directory when the prefix widget is empty.
 PLACEHOLDER_PREFIX = "_"
+
+#: Where the saved pictures are shown: the pack's own panel, ComfyUI's previews, or nowhere.
+INTERFACE_GALLERY = "interface gallery"
+NODE_GALLERY = "node gallery"
+NO_GALLERY = "off"
+GALLERY_OPTIONS = (INTERFACE_GALLERY, NODE_GALLERY, NO_GALLERY)
+
+#: Run output key the interface gallery reads.
+GALLERY_KEY = "was_gallery"
+
+#: The most pictures the interface gallery is sent, and the most caption characters for each.
+MAX_GALLERY_ITEMS = 1024
+MAX_GALLERY_CAPTION_CHARS = 4000
 
 
 def subfolder_of(directory: str, root: str) -> str | None:
@@ -130,6 +144,45 @@ def spread(value, total: int, name: str, lines: bool = False) -> list[str] | Non
             f"for all of them{hint}"
         )
     return found
+
+
+def read_caption(image_path: str) -> str:
+    """The caption saved beside an image, or ``""`` where there is none or it cannot be read.
+
+    Args:
+        image_path: The image's path.
+
+    Returns:
+        Up to :data:`MAX_GALLERY_CAPTION_CHARS` of the ``.txt`` file of the same name.
+    """
+    path = os.path.splitext(image_path)[0] + CAPTION_EXTENSION
+    try:
+        with open(path, encoding="utf-8", errors="replace") as handle:
+            return handle.read(MAX_GALLERY_CAPTION_CHARS).strip()
+    except OSError:
+        return ""
+
+
+def gallery_item(path: str, caption: str) -> dict:
+    """One picture as the interface gallery draws it.
+
+    Args:
+        path: The saved file.
+        caption: Its caption, or ``""``.
+
+    Returns:
+        ``name``, ``caption``, and the file's menu ``label`` and ``stamp`` where it lies under
+        a folder the pack lists, which is what its thumbnail is fetched by. Never a full path.
+    """
+    item = {"name": os.path.basename(path), "caption": caption[:MAX_GALLERY_CAPTION_CHARS]}
+    try:
+        entry = file_listing.typed(path, None, file_listing.ROOTS)
+    except Exception:
+        entry = None
+    if entry is not None:
+        item["label"] = entry.label
+        item["stamp"] = int(entry.mtime)
+    return item
 
 
 def write_caption(directory, name: str, text: str) -> str | None:
@@ -316,9 +369,9 @@ class ImageSave(io.ComfyNode):
                     "show_history",
                     default=False,
                     tooltip=(
-                        "`off` previews the images this run wrote; `on` previews the "
-                        "files this node has written before instead, newest first, up to the "
-                        "limit in the pack's config."
+                        "`off` = the gallery shows the images this run wrote; `on` = it "
+                        "shows the files this node has written before instead, newest first, "
+                        "up to the limit in the pack's config."
                     ),
                 ),
                 io.Boolean.Input(
@@ -339,12 +392,15 @@ class ImageSave(io.ComfyNode):
                         "Nothing is stored with --disable-metadata."
                     ),
                 ),
-                io.Boolean.Input(
-                    "show_previews",
-                    default=True,
+                io.Combo.Input(
+                    "gallery",
+                    options=list(GALLERY_OPTIONS),
+                    default=INTERFACE_GALLERY,
                     tooltip=(
-                        "Whether the saved images appear on the node. `off` still writes "
-                        "the files and keeps the node small, which suits a long batch."
+                        "`interface gallery` = the saved pictures in the node's panel, each "
+                        "caption shown on hover; `node gallery` = ComfyUI's own previews, "
+                        "also listed in the queue; `off` = no pictures, the files still "
+                        "written."
                     ),
                 ),
                 io.Combo.Input(
@@ -429,7 +485,7 @@ class ImageSave(io.ComfyNode):
         show_history=False,
         show_history_by_prefix=True,
         embed_workflow=True,
-        show_previews=True,
+        gallery=INTERFACE_GALLERY,
         bit_depth=depths.DEFAULT,
         profile=None,
         filenames=None,
@@ -453,7 +509,7 @@ class ImageSave(io.ComfyNode):
             "dpi": dpi, "quality": quality, "optimize_image": optimize_image,
             "lossless_webp": lossless_webp, "overwrite_mode": overwrite_mode,
             "show_history": show_history, "show_history_by_prefix": show_history_by_prefix,
-            "embed_workflow": embed_workflow, "show_previews": show_previews,
+            "embed_workflow": embed_workflow, "gallery": gallery,
             "bit_depth": bit_depth, "profile": profile,
         }
         lists = {key: _items(value) for key, value in settings.items()}
@@ -499,7 +555,7 @@ class ImageSave(io.ComfyNode):
         written = cls.encode_all(plans)
 
         per_pass: list[list[str]] = [[] for _ in each]
-        captioned, previews = [], []
+        captioned, saved = [], []
         for (number, position), output_file in written:
             if output_file is None:
                 continue
@@ -507,32 +563,54 @@ class ImageSave(io.ComfyNode):
             name = plan.names[position]
             logger.info("image file saved to: %s", output_file)
             per_pass[owners[number]].append(output_file)
+            text = ""
             if plan.texts is not None:
+                text = plan.texts[position].strip()
                 caption = write_caption(
-                    plan.destination, os.path.splitext(name)[0] + CAPTION_EXTENSION,
-                    plan.texts[position],
+                    plan.destination, os.path.splitext(name)[0] + CAPTION_EXTENSION, text,
                 )
                 if caption is not None:
                     captioned.append(caption)
-            # No browser draws an EXR, so one is reported in the panel and nowhere else.
-            if (
-                plan.extension != "exr"
-                and not plan.options["show_history"]
-                and plan.options["show_previews"]
-                and plan.place is not None
-            ):
-                previews.append(ui.SavedResult(name, *plan.place))
+            saved.append((plan, name, output_file, text))
 
         files = [path for paths in per_pass for path in paths]
         if files:
             history.update_history_output_images(files)
 
         first = each[0]
-        if plans and first["show_history"] and first["show_previews"]:
-            previews += cls.history_previews(
+        shown = first["gallery"] if first["gallery"] in GALLERY_OPTIONS else INTERFACE_GALLERY
+        earlier = []
+        if plans and first["show_history"] and shown != NO_GALLERY:
+            earlier = cls.history_paths(
                 folder_paths.get_output_directory(), plans[0].subfolder, plans[0].prefix,
                 first["show_history_by_prefix"],
             )
+
+        previews, report_ui = [], None
+        if shown == NODE_GALLERY:
+            # No browser draws an EXR, so one is reported in the panel and nowhere else.
+            previews = [
+                ui.SavedResult(name, *plan.place)
+                for plan, name, _, _ in saved
+                if plan.extension != "exr" and not first["show_history"] and plan.place is not None
+            ]
+            previews += [
+                ui.SavedResult(os.path.basename(path), where, io.FolderType.output)
+                for path, where in earlier
+            ]
+        elif shown == INTERFACE_GALLERY:
+            if first["show_history"]:
+                pictures = [(path, read_caption(path)) for path, _ in earlier]
+            else:
+                pictures = [(path, text) for _, _, path, text in saved]
+            report_ui = {GALLERY_KEY: [{
+                "workflow": executing_workflow_id() or "",
+                "history": bool(first["show_history"]),
+                "total": len(pictures),
+                "items": [
+                    gallery_item(path, text) for path, text in pictures[:MAX_GALLERY_ITEMS]
+                ],
+            }]}
 
         facts = {"overwrite": first["overwrite_mode"], "depth": first["bit_depth"]}
         if texts is not None:
@@ -549,7 +627,7 @@ class ImageSave(io.ComfyNode):
         return io.NodeOutput(
             [chosen["images"] for chosen in each],
             per_pass,
-            ui=ui.SavedImages(previews),
+            ui=report_ui if report_ui is not None else ui.SavedImages(previews),
         )
 
     @classmethod
@@ -570,7 +648,7 @@ class ImageSave(io.ComfyNode):
         show_history,
         show_history_by_prefix,
         embed_workflow,
-        show_previews,
+        gallery,
         bit_depth,
         profile,
         stems=None,
@@ -593,7 +671,7 @@ class ImageSave(io.ComfyNode):
         """
         import folder_paths
 
-        del show_history_by_prefix
+        del show_history, show_history_by_prefix, gallery
         output_dir = folder_paths.get_output_directory()
         # The prefix's folders resolve below the chosen root, and the name below them.
         wanted = (filename_prefix or "").replace("\\", "/")
@@ -704,7 +782,6 @@ class ImageSave(io.ComfyNode):
             options={
                 "dpi": dpi, "quality": quality, "optimize_image": optimize_image,
                 "lossless_webp": lossless_webp, "bit_depth": bit_depth, "profile": profile,
-                "show_history": show_history, "show_previews": show_previews,
                 "metadata_source": metadata_source, "text": cls.text_chunks(metadata_source),
                 "jpeg_exif": jpeg_exif, "webp_exif": webp_exif,
             },
@@ -830,8 +907,8 @@ class ImageSave(io.ComfyNode):
         return text
 
     @classmethod
-    def history_previews(cls, output_dir, subfolder, filename_prefix, by_prefix) -> list:
-        """Previews for the files this node has written before, newest first.
+    def history_paths(cls, output_dir, subfolder, filename_prefix, by_prefix) -> list:
+        """The files this node has written before, newest first.
 
         Args:
             output_dir: ComfyUI's output directory.
@@ -843,7 +920,7 @@ class ImageSave(io.ComfyNode):
                 with the same prefix.
 
         Returns:
-            ``ui.SavedResult`` entries, capped at ``history.display_limit()``.
+            ``(path, subfolder of output_dir)`` pairs, capped at ``history.display_limit()``.
         """
         database = history.open_history_db()
         if not (database.catExists("History") and database.keyExists("History", HISTORY_KEY)):
@@ -866,7 +943,4 @@ class ImageSave(io.ComfyNode):
         limit = history.display_limit()
         filtered = filtered[-limit:]
         filtered.reverse()
-        return [
-            ui.SavedResult(os.path.basename(path), where, io.FolderType.output)
-            for path, where in filtered
-        ]
+        return filtered

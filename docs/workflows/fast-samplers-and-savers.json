@@ -668,11 +668,11 @@
           "link": null
         },
         {
-          "localized_name": "show_previews",
-          "name": "show_previews",
-          "type": "BOOLEAN",
+          "localized_name": "gallery",
+          "name": "gallery",
+          "type": "COMBO",
           "widget": {
-            "name": "show_previews"
+            "name": "gallery"
           },
           "link": null
         },
@@ -722,7 +722,7 @@
         false,
         true,
         true,
-        true,
+        "interface gallery",
         "8-bit"
       ],
       "widgets_values_named": {
@@ -740,8 +740,8 @@
         "show_history": false,
         "show_history_by_prefix": true,
         "embed_workflow": true,
-        "show_previews": true,
-        "bit_depth": "8-bit"
+        "bit_depth": "8-bit",
+        "gallery": "interface gallery"
       }
     },
     {

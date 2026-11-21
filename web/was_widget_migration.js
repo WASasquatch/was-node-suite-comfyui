@@ -164,7 +164,6 @@ const V2_BOOLEAN_WIDGETS = {
     "show_history",
     "show_history_by_prefix",
     "embed_workflow",
-    "show_previews",
   ],
   "Image Seamless Texture": ["tiled"],
   "Image Voronoi Noise Filter": ["flat", "RGB_output"],
@@ -192,6 +191,8 @@ const RENAMED_OPTIONS = {
   // Three Load Model's `centre` checkbox became the `origin` menu in the same place.
   WASThreeLoadModel: [["origin"], { true: "centre", false: "as saved" }],
   WASStringList: [["combine"], { "line by line": "precompile" }],
+  // Image Save's `show_previews` switch became the `gallery` menu in the same place.
+  "Image Save": [["gallery"], { true: "node gallery", false: "interface gallery" }],
   WASMiniMaxH3Conditioning: [
     Array.from({ length: 24 }, (unused, index) => `continuity_${index + 1}`),
     { ...H3_CONTINUITY_RENAMED, "as set": "carry" },

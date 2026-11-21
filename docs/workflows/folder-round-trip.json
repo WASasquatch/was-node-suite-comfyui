@@ -462,12 +462,12 @@
           }
         },
         {
-          "localized_name": "show_previews",
-          "name": "show_previews",
-          "type": "BOOLEAN",
+          "localized_name": "gallery",
+          "name": "gallery",
+          "type": "COMBO",
           "link": null,
           "widget": {
-            "name": "show_previews"
+            "name": "gallery"
           }
         },
         {
@@ -518,7 +518,7 @@
         false,
         true,
         false,
-        true,
+        "interface gallery",
         "8-bit"
       ]
     },

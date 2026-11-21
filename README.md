@@ -144,7 +144,9 @@ are now checkboxes, and fourteen nodes that stopped at four to eight slots now d
 twenty-four or twenty-six, drawing one empty slot below the last one filled. Saved settings are
 read back onto the new widgets and everything wired stays wired. The three batchers each gain a
 `count` output below the one they had. `Image Save`'s `prefix_as_filename` is now
-`overwrite_mode`, ticked where it read `true`. `Logic Boolean`'s 0 to 1 slider is a checkbox,
+`overwrite_mode`, ticked where it read `true`. `Image Save`'s `show_previews` is now the
+`gallery` menu in the same place: `node gallery` where it read `true`, and `interface gallery`
+where it read `false`. `Logic Boolean`'s 0 to 1 slider is a checkbox,
 ticked where it read above 0.5.
 
 **Three Custom Material takes a module file.** Its `javascript` box is gone. The node now picks

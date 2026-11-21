@@ -586,7 +586,9 @@ Text File** also save into ComfyUI's `input` folder and every folder `paths.allo
 `paths.allow_write` lists, so a dataset is edited where its loaders read it.
 **Image Load**, **Load Image Batch** and **Load Image
 Sequence** read a 16-bit PNG at full precision, and a file marked linear with no curve applied.
-**Image Save** encodes the files of a batch in parallel.
+**Image Save** encodes the files of a batch in parallel. Its `interface gallery` draws the
+saved pictures in the node's panel with each caption shown over its picture on hover, a way to
+read a captioned dataset back as it is written, including one saved outside ComfyUI's folders.
 **Fast Save Animated WEBP** writes a batch as one animated WebP with its frames encoded in
 parallel, lossless frames pixel for pixel. **Directory Listing** and **Path Exists** reach the
 filesystem. Every file and folder menu a loader reads from also takes a path wired in as text,

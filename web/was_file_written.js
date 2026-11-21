@@ -6,6 +6,7 @@
  */
 
 import { app } from "../../scripts/app.js";
+import { createCaptionGallery } from "./interface/caption_gallery.js";
 import { createReportPanel } from "./interface/report_panel.js";
 import { appendInterfaceWidget } from "./interface/widget.js";
 
@@ -13,8 +14,7 @@ const EXT_NAME = "WASNodeSuite.FileWritten";
 const SETTING_ID = "WAS.Files.ShowWritten";
 const LOG_NAME = "WASNodeSuite.FileWritten";
 
-// Every node in the pack that writes a file. Image Save and Fast Save Animated WEBP draw the
-// pictures they wrote, not where they landed; the rest draw nothing at all.
+// Every node in the pack that writes a file.
 const NODES = [
   "Image Save",
   "Save Text File",
@@ -32,6 +32,10 @@ const NODES = [
 // Height of the panel in node units: the summary line, the two figures, the five fact rows the
 // report writes itself and the three a node adds, with nothing scrolling.
 const PANEL_HEIGHT = 228;
+
+// The node that draws its saved pictures in the panel, and the panel's height with them.
+const GALLERY_NODE = "Image Save";
+const GALLERY_PANEL_HEIGHT = 480;
 
 // The widest name the report writes, which is what the fact column is opened at.
 const LABEL_WIDTH = 78;
@@ -70,7 +74,8 @@ app.registerExtension({
         + "last names and the bytes on Image Save, Save Text File, Save Dataset, EXR Save, Write to GIF, Write to Video, "
         + "Fast Save Animated WEBP, Create Morph Image and H3 Save Clip. A naming scheme that replaces its own "
         + "output on every frame, and a "
-        + "write that failed, are drawn in the warning colour. The nodes run the same either "
+        + "write that failed, are drawn in the warning colour. Image Save's interface gallery is "
+        + "drawn in the same panel, so it goes with it. The nodes run the same either "
         + "way. This applies to nodes added after the setting changes, so a reload shows it "
         + "everywhere.",
       type: "boolean",
@@ -86,6 +91,7 @@ app.registerExtension({
     // panel to every node of this type.
     if (proto.__was_file_written_wrapped) return;
     proto.__was_file_written_wrapped = true;
+    const gallery = nodeData.name === GALLERY_NODE;
 
     const originalOnNodeCreated = proto.onNodeCreated;
     proto.onNodeCreated = function () {
@@ -94,7 +100,8 @@ app.registerExtension({
       try {
         const panel = createReportPanel(this, {
           className: "was-file-written",
-          height: PANEL_HEIGHT,
+          height: gallery ? GALLERY_PANEL_HEIGHT : PANEL_HEIGHT,
+          ...(gallery ? { sketch: () => createCaptionGallery(this) } : {}),
           labelWidth: LABEL_WIDTH,
           emptyLabel: EMPTY_LABEL,
           logName: LOG_NAME,
