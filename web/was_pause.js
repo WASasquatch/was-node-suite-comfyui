@@ -6,6 +6,7 @@ import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 import { fetchWithin } from "./interface/request.js";
 import { addButton } from "./interface/decoration.js";
+import { executionId, nodeForExecutionId } from "./interface/preview.js";
 
 const EXT_NAME = "WASNodeSuite.Pause";
 
@@ -25,7 +26,7 @@ const held = new Map();
  * @returns {boolean} True while it waits.
  */
 function waiting(node) {
-  return held.has(String(node?.id));
+  return held.has(executionId(node));
 }
 
 /**
@@ -64,7 +65,7 @@ async function release(node, action) {
     const answer = await fetchWithin(ROUTE, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ node_id: String(node.id), action, client_id: clientId() }),
+      body: JSON.stringify({ node_id: executionId(node), action, client_id: clientId() }),
     });
     if (!answer.ok) {
       const reply = await answer.json().catch(() => ({}));
@@ -105,10 +106,10 @@ async function showHeldContent(node, nodeId) {
  * @returns {void}
  */
 function redraw(nodeId) {
-  const node = app.graph?.getNodeById?.(Number(nodeId))
-    ?? app.graph?.getNodeById?.(nodeId);
+  const node = nodeForExecutionId(nodeId);
   if (node) {
     const held = waiting(node);
+    node.__was_hold_id = held ? String(nodeId) : undefined;
     updateButtons(node);
     node.color = held ? "#7a5a1e" : undefined;
     node.__was_viewer_held = held;
@@ -123,7 +124,7 @@ app.registerExtension({
   async setup() {
     api.addEventListener("was-pause", ({ detail }) => {
       held.set(String(detail?.node_id), detail?.message ?? "");
-      const node = app.graph?.getNodeById?.(Number(detail?.node_id));
+      const node = nodeForExecutionId(detail?.node_id);
       if (node) node.__was_viewer_kind = detail?.kind ?? "none";
       redraw(detail?.node_id);
       // A held node never reaches its own `ui` payload, so the content it wants edited is

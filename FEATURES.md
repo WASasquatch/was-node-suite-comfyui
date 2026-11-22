@@ -927,7 +927,7 @@ For finished H3 clips at a fraction of the usual steps.
 **H3 Image Sampler** samples MiniMax H3 Image's six steps in Sampler Custom. By default the first
 three steps run on a latent a quarter of the size, which then grows to full size, and the step
 into the final one takes fresh noise, so skin, hair and fabric come out clean at 4 to 16
-megapixels. `standard` mode keeps every step at full size with the composition of the model's own
+megapixels. An edit with reference pictures runs every step at full size. `standard` mode keeps every step at full size with the composition of the model's own
 sampler, and `renoise_steps` 0 there is that sampler exactly. The graph runs it at 16 megapixels
 on a 24 GB card with **H3 Low VRAM** and **Free Memory**.
 
@@ -936,6 +936,11 @@ more photographic: clean skin with real pores in place of speckled crust, crispe
 stone. `blank` mode does it on every step at no extra cost, and `subtraction` pushes the first
 steps past the change the picture makes for still more detail. Strength sets how far, and both
 modes change the composition.
+
+**H3 Image VisRow Conditioning** takes the place of MiniMax H3 Image Conditioning and gives the
+same photographic skin, fur and stone as a blank picture without spending `Picture 1` on it, so
+its nine reference sockets stay free for an edit. `strength` 1 matches a blank picture, 2 is
+crisper still, and 0 is the core node exactly.
 
 The system prompt library's built-in **MiniMax H3 Image Prompt Enhancer** skill turns a few words
 into the long, literal caption H3 Image follows best, and picks the aspect ratio to render at.

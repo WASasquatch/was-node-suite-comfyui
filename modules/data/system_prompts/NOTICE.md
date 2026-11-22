@@ -10,6 +10,7 @@ licence. Every other file is part of WAS Node Suite and under its licence.
 | MIT, Black Forest Labs Inc. | `LICENSE-MIT-Black-Forest-Labs.txt` |
 | MIT, BRIA AI | `LICENSE-MIT-Bria.txt` |
 | MIT, Kandinsky Lab | `LICENSE-MIT-Kandinsky-Lab.txt` |
+| MIT, Jesse Vincent | `LICENSE-MIT-Jesse-Vincent.txt` |
 
 ## Sources
 
@@ -32,6 +33,10 @@ licence. Every other file is part of WAS Node Suite and under its licence.
 | `Qwen-Image/Qwen-Image-Edit 2509 Instruction Rewriter.md` | [Qwen/Qwen-Image-Edit-2509](https://huggingface.co/spaces/Qwen/Qwen-Image-Edit-2509) Space, `app.py` | `757d88f` | Apache-2.0 | yes, below |
 | `Z-Image/Z-Image Prompt Enhancer (Chinese).md` | [Tongyi-MAI/Z-Image-Turbo](https://huggingface.co/spaces/Tongyi-MAI/Z-Image-Turbo) Space, `pe.py` | `768cb50` | Apache-2.0 | yes, below |
 | `ERNIE Image/ERNIE Image Prompt Enhancer.md` | [baidu/ERNIE-Image](https://huggingface.co/baidu/ERNIE-Image), `pe/chat_template.jinja` | `5346b31` | Apache-2.0 | yes, below |
+| `Code/Code Planner.md` | [obra/superpowers](https://github.com/obra/superpowers), `skills/writing-plans/SKILL.md` and `skills/brainstorming/SKILL.md`. Copyright (c) 2025 Jesse Vincent | `22f0b46` | MIT | yes, below |
+| `Code/Code Writer.md` | [Aider-AI/aider](https://github.com/Aider-AI/aider), `aider/coders/base_prompts.py` and `aider/coders/editblock_prompts.py` | `5dc9490` | Apache-2.0 | yes, below |
+| `Code/Code Reviewer.md` | [openai/codex](https://github.com/openai/codex), `codex-rs/core/review_prompt.md`; [obra/superpowers](https://github.com/obra/superpowers), `skills/requesting-code-review/code-reviewer.md`. Copyright (c) 2025 Jesse Vincent | `b4123b7`, `22f0b46` | Apache-2.0, MIT | yes, below |
+| `Code/Code Reviser.md` | [obra/superpowers](https://github.com/obra/superpowers), `skills/receiving-code-review/SKILL.md`. Copyright (c) 2025 Jesse Vincent; [Aider-AI/aider](https://github.com/Aider-AI/aider), `aider/coders/base_prompts.py` and `aider/coders/editblock_prompts.py` | `22f0b46`, `5dc9490` | MIT, Apache-2.0 | yes, below |
 
 ## Changes
 
@@ -45,3 +50,7 @@ licence. Every other file is part of WAS Node Suite and under its licence.
 | `Qwen-Image/Qwen-Image-Edit 2511 Instruction Rewriter.md`, `Qwen-Image/Qwen-Image-Edit 2509 Instruction Rewriter.md` | The closing JSON output example is replaced by an instruction to answer in plain text. |
 | `Z-Image/Z-Image Prompt Enhancer (Chinese).md` | The closing `用户输入 prompt: {prompt}` line is left out; the request is sent as the user message. |
 | `ERNIE Image/ERNIE Image Prompt Enhancer.md` | The system prompt is taken out of the chat template that wraps it. |
+| `Code/Code Planner.md` | Rewritten for a model with no tools that answers in one turn. The plan header, the test-run, commit and save-path steps and the execution handoff are left out. The audience, task-size, placeholder and proportion rules are kept, the two-or-three-approaches rule comes from brainstorming, and a fixed answer layout is added. |
+| `Code/Code Writer.md` | Rewritten for a model with no tools that writes from a plan. The shell, add-files-to-chat, rename and go-ahead instructions and the worked examples are left out. The lazy and overeager prompts are kept as written, the SEARCH/REPLACE rules are condensed, and whole-file output for the first round is added. |
+| `Code/Code Reviewer.md` | Rewritten for whole files rather than a pull request. The eight bug guidelines are condensed and the fourth reads as a later-review rule; the comment guidelines are folded into the layout. The JSON output, file paths and line ranges are replaced by a plain labelled layout with an exact code line, using the P0 to P3 scale and the issue fields of code-reviewer.md. Plan coverage findings are added. |
+| `Code/Code Reviser.md` | Rewritten for a model with no tools that answers in one turn. Checking against the codebase reads as checking against the code given; the GitHub, test and clarify-before-acting steps are left out. Aider's overeager prompt is reworded from the user's request to the review, its SEARCH/REPLACE rules are condensed, and a fixed answer layout and a retry rule for edits that did not apply are added. |

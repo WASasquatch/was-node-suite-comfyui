@@ -3738,7 +3738,7 @@ class CanvasView extends BaseView {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            node_id: String(node.id), action: "resume",
+            node_id: node.__was_hold_id ?? String(node.id), action: "resume",
             value: this.OUTPUT_MARKER + dataUrl,
             client_id: String(globalThis.app?.api?.clientId || globalThis.app?.api?.initialClientId || ""),
           }),

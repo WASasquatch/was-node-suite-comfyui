@@ -29,6 +29,12 @@
       "description": "One prompt at 16 MP three ways: plain, H3 Image Blank Guidance in blank mode for clean, photographic skin, and in subtraction mode for more detail, each compared with plain."
     },
     {
+      "file": "h3-image-visrow.json",
+      "section": "Image generation and sampling",
+      "title": "MiniMax H3 Image with VisRow conditioning",
+      "description": "One prompt at 16 MP with MiniMax H3 Image Conditioning and with H3 Image VisRow Conditioning at strength 1, compared, then the VisRow picture edited as Picture 1 through a second VisRow node."
+    },
+    {
       "file": "image_minimax_h3_image_t2i.json",
       "section": "Image generation and sampling",
       "title": "MiniMax H3 Image with a prompt enhancer",
@@ -645,6 +651,18 @@
       "section": "Language models and Llama-Index",
       "title": "MOSS-Image prompt from a skill",
       "description": "A MOSS-Image prompt written by a system prompt skill with its references looked up in an index, compiled for MOSS-Image."
+    },
+    {
+      "file": "llm-code-writing.json",
+      "section": "Language models and Llama-Index",
+      "title": "Code writing conversation",
+      "description": "A request planned, written, reviewed and revised by four language model roles until the review passes, then held on the canvas for feedback that starts the next round."
+    },
+    {
+      "file": "llm-node-writing.json",
+      "section": "Language models and Llama-Index",
+      "title": "ComfyUI node writing conversation",
+      "description": "The code writing conversation with a ComfyUI node authoring skill joined to every role, writing a standalone custom node package."
     },
     {
       "file": "caption-datasets.json",

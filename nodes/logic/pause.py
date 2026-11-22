@@ -77,7 +77,7 @@ class Pause(io.ComfyNode):
                     tooltip="true where Resume was pressed, false where the wait ran out.",
                 ),
             ],
-            hidden=[io.Hidden.unique_id],
+            hidden=[io.Hidden.unique_id, io.Hidden.dynprompt],
         )
 
     @classmethod
@@ -102,13 +102,13 @@ class Pause(io.ComfyNode):
             What arrived, how the wait ended, and whether Resume was pressed.
         """
         from ...modules.compat.lists import as_list
-        from ...modules.interface.pause import RESUMED, wait_for_resume
+        from ...modules.interface.pause import RESUMED, held_id, wait_for_resume
 
         held = as_list(value) or [None]
         shown = as_list(message)
         limit = as_list(timeout)
         outcome, _ = wait_for_resume(
-            str(cls.hidden.unique_id),
+            held_id(cls.hidden.unique_id, cls.hidden.dynprompt),
             timeout=float(limit[0]) if limit else 600.0,
             message=str(shown[0]) if shown else "",
         )

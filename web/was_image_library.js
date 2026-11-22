@@ -8,6 +8,7 @@ import { api } from "../../scripts/api.js";
 import { app } from "../../scripts/app.js";
 import { findWidget, writeWidget } from "./interface/audio_view.js";
 import { CARD_LOOK } from "./interface/card.js";
+import { executionId, nodeForExecutionId } from "./interface/preview.js";
 import { fetchWithin } from "./interface/request.js";
 import { fetchRunResult } from "./interface/run_result.js";
 import { themeVar } from "./interface/theme.js";
@@ -585,7 +586,7 @@ function createLibraryPanel(node) {
       const answer = await fetchWithin(PAUSE_ROUTE, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ node_id: String(node.id), action: "resume", value: key, client_id: clientId() }),
+        body: JSON.stringify({ node_id: executionId(node), action: "resume", value: key, client_id: clientId() }),
       });
       if (!answer.ok) console.error(`[${EXT_NAME}] The run was not resumed:`, answer.status);
     } catch (error) {
@@ -642,7 +643,7 @@ async function isWaiting(node) {
   try {
     const answer = await fetchWithin(`${PAUSE_ROUTE}?client_id=${encodeURIComponent(clientId())}`);
     const body = await answer.json();
-    return (body?.waiting ?? []).some((hold) => String(hold.node_id) === String(node.id));
+    return (body?.waiting ?? []).some((hold) => String(hold.node_id) === executionId(node));
   } catch (error) {
     console.error(`[${EXT_NAME}] Failed to read whether the run is held:`, error);
     return false;
@@ -653,8 +654,8 @@ app.registerExtension({
   name: EXT_NAME,
 
   async setup() {
-    api.addEventListener("was-pause", ({ detail }) => panels.get(String(detail?.node_id))?.held(true));
-    api.addEventListener("was-pause-done", ({ detail }) => panels.get(String(detail?.node_id))?.held(false));
+    api.addEventListener("was-pause", ({ detail }) => panels.get(String(nodeForExecutionId(detail?.node_id)?.id))?.held(true));
+    api.addEventListener("was-pause-done", ({ detail }) => panels.get(String(nodeForExecutionId(detail?.node_id)?.id))?.held(false));
     // Every panel asks again once a run has finished.
     api.addEventListener("execution_success", () => {
       for (const panel of panels.values()) panel.refresh();

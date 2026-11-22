@@ -18,6 +18,7 @@ __all__ = [
     "CANCELLED",
     "TIMED_OUT",
     "waiting",
+    "held_id",
     "wait_for_resume",
     "register_routes",
 ]
@@ -66,6 +67,26 @@ def waiting(client: str) -> list[dict]:
          "waited": round(now - hold["started"], 1)}
         for node_id, hold in current
     ]
+
+
+def held_id(unique_id, dynprompt=None) -> str:
+    """The id a node holds a run under: the canvas node it was drawn from.
+
+    Args:
+        unique_id: The executing node's id, a loop iteration's copy included.
+        dynprompt: The run's ``DynamicPrompt``, or ``None``.
+
+    Returns:
+        The display id, such as ``12`` or ``30:55`` inside a subgraph, or ``unique_id`` itself
+        where the run gives no display id.
+    """
+    key = str(unique_id)
+    if dynprompt is None:
+        return key
+    try:
+        return str(dynprompt.get_display_node_id(key) or key)
+    except Exception:
+        return key
 
 
 def _queued_client() -> str:

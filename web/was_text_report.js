@@ -1,5 +1,5 @@
 /**
- * The report drawn on the text batch nodes.
+ * The report drawn on the text batch nodes and others.
  *
  * Every node listed below gets the pack's report panel: its summary, figures, facts and the
  * texts it published, such as what a replace changed or which captions were flagged.
@@ -32,6 +32,8 @@ const PANELS = {
   WASDatasetFilter: [300, "run to split the dataset", {}],
   WASDatasetMerge: [260, "run to join the datasets", {}],
   WASJSONValidate: [320, "run to check the JSON", { unit: "" }],
+  WASApplyCodeEdits: [360, "run to apply the edits", { unit: "" }],
+  WASH3ImageVisRowConditioning: [200, "run to see what was encoded", { unit: "" }],
 };
 
 /**

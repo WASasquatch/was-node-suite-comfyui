@@ -210,7 +210,7 @@ class ImageLibrarySearch(io.ComfyNode):
                     ),
                 ),
             ],
-            hidden=[io.Hidden.unique_id],
+            hidden=[io.Hidden.unique_id, io.Hidden.dynprompt],
         )
 
     @classmethod
@@ -349,7 +349,7 @@ class ImageLibrarySearch(io.ComfyNode):
         if pause:
             report(chosen, note=": pick a match, then Continue")
             outcome, value = hold.wait_for_resume(
-                str(cls.hidden.unique_id), timeout=float(hold_timeout),
+                hold.held_id(cls.hidden.unique_id, cls.hidden.dynprompt), timeout=float(hold_timeout),
                 message="Pick a match, then Continue",
             )
             picked = library.find(value.strip()) if outcome == hold.RESUMED and value.strip() else None

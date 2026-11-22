@@ -1,10 +1,10 @@
 # Workflow index
 
-All 125 example graphs in [`docs/workflows`](workflows), by area. A file opens when it is dragged onto the ComfyUI canvas, or from the Workflows sidebar once it is in `ComfyUI/user/default/workflows`, and ComfyUI offers each model it lacks for download.
+All 128 example graphs in [`docs/workflows`](workflows), by area. A file opens when it is dragged onto the ComfyUI canvas, or from the Workflows sidebar once it is in `ComfyUI/user/default/workflows`, and ComfyUI offers each model it lacks for download.
 
 | Section | Workflows |
 |---|--:|
-| [Image generation and sampling](#image-generation-and-sampling) | 16 |
+| [Image generation and sampling](#image-generation-and-sampling) | 17 |
 | [Image editing](#image-editing) | 9 |
 | [Photo and film looks](#photo-and-film-looks) | 4 |
 | [Colour, HDR and scopes](#colour-hdr-and-scopes) | 5 |
@@ -15,7 +15,7 @@ All 125 example graphs in [`docs/workflows`](workflows), by area. A file opens w
 | [Video editing and restoration](#video-editing-and-restoration) | 8 |
 | [3D and Three.js](#3d-and-threejs) | 15 |
 | [Prompts and text](#prompts-and-text) | 9 |
-| [Language models and Llama-Index](#language-models-and-llama-index) | 8 |
+| [Language models and Llama-Index](#language-models-and-llama-index) | 10 |
 | [Files, datasets and documents](#files-datasets-and-documents) | 7 |
 | [Logic, loops and apps](#logic-loops-and-apps) | 8 |
 
@@ -27,6 +27,7 @@ All 125 example graphs in [`docs/workflows`](workflows), by area. A file opens w
 |---|---|---|---|
 |  | **MiniMax H3 Image at 16 megapixels** | Text to image with MiniMax H3 Image through H3 Image Sampler, at 16 megapixels on a 24 GB card with H3 Low VRAM and Free Memory. | [open](workflows/minimax-h3-image-sampler.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/minimax-h3-image-sampler.json) |
 | <a href="workflows/images/h3-image-blank-guidance.webp"><img src="workflows/images/h3-image-blank-guidance.webp" width="240" alt="MiniMax H3 Image with blank guidance"></a> | **MiniMax H3 Image with blank guidance** | One prompt at 16 MP three ways: plain, H3 Image Blank Guidance in blank mode for clean, photographic skin, and in subtraction mode for more detail, each compared with plain. | [open](workflows/h3-image-blank-guidance.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/h3-image-blank-guidance.json) |
+|  | **MiniMax H3 Image with VisRow conditioning** | One prompt at 16 MP with MiniMax H3 Image Conditioning and with H3 Image VisRow Conditioning at strength 1, compared, then the VisRow picture edited as Picture 1 through a second VisRow node. | [open](workflows/h3-image-visrow.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/h3-image-visrow.json) |
 |  | **MiniMax H3 Image with a prompt enhancer** | MiniMax H3 Image text to image with a switchable prompt enhancer that expands a few words into a full caption and picks the aspect ratio, starting at 4 megapixels. | [open](workflows/image_minimax_h3_image_t2i.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/image_minimax_h3_image_t2i.json) |
 |  | **Fibo 2.0 generate and edit** | Generate Fibo 2 Prompt writes a structured caption, Fibo 2.0 Dev renders it, and Fibo 2.0 Edit Turbo changes a loaded picture from an instruction. | [open](workflows/fibo2-generate-edit.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/fibo2-generate-edit.json) |
 |  | **BluePixel text to image** | BluePixel-Turbo renders a picture from a prompt with its own loaders and scheduler. | [open](workflows/bluepixel-text-to-image.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/bluepixel-text-to-image.json) |
@@ -212,6 +213,8 @@ All 125 example graphs in [`docs/workflows`](workflows), by area. A file opens w
 |  | **Text, pictures, video and tables in one index** | Text, a picture, a video and a table turned into documents and indexed together, then searched and shown as pictures. | [open](workflows/llm-to-documents.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/llm-to-documents.json) |
 |  | **Vector store** | An index kept in a vector store between runs, and a document added to the stored index. | [open](workflows/llm-vector-store.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/llm-vector-store.json) |
 |  | **MOSS-Image prompt from a skill** | A MOSS-Image prompt written by a system prompt skill with its references looked up in an index, compiled for MOSS-Image. | [open](workflows/llm-skill-prompt-enhancer.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/llm-skill-prompt-enhancer.json) |
+|  | **Code writing conversation** | A request planned, written, reviewed and revised by four language model roles until the review passes, then held on the canvas for feedback that starts the next round. | [open](workflows/llm-code-writing.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/llm-code-writing.json) |
+|  | **ComfyUI node writing conversation** | The code writing conversation with a ComfyUI node authoring skill joined to every role, writing a standalone custom node package. | [open](workflows/llm-node-writing.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/llm-node-writing.json) |
 
 ---
 

@@ -113,7 +113,7 @@ class ZipManage(io.ComfyNode):
                     ),
                 ),
             ],
-            hidden=[io.Hidden.unique_id],
+            hidden=[io.Hidden.unique_id, io.Hidden.dynprompt],
             outputs=[
                 ZIP.Output(
                     display_name="zip",
@@ -226,7 +226,7 @@ class ZipManage(io.ComfyNode):
         from ...modules.interface import pause
 
         outcome, value = pause.wait_for_resume(
-            str(cls.hidden.unique_id),
+            pause.held_id(cls.hidden.unique_id, cls.hidden.dynprompt),
             timeout=float(timeout),
             message="Tick the entries to keep, then resume",
             kind=HOLD_KIND,

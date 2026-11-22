@@ -72,6 +72,24 @@ export function executionId(node) {
 }
 
 /**
+ * The node an execution id names, inside subgraphs as well as at the root.
+ *
+ * @param {string|number} id - A colon joined execution id, such as `12` or `12:5`.
+ * @returns {object|null} The node, or null when the open workflow holds none under that id.
+ */
+export function nodeForExecutionId(id) {
+  let graph = window.app?.rootGraph ?? window.app?.graph;
+  let node = null;
+  for (const part of String(id ?? "").split(":")) {
+    if (!graph || part === "") return null;
+    node = graph.getNodeById?.(Number(part)) ?? graph.getNodeById?.(part) ?? null;
+    if (!node) return null;
+    graph = node.subgraph;
+  }
+  return node;
+}
+
+/**
  * The id of the workflow open on the canvas.
  *
  * @returns {string} The root graph's id, which is the `workflow.id` a prompt queued from it

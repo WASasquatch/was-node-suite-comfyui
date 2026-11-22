@@ -277,6 +277,7 @@ const GROWING = {
   WASLLMPromptTemplate: lettered("value", 4),
   // The images an edit reads, drawn as they are wired.
   WASTextEncodeFibo2: [1, 2, 3, 4, 5].map((index) => [`image_${index}`]),
+  WASH3ImageVisRowConditioning: [1, 2, 3, 4, 5, 6, 7, 8, 9].map((index) => [`image_${index}`]),
   WASGenerateFibo2Prompt: [1, 2, 3, 4].map((index) => [`image_${index}`]),
   "Masks Combine Regions": lettered("mask"),
   "Text List Concatenate": lettered("list"),

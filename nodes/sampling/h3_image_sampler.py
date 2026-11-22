@@ -58,8 +58,9 @@ class H3ImageSampler(io.ComfyNode):
                     ],
                     tooltip=(
                         "`progressive` = the first steps on a smaller latent, grown to full size "
-                        "partway; `standard` = every step at full size, with the composition of the "
-                        "model's own Euler sampler."
+                        "partway, and an edit with reference pictures at full size throughout; "
+                        "`standard` = every step at full size, with the composition of the model's own "
+                        "Euler sampler."
                     ),
                 ),
                 io.Int.Input(

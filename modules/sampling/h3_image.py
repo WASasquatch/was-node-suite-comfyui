@@ -10,9 +10,23 @@ import math
 
 import torch
 
+from .. import log
 from . import spectral
 
-__all__ = ["sample", "start_size"]
+__all__ = ["has_references", "sample", "start_size"]
+
+logger = log.get_logger("sampling.h3_image")
+
+
+def has_references(model) -> bool:
+    """Whether the run's conditioning carries MiniMax H3 reference pictures as latents."""
+    conds = getattr(getattr(model, "inner_model", None), "conds", None) or {}
+    for entries in conds.values():
+        for entry in entries or ():
+            payload = getattr((entry.get("model_conds") or {}).get("minimax_payload"), "cond", None)
+            if isinstance(payload, dict) and payload.get("refs"):
+                return True
+    return False
 
 
 def start_size(height: int, width: int, scale: float) -> tuple[int, int]:
@@ -79,7 +93,11 @@ def sample(model, x, sigmas, extra_args=None, callback=None, disable=None, renoi
     model_sampling = model.inner_model.model_patcher.get_model_object("model_sampling")
     steps = len(sigmas) - 1
     renoised = _renoised(sigmas, renoise_steps)
-    if start_scale < 1.0 and 0 < grow_at < steps:
+    progressive = start_scale < 1.0 and 0 < grow_at < steps
+    if progressive and has_references(model):
+        logger.info("H3 Image Sampler: an edit with reference pictures runs every step at full size.")
+        progressive = False
+    if progressive:
         return _progressive(model, x, sigmas, extra_args, callback, disable, renoised, noise_scale,
                             start_scale, int(grow_at), model_sampling, noise_sampler)
 

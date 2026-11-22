@@ -18,27 +18,34 @@ const RUN_ENDED = ["execution_success", "execution_error", "execution_interrupte
 // four values the frontend passes through untouched.
 const FINISHED = "finished";
 
-
 /**
- * Read the state one node is reported in by a `progress_state` message.
+ * The finished entries a progress report holds for one canvas node: its own, and every loop
+ * iteration's copy drawn as it.
  *
- * @param {object} detail - The message payload.
+ * @param {object} detail - A `progress_state` event's detail.
  * @param {string} id - The node's execution id.
- * @returns {string} The state, or an empty string when that node is not in the message.
+ * @returns {string[]} The reported ids of the finished entries.
  */
-function stateOf(detail, id) {
-  const entry = detail?.nodes?.[id];
-  return typeof entry?.state === "string" ? entry.state : "";
+function finishedAs(detail, id) {
+  const nodes = detail?.nodes;
+  if (!nodes || typeof nodes !== "object") return [];
+  const found = [];
+  for (const [key, entry] of Object.entries(nodes)) {
+    if (entry?.state !== FINISHED) continue;
+    if (key === id || String(entry?.display_node_id ?? "") === id) found.push(key);
+  }
+  return found;
 }
 
 /**
- * Call a handler once, the first time a node is reported as finished in a run.
+ * Call a handler the first time a node is reported as finished in a run, and again for each loop
+ * iteration's copy of it.
  *
  * @param {object} node - The node the interface is drawn on. Its execution id is composed with
  *   `executionId`, so a node inside a subgraph is matched under its colon joined path.
  * @param {(info: {promptId: string, nodeId: string, cached: boolean}) => void} handler - Called
- *   at most once per run, with the prompt the node finished in and whether that prompt reported
- *   the node as served from cache.
+ *   once per run for the node and once for each copy a loop runs, with the prompt it finished in
+ *   and whether that prompt reported it as served from cache.
  * @returns {() => void} Unsubscribe. Safe to call more than once.
  */
 export function onNodeFinished(node, handler) {
@@ -64,12 +71,13 @@ export function onNodeFinished(node, handler) {
       const detail = event?.detail;
       const id = executionId(node);
       if (!id) return;
-      if (stateOf(detail, id) !== FINISHED) return;
       const promptId = String(detail?.prompt_id ?? "");
-      const key = `${promptId}\u0000${id}`;
-      if (latched.has(key)) return;
-      latched.add(key);
-      handler({ promptId, nodeId: id, cached: cached.has(id) });
+      for (const reported of finishedAs(detail, id)) {
+        const key = `${promptId}\u0000${reported}`;
+        if (latched.has(key)) continue;
+        latched.add(key);
+        handler({ promptId, nodeId: id, cached: cached.has(reported) });
+      }
     } catch (error) {
       console.error(`${LOG_PREFIX} A node-finished handler failed:`, error);
     }

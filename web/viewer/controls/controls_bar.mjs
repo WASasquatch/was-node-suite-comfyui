@@ -371,7 +371,7 @@ function createHoldControls(theme, node, elements) {
       const answer = await fetch(PAUSE_ROUTE, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ node_id: String(node.id), action: "resume", value, client_id: clientId }),
+        body: JSON.stringify({ node_id: node.__was_hold_id ?? String(node.id), action: "resume", value, client_id: clientId }),
       });
       if (!answer.ok) {
         const reply = await answer.json().catch(() => ({}));

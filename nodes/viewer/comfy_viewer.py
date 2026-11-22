@@ -300,7 +300,7 @@ class WASComfyViewer(io.ComfyNode):
             ],
             is_input_list=True,
             is_output_node=True,
-            hidden=[io.Hidden.unique_id],
+            hidden=[io.Hidden.unique_id, io.Hidden.dynprompt],
         )
 
     @classmethod
@@ -356,11 +356,11 @@ class WASComfyViewer(io.ComfyNode):
             logger.debug("content claimed by the %s view", handled.get("parser_name", "unknown"))
             display = handled["display_content"]
             if holding:
-                from ...modules.interface.pause import wait_for_resume
+                from ...modules.interface.pause import held_id, wait_for_resume
                 from ...modules.viewer.parsers.canvas_parser import CanvasParser
 
                 _, edited = wait_for_resume(
-                    str(cls.hidden.unique_id), timeout=seconds,
+                    held_id(cls.hidden.unique_id, cls.hidden.dynprompt), timeout=seconds,
                     message="edit on the canvas, then send the output",
                     kind="canvas" if CanvasParser.detect_input(content) else "text",
                     content=display,
@@ -384,14 +384,14 @@ class WASComfyViewer(io.ComfyNode):
             manual_content, excluded = [], []
 
         if holding:
-            from ...modules.interface.pause import wait_for_resume
+            from ...modules.interface.pause import held_id, wait_for_resume
 
             shown = (
                 LIST_SEPARATOR.join(to_string(item) for item in manual_content)
                 if has_content(manual_content) else source
             )
             _, edited = wait_for_resume(
-                str(cls.hidden.unique_id), timeout=seconds,
+                held_id(cls.hidden.unique_id, cls.hidden.dynprompt), timeout=seconds,
                 message="edit the content, then Continue", kind="text", content=shown,
             )
             if edited:

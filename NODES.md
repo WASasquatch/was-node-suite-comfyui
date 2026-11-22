@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **757** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **759** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-671 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+673 of them load in a fresh install. The other 86 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 513 |
+| [Always loaded](#always-loaded) | always on | 515 |
 | [`features.llm`](#featuresllm) | off | 79 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,14 +41,14 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-513 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+515 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/3D/Character](#was-suite3dcharacter) (4)
 - [WAS Suite/3D/Mesh](#was-suite3dmesh) (13)
 - [WAS Suite/3D/Model](#was-suite3dmodel) (6)
 - [WAS Suite/Animation](#was-suiteanimation) (34)
 - [WAS Suite/Archive](#was-suitearchive) (9)
-- [WAS Suite/Conditioning](#was-suiteconditioning) (3)
+- [WAS Suite/Conditioning](#was-suiteconditioning) (4)
 - [WAS Suite/Dataset](#was-suitedataset) (8)
 - [WAS Suite/Debug](#was-suitedebug) (4)
 - [WAS Suite/Document](#was-suitedocument) (6)
@@ -87,7 +87,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (12)
 - [WAS Suite/Text/Operations](#was-suitetextoperations) (7)
-- [WAS Suite/Text/Parse](#was-suitetextparse) (4)
+- [WAS Suite/Text/Parse](#was-suitetextparse) (5)
 - [WAS Suite/Text/Search](#was-suitetextsearch) (7)
 - [WAS Suite/Text/Styles](#was-suitetextstyles) (5)
 - [WAS Suite/Text/System Prompts](#was-suitetextsystem-prompts) (2)
@@ -2378,6 +2378,46 @@ Encode a prompt with CLIP after substituting Noodle Soup Prompts terminology or 
 | `conditioning` | `CONDITIONING` | The encoded prompt, for a sampler's positive or negative input. |
 | `parsed_text` | `STRING` | The prompt after substitution, the words that were actually encoded. Worth saving alongside the image, since a new seed produces different words. |
 | `raw_text` | `STRING` | The prompt exactly as typed, markup and all, before any substitution. |
+
+</details>
+
+<a id="node-wash3imagevisrowconditioning"></a>
+<details>
+<summary><b>H3 Image VisRow Conditioning</b></summary>
+
+Encode a MiniMax H3 Image prompt, with up to nine reference pictures, and add picture rows that make skin, fur and stone more photographic. Strength 1 matches reading the prompt beside a blank picture, while Picture 1 stays free for a real reference.
+
+| | |
+|---|---|
+| Node id | `WASH3ImageVisRowConditioning` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `clip` | `CLIP` | Yes |  |  | The MiniMax H3 Image text encoder, from Load CLIP with type minimax. |
+| `prompt` | `STRING` | Yes |  |  | What to make, or the edit, naming references as <Picture 1>, <Picture 2>: `Put the hat from <Picture 2> on the man in <Picture 1>`. |
+| `width` | `INT` | Yes | 0 |  | Width of the picture: `0` = image_1's width after its reference scaling, or 2048 without references. |
+| `height` | `INT` | Yes | 0 |  | Height of the picture: `0` = image_1's height after its reference scaling, or 2048 without references. |
+| `strength` | `FLOAT` | Yes | 1.0 |  | Picture rows added, in pictures' worth: `1` = 1026 rows, as a blank picture adds; `2` = crisper still; `0` = MiniMax H3 Image Conditioning unchanged. |
+| `placement` | `COMBO` | Yes | after prompt | `after prompt`, `before prompt` | `after prompt` = the rows follow the prompt; `before prompt` = between the reference pictures and the prompt. |
+| `vae` | `VAE` | No |  |  | The MiniMax H3 Image VAE. With it the reference pictures are also anchored as latents. |
+| `image_1` | `IMAGE` | No |  |  | Picture 1 in the prompt, and the picture an edit changes. |
+| `image_2` | `IMAGE` | No |  |  | Picture 2 in the prompt. |
+| `image_3` | `IMAGE` | No |  |  | Picture 3 in the prompt. |
+| `image_4` | `IMAGE` | No |  |  | Picture 4 in the prompt. |
+| `image_5` | `IMAGE` | No |  |  | Picture 5 in the prompt. |
+| `image_6` | `IMAGE` | No |  |  | Picture 6 in the prompt. |
+| `image_7` | `IMAGE` | No |  |  | Picture 7 in the prompt. |
+| `image_8` | `IMAGE` | No |  |  | Picture 8 in the prompt. |
+| `image_9` | `IMAGE` | No |  |  | Picture 9 in the prompt. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `positive` | `CONDITIONING` | The prompt with its picture rows, for the guider or sampler. |
+| `latent` | `LATENT` | An empty latent at the picture size, to sample into. |
 
 </details>
 
@@ -13470,7 +13510,7 @@ Sample MiniMax H3 Image at 4 to 16 megapixels with cleaner fine texture. By defa
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `progressive` = the first steps on a smaller latent, grown to full size partway; `standard` = every step at full size, with the composition of the model's own Euler sampler. |
+| `mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `progressive` = the first steps on a smaller latent, grown to full size partway, and an edit with reference pictures at full size throughout; `standard` = every step at full size, with the composition of the model's own Euler sampler. |
 | `renoise_steps` | `INT` | Yes | 1 |  | Last steps that re-noise the prediction with fresh noise, as lcm does. `0` = the model's Euler sampler exactly; `1` = only the step into the final one; `5` on six steps = lcm. |
 | `noise_scale` | `FLOAT` | Yes | 1.0 |  | Fresh noise in a renoised step. `1.0` = as lcm; `0.9` = softer texture; `1.1` = crisper fine detail; `1.2` = close to Euler's crunch again. |
 
@@ -15597,6 +15637,34 @@ Parse a string into a number: a float when it contains a decimal point, an int o
 </details>
 
 ### WAS Suite/Text/Parse
+
+<a id="node-wasapplycodeedits"></a>
+<details>
+<summary><b>Apply Code Edits</b></summary>
+
+Apply a language model's answer to the code it was asked to change: whole files under their paths, or SEARCH/REPLACE blocks that change only the lines they name. Hands on the new code, a diff and a report of any edit that did not fit, for the model to try again.
+
+| | |
+|---|---|
+| Node id | `WASApplyCodeEdits` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `reply` | `STRING` | Yes |  |  | The model's answer. `app.py` on a line, then a code block = that whole file; a `<<<<<<< SEARCH` ... `=======` ... `>>>>>>> REPLACE` block = those lines changed. Words around them are ignored. |
+| `code` | `STRING` | No |  |  | The code before the edits: files as `path` lines each followed by a code block, as this node hands them on, or one file as bare text. Empty = no code yet, so the reply's whole files start it. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `code` | `STRING` | The code after the edits, each file as its path then a code block; one unnamed file stays bare text. Unchanged where nothing applied. |
+| `diff` | `STRING` | A unified diff of every changed file, `--- a/app.py` then `+++ b/app.py`. Empty when nothing changed. |
+| `report` | `STRING` | `Applied 3 of 4 edits to 2 files.`, then each edit that did not fit with the closest lines found, to send back to the model. |
+| `all_applied` | `BOOLEAN` | true when no edit failed, a reply with no edits included; false when at least one block found nothing to replace. |
+
+</details>
 
 <a id="node-wasjsonvalidate"></a>
 <details>

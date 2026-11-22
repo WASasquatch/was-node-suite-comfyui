@@ -9,6 +9,7 @@ import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 import { fetchWithin } from "./interface/request.js";
 import { appendInterfaceWidget } from "./interface/widget.js";
+import { executionId, nodeForExecutionId } from "./interface/preview.js";
 
 const EXT_NAME = "WASNodeSuite.ZipManage";
 const NODE = "WASZipManage";
@@ -70,7 +71,7 @@ async function adoptExistingHold(node, picker) {
   // `was-pause` is announced once, when the hold begins. A node added after that, as a page
   // reload or opening the workflow adds it, would otherwise draw its placeholder while the
   // run stays held with nothing on the page to resume it from.
-  const hold = await heldFor(node.id);
+  const hold = await heldFor(executionId(node));
   if (!hold || hold.kind !== HOLD_KIND) return;
   const names = String(hold.content ?? "")
     .split("\n")
@@ -211,11 +212,11 @@ function createPicker(node) {
   none.addEventListener("click", () => { boxes().forEach((b) => { b.checked = false; }); count(); });
   keep.addEventListener("click", () => {
     const chosen = boxes().filter((b) => b.checked).map((b) => b.dataset.name);
-    release(node.id, "resume", chosen.length ? chosen.join("\n") : "#");
+    release(executionId(node), "resume", chosen.length ? chosen.join("\n") : "#");
     idle("Resumed.");
   });
   cancel.addEventListener("click", () => {
-    release(node.id, "cancel", "");
+    release(executionId(node), "cancel", "");
     idle("Run cancelled.");
   });
 
@@ -238,7 +239,7 @@ app.registerExtension({
   async setup() {
     api.addEventListener("was-pause", async ({ detail }) => {
       if (detail?.kind !== HOLD_KIND) return;
-      const picker = pickers.get(String(detail.node_id));
+      const picker = pickers.get(String(nodeForExecutionId(detail.node_id)?.id));
       if (!picker) return;
       const hold = await heldFor(detail.node_id);
       const names = String(hold?.content ?? "")
@@ -250,7 +251,7 @@ app.registerExtension({
     });
 
     api.addEventListener("was-pause-done", ({ detail }) => {
-      pickers.get(String(detail?.node_id))?.idle("Nothing is waiting.");
+      pickers.get(String(nodeForExecutionId(detail?.node_id)?.id))?.idle("Nothing is waiting.");
     });
 
     api.addEventListener("execution_start", () => {
