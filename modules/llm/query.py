@@ -117,11 +117,11 @@ def check_qa_prompt(text: str, node: str) -> str:
         node: The node's display name, for the message.
 
     Returns:
-        The prompt, stripped; empty when none was given.
+        The prompt, stripped, with the chunks placed above it and the question below it where
+        it has no ``{context_str}`` or ``{query_str}``; empty when none was given.
 
     Raises:
-        ValueError: The prompt is too long, misses ``{context_str}`` or ``{query_str}``, or
-            holds another field.
+        ValueError: The prompt is too long or holds another field.
     """
     prompt = str(text or "").strip()
     if not prompt:
@@ -139,13 +139,10 @@ def check_qa_prompt(text: str, node: str) -> str:
             f"{node}: qa_prompt holds {shown}, and only {{context_str}} and {{query_str}} are "
             f"filled in. Remove the other fields, or write the braces as plain words."
         )
-    missing = [field for field in QA_FIELDS if field not in fields]
-    if missing:
-        shown = " and ".join("{" + field + "}" for field in missing)
-        raise ValueError(
-            f"{node}: qa_prompt needs {shown}, where the retrieved chunks and the question go, "
-            f"such as 'Context:\\n{{context_str}}\\nAnswer: {{query_str}}'."
-        )
+    if "context_str" not in fields:
+        prompt = f"Context:\n{{context_str}}\n\n{prompt}"
+    if "query_str" not in fields:
+        prompt = f"{prompt}\n\nQuestion: {{query_str}}\nAnswer:"
     return prompt
 
 

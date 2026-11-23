@@ -69,9 +69,9 @@ class WASLLMQueryEngine(io.ComfyNode):
                 io.String.Input(
                     "qa_prompt", multiline=True, default="", optional=True,
                     tooltip=(
-                        "Replaces the question prompt. Must hold `{context_str}` and "
-                        "`{query_str}`, such as `Answer from this only:\\n{context_str}\\n"
-                        "Question: {query_str}`. Empty uses the built-in prompt."
+                        "Replaces the question prompt. Plain instructions get the retrieved chunks "
+                        "above them and the question below; `{context_str}` and `{query_str}` "
+                        "place them by hand. Empty uses the built-in prompt."
                     ),
                 ),
                 LLM_POSTPROCESSORS.Input(
