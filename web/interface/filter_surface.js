@@ -603,7 +603,7 @@ function computeLayout(width, height) {
 /**
  * Fit the picture into one panel.
  *
- * The card fills the panel. A published picture keeps its aspect and is centred.
+ * The card and a published picture both keep their aspect and are centred, once each.
  *
  * @param {{x: number, y: number, w: number, h: number}} panel - Panel in element pixels.
  * @param {object} frame - Frame from `normaliseFrame`, carrying its `kind`.
@@ -612,8 +612,8 @@ function computeLayout(width, height) {
  */
 function fitView(panel, frame) {
   if (!(panel.w > 0) || !(panel.h > 0)) return null;
-  if (frame.kind === BACKDROP_KIND.CARD) return { ...panel };
-  if (!(frame.width > 0) || !(frame.height > 0) || !frame.image) return null;
+  if (!(frame.width > 0) || !(frame.height > 0)) return null;
+  if (frame.kind !== BACKDROP_KIND.CARD && !frame.image) return null;
 
   const fit = Math.min(panel.w / frame.width, panel.h / frame.height);
   const w = Math.max(1, frame.width * fit);
@@ -982,6 +982,8 @@ export function createFilterSurface(options = {}) {
     let image = null;
     if (frame.kind === BACKDROP_KIND.CARD) {
       image = createTestCard(width, height, { originX: -margin, originY: -margin });
+      // The margin repeats the card's edge pixels, as the node's filters do at an image edge.
+      if (image) clampEdges(image, margin);
     } else {
       image = sampleImage(frame.image, width, height, view, margin);
     }
@@ -1206,25 +1208,14 @@ export function createFilterSurface(options = {}) {
   /**
    * What the picture is, in the words the footer states it in.
    *
-   * @param {object|null} info - Description from `describe`.
    * @returns {string} The name and size of the backdrop.
    */
-  function sourceSentence(info) {
+  function sourceSentence() {
     const frame = state.frame;
     if (frame.kind !== BACKDROP_KIND.CARD) {
       return `source ${Math.round(frame.width)}x${Math.round(frame.height)}`;
     }
-
-    const card = `test card ${CARD_WIDTH}x${CARD_HEIGHT}`;
-    if (!info) return card;
-    const width = Math.round(info.width);
-    const height = Math.round(info.height);
-    const repeats = width > CARD_WIDTH || height > CARD_HEIGHT;
-    const cut = width < CARD_WIDTH || height < CARD_HEIGHT;
-    if (repeats && cut) return `${card}, tiled and cropped`;
-    if (repeats) return `${card}, tiled`;
-    if (cut) return `${card}, cropped`;
-    return card;
+    return `test card ${CARD_WIDTH}x${CARD_HEIGHT}`;
   }
 
   /**
@@ -1337,7 +1328,7 @@ export function createFilterSurface(options = {}) {
     // The left holds the state the card is standing in for while it is standing in for one, and
     // the size of the picture once it is the picture, since that is there to be read rather than
     // acted on.
-    const lead = standIn || (info ? sourceSentence(info) : "");
+    const lead = standIn || (info ? sourceSentence() : "");
     const shownLead = elideText(ctx, lead, layout.areaWidth - glyphWidth - noteWidth);
     if (shownLead) {
       ctx.fillStyle = standIn && failed ? theme.warning : theme.fgMuted;
@@ -1463,7 +1454,12 @@ export function createFilterSurface(options = {}) {
     // the subject, change how much work a cost bound affords and change the factor a fidelity
     // is claimed against. Everything else is drawn at the zoom and sharpens with it: the
     // panels, the labels, the borders, the glyph and the footer.
-    const picture = view ? deviceRect(view, pictureRatio(view)) : null;
+    // The card is worked out at one buffer pixel per card pixel, the size the node would be given.
+    const picture = !view
+      ? null
+      : state.frame.kind === BACKDROP_KIND.CARD
+        ? { x: 0, y: 0, w: CARD_WIDTH, h: CARD_HEIGHT }
+        : deviceRect(view, pictureRatio(view));
     const device = view ? deviceRect(view, ratio) : null;
     let info = null;
     let drew = false;

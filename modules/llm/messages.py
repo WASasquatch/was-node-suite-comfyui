@@ -291,6 +291,23 @@ def to_dicts(messages) -> list[dict]:
     return [item.model_dump(mode="json") for item in messages or ()]
 
 
+#: Block fields naming where content lives, dropped from a saved message read back.
+ADDRESS_FIELDS = ("url", "path")
+
+
+def _held_only(row: dict) -> dict:
+    """A saved message whose blocks keep only content they hold, with no address or path."""
+    blocks = row.get("blocks")
+    if not isinstance(blocks, list):
+        return row
+    kept = [
+        {key: value for key, value in block.items() if key not in ADDRESS_FIELDS}
+        if isinstance(block, dict) else block
+        for block in blocks
+    ]
+    return {**row, "blocks": kept}
+
+
 def from_dicts(rows) -> list:
     """Messages read back from :func:`to_dicts` rows, skipping any that do not parse."""
     runtime.core()
@@ -301,7 +318,7 @@ def from_dicts(rows) -> list:
         if not isinstance(row, dict):
             continue
         try:
-            found.append(ChatMessage.model_validate(row))
+            found.append(ChatMessage.model_validate(_held_only(row)))
         except Exception as error:
             runtime.logger.debug("a saved message did not parse (%s)", error)
     return found

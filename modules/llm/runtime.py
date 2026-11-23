@@ -100,7 +100,7 @@ def core():
 
 
 def _bundled_data() -> None:
-    """Point llama-index's sentence and token data at the copies it ships when the environment names another folder."""
+    """Load llama-index's sentence and token data from the copies it ships, so none is downloaded."""
     try:
         import llama_index.core as library
         from llama_index.core.utils import globals_helper, set_global_tokenizer
@@ -111,7 +111,7 @@ def _bundled_data() -> None:
             found = generate.bundled_encoding("cl100k_base")
             if found is not None:
                 set_global_tokenizer(functools.partial(found[1].encode, allowed_special="all"))
-        if os.environ.get("NLTK_DATA") and globals_helper._punkt_tokenizer is None:
+        if globals_helper._stopwords is None or globals_helper._punkt_tokenizer is None:
             from nltk.corpus import stopwords
             from nltk.data import path as searched
             from nltk.tokenize import PunktSentenceTokenizer
@@ -119,7 +119,11 @@ def _bundled_data() -> None:
             bundled = os.path.join(os.path.dirname(os.path.abspath(library.__file__)), "_static", "nltk_cache")
             if os.path.isdir(bundled) and bundled not in searched:
                 searched.append(bundled)
-            globals_helper._stopwords = stopwords.words("english")
+            try:
+                words = stopwords.words("english")
+            except LookupError:
+                words = []
+            globals_helper._stopwords = words
             globals_helper._punkt_tokenizer = PunktSentenceTokenizer()
     except Exception as error:
         logger.debug("llama-index's bundled sentence and token data could not be set (%s)", error)

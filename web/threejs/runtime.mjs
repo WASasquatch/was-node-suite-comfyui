@@ -92,16 +92,115 @@ function isHeldAddress(address) {
     }
 }
 
+// Host name endings that name this machine or a network it sits on.
+const LOCAL_SUFFIXES = [
+    ".localhost", ".local", ".lan", ".home", ".home.arpa", ".internal", ".intranet", ".corp",
+    ".private",
+];
+
+// IPv4 ranges that are not public, as [first octets, prefix length].
+const LOCAL_IPV4 = [
+    [[0], 8], [[10], 8], [[100, 64], 10], [[127], 8], [[169, 254], 16], [[172, 16], 12],
+    [[192, 0, 0], 24], [[192, 0, 2], 24], [[192, 88, 99], 24], [[192, 168], 16],
+    [[198, 18], 15], [[198, 51, 100], 24], [[203, 0, 113], 24], [[224], 4], [[240], 4],
+    [[168, 63, 129, 16], 32],
+];
+
 /**
- * Whether an address is an absolute `http` or `https` URL.
+ * Whether four IPv4 octets fall in a range that is not public.
+ *
+ * @param {number[]} octets - The address as four numbers.
+ * @returns {boolean} True for loopback, private, link-local, shared, reserved and multicast.
+ */
+function isLocalIPv4(octets) {
+    const value = ((octets[0] << 24) | (octets[1] << 16) | (octets[2] << 8) | octets[3]) >>> 0;
+    return LOCAL_IPV4.some(([start, bits]) => {
+        const first = [0, 1, 2, 3].map((i) => start[i] || 0);
+        const base = ((first[0] << 24) | (first[1] << 16) | (first[2] << 8) | first[3]) >>> 0;
+        const mask = bits === 0 ? 0 : (0xFFFFFFFF << (32 - bits)) >>> 0;
+        return ((value & mask) >>> 0) === ((base & mask) >>> 0);
+    });
+}
+
+/**
+ * Eight 16-bit groups from an IPv6 literal, or `null`.
+ *
+ * @param {string} text - The address without brackets, as the URL parser wrote it.
+ * @returns {number[]|null} The groups.
+ */
+function ipv6Groups(text) {
+    let body = text;
+    const tail = body.match(/(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+    if (tail) {
+        const [a, b, c, d] = tail.slice(1).map(Number);
+        body = `${body.slice(0, tail.index)}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
+    }
+    const halves = body.split("::");
+    if (halves.length > 2) return null;
+    const read = (part) => (part ? part.split(":").map((group) => parseInt(group, 16)) : []);
+    const head = read(halves[0]);
+    const rest = halves.length === 2 ? read(halves[1]) : [];
+    const missing = 8 - head.length - rest.length;
+    if (missing < 0 || (halves.length === 1 && missing !== 0)) return null;
+    const groups = [...head, ...new Array(missing).fill(0), ...rest];
+    return groups.every((group) => Number.isInteger(group) && group >= 0 && group <= 0xFFFF)
+        ? groups
+        : null;
+}
+
+/**
+ * Whether an IPv6 address is not public, including an IPv4 address it carries.
+ *
+ * @param {number[]} g - The eight groups.
+ * @returns {boolean} True for loopback, unspecified, unique local, link-local, multicast,
+ *     documentation, and a mapped, compatible, 6to4, Teredo or NAT64 address carrying a local
+ *     IPv4 one.
+ */
+function isLocalIPv6(g) {
+    const octetsOf = (high, low) => [high >> 8, high & 0xFF, low >> 8, low & 0xFF];
+    if (g.slice(0, 6).every((x) => x === 0)) return true;
+    if (g.slice(0, 5).every((x) => x === 0) && g[5] === 0xFFFF) return isLocalIPv4(octetsOf(g[6], g[7]));
+    if ((g[0] & 0xFE00) === 0xFC00 || (g[0] & 0xFFC0) === 0xFE80 || (g[0] & 0xFF00) === 0xFF00) return true;
+    if (g[0] === 0x2001 && g[1] === 0x0DB8) return true;
+    if (g[0] === 0x2002) return isLocalIPv4(octetsOf(g[1], g[2]));
+    if (g[0] === 0x2001 && g[1] === 0) return isLocalIPv4(octetsOf(g[6] ^ 0xFFFF, g[7] ^ 0xFFFF));
+    if (g[0] === 0x0064 && g[1] === 0xFF9B) return isLocalIPv4(octetsOf(g[6], g[7]));
+    return false;
+}
+
+/**
+ * Whether a host, as the URL parser normalised it, names this machine or a private network.
+ *
+ * @param {string} hostname - `URL.hostname`.
+ * @returns {boolean} True for `localhost`, a name with no dot, a local name ending, and an IP
+ *     literal that is not public.
+ */
+function isLocalHost(hostname) {
+    const host = String(hostname || "").toLowerCase().replace(/\.$/, "");
+    if (!host) return true;
+    if (host.startsWith("[")) {
+        const groups = ipv6Groups(host.slice(1, -1).split("%")[0]);
+        return groups === null || isLocalIPv6(groups);
+    }
+    const ipv4 = host.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+    if (ipv4) return isLocalIPv4(ipv4.slice(1).map(Number));
+    if (host === "localhost" || !host.includes(".")) return true;
+    return LOCAL_SUFFIXES.some((suffix) => host.endsWith(suffix));
+}
+
+/**
+ * Whether an address is an absolute `http` or `https` URL on a public host.
  *
  * @param {string} address - The address a texture names.
- * @returns {boolean} True for an absolute web address.
+ * @returns {boolean} True for a web address whose host is not this machine or a private
+ *     network, and that carries no user name or password.
  */
 function isWebAddress(address) {
     try {
-        const protocol = new URL(String(address || "").trim()).protocol;
-        return protocol === "http:" || protocol === "https:";
+        const parsed = new URL(String(address || "").trim());
+        return (parsed.protocol === "http:" || parsed.protocol === "https:")
+            && !parsed.username && !parsed.password
+            && !isLocalHost(parsed.hostname);
     } catch (error) {
         return false;
     }
@@ -1370,9 +1469,15 @@ export function createRuntime(canvas, statusElement, options = {}) {
             const address = String(params.url || "");
             if (!isHeldAddress(address) && !(networkAllowed && isWebAddress(address))) {
                 throw new Error(
-                    "A texture names an address outside ComfyUI, and this page fetches only "
-                        + "pictures ComfyUI holds, so it was not fetched. Use Three Texture From "
-                        + "Image, or paste a data:image/png;base64, address into Three Texture URL."
+                    networkAllowed
+                        ? "A texture names an address on this computer or a private network, "
+                            + "and this page fetches only public web addresses, so it was not "
+                            + "fetched. Use Three Texture From Image, or give a public https:// "
+                            + "address."
+                        : "A texture names an address outside ComfyUI, and this page fetches "
+                            + "only pictures ComfyUI holds, so it was not fetched. Use Three "
+                            + "Texture From Image, or paste a data:image/png;base64, address into "
+                            + "Three Texture URL."
                 );
             }
             const loader = new THREE.TextureLoader();

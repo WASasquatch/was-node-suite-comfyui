@@ -9,7 +9,6 @@ from __future__ import annotations
 import hashlib
 import html
 import http.client
-import ipaddress
 import json
 import math
 import os
@@ -29,6 +28,7 @@ from .. import deps, log
 from ..document import markup, plaintext, tree
 from ..interface import run_result
 from ..util import file_listing, sandbox
+from ..util.addresses import public_addresses
 from . import FEATURE, runtime, wires
 
 __all__ = [
@@ -1147,7 +1147,7 @@ def fetch(url: str, timeout: float, max_bytes: int) -> Fetched:
         parts = urlsplit(current)
         host = parts.hostname or ""
         port = parts.port or (443 if parts.scheme == "https" else 80)
-        addresses = _public_addresses(host, port)
+        addresses = public_addresses(host, port, "LLM Load Web Page")
         connection, response = _request(parts, host, port, addresses, deadline)
         try:
             if response.status in (301, 302, 303, 307, 308):
@@ -1251,57 +1251,6 @@ def _checked_url(url: str) -> str:
     if not parts.hostname:
         raise ValueError("LLM Load Web Page was given an address with no host. Give a whole address, such as https://example.com/page.")
     return text
-
-
-def _public_addresses(host: str, port: int) -> list[str]:
-    """Every address a host resolves to, once each is a public one.
-
-    Raises:
-        ValueError: Any address is loopback, private, link-local, multicast, reserved or otherwise
-            not public.
-        RuntimeError: The host does not resolve.
-    """
-    try:
-        literal = ipaddress.ip_address(host)
-    except ValueError:
-        literal = None
-    if literal is not None:
-        resolved = [str(literal)]
-    else:
-        try:
-            infos = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
-        except (OSError, UnicodeError) as error:
-            raise RuntimeError(f"LLM Load Web Page could not find the host {host} ({error}).") from None
-        resolved = []
-        for info in infos:
-            address = str(info[4][0]).split("%", 1)[0]
-            if address not in resolved:
-                resolved.append(address)
-    if not resolved:
-        raise RuntimeError(f"LLM Load Web Page could not find the host {host}.")
-    for address in resolved:
-        if not _is_public(address):
-            raise ValueError(
-                f"LLM Load Web Page refuses {host}: it resolves to {address}, an address on this "
-                f"machine or a private network. Only public web addresses are fetched."
-            )
-    return resolved
-
-
-def _is_public(address: str) -> bool:
-    """Whether an address is a public unicast one."""
-    try:
-        ip = ipaddress.ip_address(address)
-    except ValueError:
-        return False
-    if isinstance(ip, ipaddress.IPv6Address):
-        for inner in (ip.ipv4_mapped, ip.sixtofour, (ip.teredo or (None, None))[1]):
-            if inner is not None and not _is_public(str(inner)):
-                return False
-    return not (
-        ip.is_loopback or ip.is_private or ip.is_link_local or ip.is_multicast
-        or ip.is_reserved or ip.is_unspecified or not ip.is_global
-    )
 
 
 def _request(parts, host: str, port: int, addresses: list[str], deadline: float):

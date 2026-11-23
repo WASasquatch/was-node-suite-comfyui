@@ -22,6 +22,7 @@ __all__ = [
     "refuse_remote",
     "refuse_script",
     "remote_address",
+    "remote_addresses",
     "require_spec",
 ]
 
@@ -170,6 +171,33 @@ def remote_address(value) -> str | None:
     return None
 
 
+def remote_addresses(value):
+    """Every address in a descriptor tree that reaches past this server.
+
+    Args:
+        value: A descriptor, or any part of one.
+
+    Yields:
+        Each ``params.url`` and ``params.resources`` address that leaves the server.
+    """
+    if isinstance(value, dict):
+        params = value.get("params")
+        if isinstance(params, dict):
+            address = params.get(URL_PARAM)
+            if address is not None and leaves_server(address):
+                yield str(address)
+            resources = params.get(RESOURCES_PARAM)
+            if isinstance(resources, dict):
+                for where in resources.values():
+                    if leaves_server(where):
+                        yield str(where)
+        for entry in value.values():
+            yield from remote_addresses(entry)
+    elif isinstance(value, (list, tuple)):
+        for entry in value:
+            yield from remote_addresses(entry)
+
+
 def refuse_remote(value, where: str) -> None:
     """Stop a scene fetching from another machine unless ``features.network`` is on.
 
@@ -179,14 +207,18 @@ def refuse_remote(value, where: str) -> None:
 
     Raises:
         ValueError: The scene names an address past this server, or sets
-            ``params.network``, and ``features.network`` is off.
+            ``params.network``, and ``features.network`` is off; or it names an address
+            on this machine or a private network.
     """
     address = remote_address(value)
     if address is None:
         return
     from ..model import NETWORK_FEATURE, network_enabled
+    from ..util.addresses import refuse_local
 
     if network_enabled():
+        for each in remote_addresses(value):
+            refuse_local(each, where)
         return
     raise ValueError(
         f"{where} was given a scene that has the browser fetch {address[:80]} from another "
@@ -204,20 +236,29 @@ def refuse_script(value, where: str) -> None:
         where: Name of the node, for the message.
 
     Raises:
-        ValueError: The scene carries code and ``threejs.allow_scripts`` is off, or names
-            an address past this server and ``features.network`` is off.
+        ValueError: The scene carries code while ``threejs.allow_scripts`` or
+            ``features.network`` is off, or names an address the network rules refuse.
     """
     from ..config import group_enabled
+    from ..model import NETWORK_FEATURE, network_enabled
 
     refuse_remote(value, where)
-    if not carries_script(value) or group_enabled(ALLOW_SCRIPTS):
+    if not carries_script(value):
         return
-    raise ValueError(
-        f"{where} was given a scene carrying javascript, which runs in this browser with "
-        f"the same reach as ComfyUI itself. It is refused while {ALLOW_SCRIPTS} is false. "
-        f"Set it to true in config.yaml to run scenes that script themselves, and only for "
-        f"workflows you wrote or have read."
-    )
+    if not group_enabled(ALLOW_SCRIPTS):
+        raise ValueError(
+            f"{where} was given a scene carrying javascript, which runs in this browser with "
+            f"the same reach as ComfyUI itself. It is refused while {ALLOW_SCRIPTS} is false. "
+            f"Set it to true in config.yaml to run scenes that script themselves, and only for "
+            f"workflows you wrote or have read."
+        )
+    if not network_enabled():
+        raise ValueError(
+            f"{where} was given a scene carrying javascript, which can reach any address this "
+            f"browser can, so it is refused while {NETWORK_FEATURE} is off. Turn "
+            f"{NETWORK_FEATURE} on in config.yaml as well as {ALLOW_SCRIPTS} to run scenes that "
+            f"script themselves."
+        )
 
 
 def create_spec(

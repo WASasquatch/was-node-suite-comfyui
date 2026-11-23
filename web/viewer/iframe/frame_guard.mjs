@@ -1,9 +1,26 @@
 /**
- * The two scripts a Content Viewer frame runs while `viewer.allow_scripts` is off.
+ * The scripts a Content Viewer frame runs ahead of its content: the guard and placement while
+ * `viewer.allow_scripts` is off, and the navigation hold while it is on.
  *
  * Each function is written into the frame as its own source text, so it reads nothing
  * outside its own body.
  */
+
+/**
+ * Cancel every navigation the frame starts that would leave its document.
+ *
+ * Downloads of a `blob:` or `data:` picture the frame built itself go through.
+ */
+export function navigationHold() {
+  if (window.navigation && typeof window.navigation.addEventListener === "function") {
+    window.navigation.addEventListener("navigate", function (event) {
+      var destination = event.destination;
+      if (destination && destination.sameDocument) return;
+      if (event.downloadRequest !== null && destination && /^(blob|data):/i.test(destination.url)) return;
+      if (event.cancelable) event.preventDefault();
+    });
+  }
+}
 
 /**
  * Hold the frame to its own document and run only the scripts the viewer sends it.

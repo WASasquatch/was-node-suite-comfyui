@@ -10,7 +10,7 @@ from ...modules import log
 from ...modules.compat import limits
 from ...modules.compat.types import WAS_VIDEO_METADATA
 from ...modules.image import sizing
-from ...modules.media import reader, sampling
+from ...modules.media import demux, reader, sampling
 
 logger = log.get_logger("nodes.io")
 
@@ -53,6 +53,7 @@ def _streamed(path: str, start: int, end: int, num_frames: int, target_fps: floa
     begin = first / source.fps
     seconds = count / source.fps
     trimmed = first > 0 or stop < source.frame_count
+    demux.refuse_foreign_probe(path, "Load Video")
     video = InputImpl.VideoFromFile(path, start_time=begin, duration=seconds if trimmed else 0)
     audio = reader.audio_span(path, begin, seconds) if source.has_audio else None
     blocked = ExecutionBlocker(

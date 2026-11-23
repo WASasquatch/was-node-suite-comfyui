@@ -14,7 +14,7 @@ import {
 import { getPrismTheme, getPrismScriptTags } from "../views/code_scripts.mjs";
 import { loadCssFile, getCssBasePath } from "../utils/css.mjs";
 import { getFullTheme, themeToCssVars } from "../utils/theme.mjs";
-import { frameGuard, placeContent } from "./frame_guard.mjs";
+import { frameGuard, navigationHold, placeContent } from "./frame_guard.mjs";
 
 const LIST_SEPARATOR = "\n---LIST_SEPARATOR---\n";
 
@@ -256,7 +256,8 @@ function buildListScript(items, nodeId) {
 // The policy every framed document carries while `viewer.allow_scripts` is on.
 const POLICY = "default-src 'self' data: blob:; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; connect-src 'self' data: blob:; frame-src 'none'; object-src 'none'; form-action 'none'";
 
-const POLICY_TAG = `<meta http-equiv="Content-Security-Policy" content="${POLICY}">`;
+const POLICY_TAG = `<meta http-equiv="Content-Security-Policy" content="${POLICY}">`
+  + `<meta http-equiv="x-dns-prefetch-control" content="off">`;
 
 /**
  * Build complete iframe HTML content
@@ -285,12 +286,14 @@ export function buildIframeContent(content, contentType, theme, excluded = [], n
     && Boolean(htmlView?.isFullDocument?.(content));
 
   if (fullDocument && allowScripts) {
+    // The navigation hold runs before any of the document's own scripts.
+    const holdScript = `<script>${frameCall(navigationHold)}<\/script>`;
     // The theme goes in first, at the lowest specificity the page can carry, so a
     // document that styles itself paints over it and one that does not reads as the
     // node around it.
     // The policy leads the document. Anything after it is covered, including markup that
     // opens a script before it opens a head.
-    return `${POLICY_TAG}<style id="was-theme-base">${baseStyles}</style>${content}`;
+    return `${POLICY_TAG}${holdScript}<style id="was-theme-base">${baseStyles}</style>${content}`;
   }
 
   let bodyContent = "";
@@ -348,6 +351,7 @@ export function buildIframeContent(content, contentType, theme, excluded = [], n
   // Bootstrap script for postMessage-based script injection
   // This avoids embedding large scripts inline which can break HTML parsing
   const bootstrapScript = `<script>
+    ${frameCall(navigationHold)}
     window.WAS_NODE_ID = ${scriptJson(String(nodeId || ''))};
     window.WAS_SCRIPTS_LOADED = false;
     window.addEventListener('message', function(event) {

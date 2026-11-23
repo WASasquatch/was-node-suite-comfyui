@@ -56,6 +56,7 @@ const TOOLBAR = [
 // `data:` and `blob:`; fonts from that origin and `data:`; stylesheets from that origin and
 // inline. Frames, requests, form posts and `<base>` are refused.
 const CONTENT_SECURITY_POLICY = [
+  "default-src 'none'",
   "script-src 'none'",
   "object-src 'none'",
   "img-src 'self' data: blob:",

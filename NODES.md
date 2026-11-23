@@ -23787,7 +23787,7 @@ Carry the first frame of an image batch into any of a material's map sockets, ti
 <details>
 <summary><b>Three Texture URL</b></summary>
 
-A texture the browser reads for itself, from a data URL already holding the bytes, or from a web address when features.network is on in config.yaml. A remote address has to allow cross-origin reads or the texture arrives blank. To use a picture from the graph, reach for Three Texture From Image instead.
+A texture the browser reads for itself, from a data URL already holding the bytes, or from a public web address when features.network is on in config.yaml. A remote address has to allow cross-origin reads or the texture arrives blank. To use a picture from the graph, reach for Three Texture From Image instead.
 
 | | |
 |---|---|
@@ -23798,7 +23798,7 @@ A texture the browser reads for itself, from a data URL already holding the byte
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `url` | `STRING` | Yes |  |  | Where to read from, as a `data:image/png;base64,` string, or `https://example.com/wood.jpg` with features.network on. Tokens such as [time] are left as typed. |
+| `url` | `STRING` | Yes |  |  | Where to read from, as a `data:image/png;base64,` string, or `https://example.com/wood.jpg` with features.network on. Addresses on this computer or a local network are refused. Tokens such as [time] are left as typed. |
 | `color_space` | `COMBO` | Yes | srgb | `srgb`, `linear-srgb`, `none` | 'srgb' for a colour map such as albedo; 'linear-srgb' for normal, roughness, metalness or alpha. |
 | `wrap_s` | `COMBO` | Yes | clamp | `clamp`, `repeat`, `mirrored-repeat` | What happens past the horizontal edge. 'clamp' stretches the edge pixel, 'repeat' tiles. |
 | `wrap_t` | `COMBO` | Yes | clamp | `clamp`, `repeat`, `mirrored-repeat` | What happens past the vertical edge. 'clamp' stretches the edge pixel, 'repeat' tiles. |

@@ -271,7 +271,7 @@ const DEFAULT_SANDBOX = "allow-scripts allow-forms allow-popups allow-modals all
 // and reads what ComfyUI serves it directly, which a null origin is answered 403 for.
 export const DIRECT_URL_SANDBOX = "allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock allow-downloads";
 
-// Permissions a frame never holds while `viewer.allow_scripts` is off.
+// Permissions a framed document never holds.
 const NAVIGATING = new Set([
   "allow-forms",
   "allow-popups-to-escape-sandbox",
@@ -294,8 +294,8 @@ export function getViewSandboxAttributes(contentType, allowScripts = false) {
     : DEFAULT_SANDBOX;
   // A view may ask for further permissions, and never for this one: the document here is
   // built from what a node holds, which arrives with whatever workflow was opened.
-  const framed = withoutSameOrigin(asked);
-  return allowScripts === true ? framed : withoutNavigation(framed);
+  const framed = withoutNavigation(withoutSameOrigin(asked));
+  return allowScripts === true ? withoutToken(framed, "allow-popups") : framed;
 }
 
 /**
@@ -312,6 +312,17 @@ function withoutNavigation(attributes) {
     .filter((token) => token && !NAVIGATING.has(token));
   if (!kept.includes("allow-scripts")) kept.unshift("allow-scripts");
   return kept.join(" ");
+}
+
+/**
+ * Sandbox attributes with one permission removed.
+ *
+ * @param {string} attributes
+ * @param {string} token - The permission to drop.
+ * @returns {string} `attributes` without `token`.
+ */
+function withoutToken(attributes, token) {
+  return String(attributes || "").split(/\s+/).filter((each) => each && each !== token).join(" ");
 }
 
 /**

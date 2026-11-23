@@ -13,7 +13,7 @@ input that reaches it is fixed fastest.
 |---|---|
 | Start a process | No `subprocess`, `multiprocessing` or `pty`, and no `os.system`, `os.popen`, `os.exec*`, `os.spawn*`, `os.posix_spawn`, `os.startfile`, `os.fork` or `asyncio.create_subprocess_*`, in any import form |
 | Install a package | Nothing runs `pip`. A feature group that needs a library names it in the log with the command to run |
-| Execute supplied code on the server | No `eval`, no `exec`, no `compile` of runtime input. Supplied JavaScript runs in the browser in three places, all below: Three.js scenes while `threejs.allow_scripts` is on, the page Three Compile writes under the same setting, and the Content Viewer's sandboxed frame while `viewer.allow_scripts` is on, which it is not by default |
+| Execute supplied code on the server | No `eval`, no `exec`, no `compile` of runtime input. Supplied JavaScript runs in the browser in three places, all below: Three.js scenes while `threejs.allow_scripts` and `features.network` are both on, the page Three Compile writes under the same settings, and the Content Viewer's sandboxed frame while `viewer.allow_scripts` is on, which it is not by default |
 | Load arbitrary pickles | Every `torch.load` passes `weights_only=True`, and Load Cache, which reads a file a person picks, refuses torch older than 2.6. Every `comfy.utils.load_torch_file` passes `safe_load=True`. Diffusers Hub Model Down-Loader fetches and loads `.safetensors` weights only, and BLIP and CLIPSeg load `model.safetensors` only. The checkpoint and Diffusers model loaders hand a model-folder file to ComfyUI's own loading code, as ComfyUI's loader nodes do |
 | Require any package | The default node set installs nothing, and `requirements.txt` names no package. `requirements-optional.txt` points at `requirements/document_export.txt`, which names three packages for the `document_export` group, and at `requirements/llm.txt`, which names the packages of the `llm` group. Nothing installs them: each group prints the command for a person to run |
 
@@ -49,13 +49,21 @@ Down-Loader fetch the repository the workflow names into the model folder: its c
 its `.safetensors` weights. LLM Embedding Model, LLM Rerank and LLM Transformers Loader fetch
 only a repository on their own fixed list, its configuration, tokenizer and `.safetensors`
 weights, into `models/LLM`, and load no model carrying its own code. Three Texture URL lets the browser load the `http` or `https`
-address the node was given. The browser learns whether `features.network` is on from what the
-server sends with a scene, never from the scene itself. Every other address the browser is
-handed is the pack's own asset route, a `data:` URL, a `blob:` URL or one of the ten fixed
-Marigold v2 downloads below, and the Three.js runtime turns any other address a scene or a model
-names into an empty file. Content shown in the Content Viewer reaches no other address while
+address the node was given when its host is public. An address carrying a user name or
+password, a host named `localhost`, a name with no dot, a name ending in `.localhost`, `.local`,
+`.lan`, `.home`, `.home.arpa`, `.internal`, `.intranet`, `.corp` or `.private`, and a host
+whose address is loopback, private, link-local, multicast, reserved, unspecified, `168.63.129.16`
+or on a network this machine sits on, is refused by the node, by every node handing a scene to
+the browser, and again by the browser before it fetches. The browser learns whether
+`features.network` is on from what the server sends with a scene, never from the scene itself.
+Every other address the browser is handed is the pack's own asset route, a `data:` URL, a
+`blob:` URL or one of the ten fixed Marigold v2 downloads below. The Three.js runtime turns any
+other address a model names into an empty file, and refuses any other address a texture or an
+environment names. Content shown in the Content Viewer reaches no other address while
 `viewer.allow_scripts` is off, whatever `features.network` is set to: it runs no script of its
-own and cannot move its frame.
+own and cannot move its frame. With `viewer.allow_scripts` on, a document loads and connects
+only to this server, `data:` and `blob:` URLs, opens no window, and has every navigation away
+from it cancelled in a browser with the Navigation API.
 
 Choosing `Marigold v2` on Power Preprocessor names any of its ten files the model folders lack
 in ComfyUI's missing models list, each with its fixed address under
@@ -80,7 +88,8 @@ Two modules are HTTP clients, both loaded only with `features.llm` on and both r
 request while `features.network` is off. `modules/llm/documents.py` fetches a web page for LLM
 Load Web Page and for the web page tool an agent calls, through `http.client` and
 `socket.create_connection`: `http` and `https` only, refusing a host any of whose addresses is
-loopback, private, link-local, multicast, reserved or unspecified, checking again after each of
+loopback, private, link-local, multicast, reserved, unspecified, `168.63.129.16` or on a network
+this machine sits on, including one carried inside an IPv6 address, checking again after each of
 at most five redirects, connecting only to an address it checked, and reading at most 20 MB.
 `modules/llm/tools.py` calls three fixed services for the agent tools through `httpx`,
 following a redirect only to the same host over `https`, at most three times:
@@ -91,11 +100,14 @@ and embedding models reach their providers through those providers' own librarie
 
 No other Python code here is an HTTP client: nothing else imports `requests`, `httpx`,
 `urllib.request`, `http.client`, `urllib3` or `websockets`, and nothing else opens a socket.
-Three related names do appear, and none of them reaches the network. `aiohttp.web` registers
+`modules/util/addresses.py` looks up the host of an address LLM Load Web Page, an agent's web
+page tool or a Three.js scene names, with `socket.getaddrinfo`, only while `features.network`
+is on, and connects to nothing. Three related names do appear, and none of them reaches the
+network. `aiohttp.web` registers
 this pack's own inbound routes in 21 modules, and its client half is never used.
-`urllib.parse` reads strings in ten files: it decodes a `data:` URI and a picture's name in
+`urllib.parse` reads strings in eleven files: it decodes a `data:` URI and a picture's name in
 the document exporter, unescapes the file names a 3D model refers to, splits the address Three
-Texture URL is given, and splits the addresses the LLM nodes fetch or call and the servers
+Texture URL is given and every address the public-address check reads, and splits the addresses the LLM nodes fetch or call and the servers
 `llm.endpoints`, `llm.mcp_servers` and `llm.vector_stores` name.
 `socket.gethostname()` fills the `[hostname]` token. Tokens are not expanded in the address
 Three Texture URL or LLM Load Web Page is given. Text wired into either from another node arrives
@@ -113,7 +125,7 @@ Every LLM node loads only while `features.llm` is on, and it is off out of the b
 
 | | |
 |---|---|
-| Hosted models | LLM OpenAI, LLM Anthropic, LLM Google Gemini, LLM Provider's hosted presets and an `llm.endpoints` entry at an address other than loopback refuse to run while `features.network` is off. Each preset sends to one fixed address with the key from one fixed environment variable; a workflow supplies neither |
+| Hosted models | LLM OpenAI, LLM Anthropic, LLM Google Gemini, LLM Provider's hosted presets and an `llm.endpoints` entry at an address other than loopback refuse to run while `features.network` is off. Each preset sends to one fixed address with the key from one fixed environment variable; a workflow supplies neither. The providers' libraries and Hugging Face's also read their own address and proxy variables, such as `ANTHROPIC_BASE_URL`, `HF_ENDPOINT` and `HTTPS_PROXY`, from the environment ComfyUI starts in; the pack sets none of them, and a workflow cannot |
 | Keys | Read from the environment ComfyUI starts in, never from a widget. No key is logged, put in a run result or named in an error: error text passes through a filter that replaces anything shaped like a key and the exact value of every key, token and password the pack has read. A keyless OpenAI-compatible server, and every server LLM Provider reaches other than OpenAI, is sent the `OpenAI-Organization`, `OpenAI-Project` and `OPENAI_CUSTOM_HEADERS` headers empty, and Ollama is sent `Bearer not-needed` in place of `OLLAMA_API_KEY` when its entry names no key. A keyless OpenAI-compatible server is sent the placeholder `not-needed`, never `OPENAI_API_KEY` |
 | Values on LLM sockets | A model, index, retriever, engine, agent, document, memory, table or vector store passed between LLM nodes shows only its kind and label when a node turns it into text, such as Preview Any, so no key, server secret or document text reaches a preview, `/history` or a saved file |
 | A model nobody wired | Inside every LLM node that runs a model, llama-index's global default models are replaced by ones that raise, so no step falls back to a hosted model the graph did not connect |
@@ -143,10 +155,11 @@ Input log the names of the custom tokens defined, never their values.
 
 **Custom Update**, **Custom Object**, **Custom Material**, **Custom Geometry** and **Script
 Module** put javascript into the scene they build, and the browser runs it. A scene carrying
-code is refused while `threejs.allow_scripts` is `false`, which is the default, at every point a
-descriptor leaves the server: handed to the browser, rendered, or written into a page by **Three
+code is refused while `threejs.allow_scripts` is `false`, which is the default, or while
+`features.network` is off, at every point a descriptor leaves the server: handed to the browser, rendered, or written into a page by **Three
 Compile**. A scene naming an address outside the server, or marked to fetch from the network, is
-refused at the same points while `features.network` is off. The check reads the whole
+refused at the same points while `features.network` is off, and one naming an address on this
+machine or a private network is refused at the same points whatever the setting. The check reads the whole
 descriptor, so it covers a descriptor built any way at all. See
 [docs/CONFIG.md](docs/CONFIG.md#threejs).
 
@@ -230,7 +243,9 @@ name. Apart from those three and Three Load Model, every node's write into `inpu
 
 A video, sound or picture the pack opens with FFmpeg, through PyAV, opens only as a single-file
 container, stream or picture from local disk. A playlist, a concatenation list and any network
-protocol are refused.
+protocol are refused. A video Load Video hands to ComfyUI to read as it plays is first probed
+against every container with local files as the only protocol, and refused unless that probe
+also reads it as a single-file container.
 
 No node reads or writes the pack's settings. In the state directory, every file whose name
 begins `config.yaml`, `config.json`, `was_state.db`, `was_suite_config.json`,
@@ -344,13 +359,13 @@ While `viewer.allow_scripts` is off, the default, a document built from a node i
 scripts, event handlers, forms, `<base>` and refresh markup removed, under a policy that runs only
 the viewer's own scripts, each carrying a nonce the document cannot know. It can neither run
 supplied code nor move its own frame, and a link in it opens in a new tab only after the address
-is confirmed. With the setting on, the document runs its own scripts and can navigate its own
-frame. The browser learns the setting from a Content Viewer node's run, never from the workflow,
+is confirmed. With the setting on, the document runs its own scripts, opens no window, and has
+every navigation away from it cancelled in a browser with the Navigation API. The browser learns the setting from a Content Viewer node's run, never from the workflow,
 and holds it off until a run says otherwise.
 
 The rich text editor shows a document in a frame of this page's origin, under a content policy
-that allows no scripts, plugins, frames, forms or connections, and loads images, fonts, media
-and stylesheets only from this origin or from `data:` and `blob:` URLs.
+that allows no scripts, plugins, frames, forms or connections, loads images, fonts, media
+and stylesheets only from this origin or from `data:` and `blob:` URLs, and loads nothing else.
 
 Text a workflow carries reaches a context menu with every `<` replaced, and is drawn as text
 whatever the frontend's version.

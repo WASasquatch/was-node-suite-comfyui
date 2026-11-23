@@ -1468,8 +1468,8 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
       const sub = [entry.description, state.folder === treeFolder(entry) ? "" : treeFolder(entry)]
         .filter(Boolean).join(" · ");
       if (sub) {
-        row.appendChild(el("div", `font:${wide ? 12 : 11}px/1.4 ${SANS};color:${LOOK.muted};overflow:hidden;`
-          + "text-overflow:ellipsis;white-space:nowrap", sub));
+        row.appendChild(el("div", `font:${wide ? 12 : 11}px/1.4 ${SANS};color:${LOOK.muted};`
+          + "overflow-wrap:anywhere", sub));
       }
       row.title = entry.key;
       row.addEventListener("click", () => pick(entry.key));
@@ -1538,7 +1538,7 @@ function createPicker(node, { layout = "node", onExpand = null, onDone = null } 
     facts.filter(Boolean).join(" · ")));
     if (entry.description) {
       preview.appendChild(el("div", `flex:0 0 auto;font:${wide ? 13 : 12}px/1.45 ${SANS};color:${LOOK.muted};`
-        + (wide ? "" : "overflow:hidden;text-overflow:ellipsis;white-space:nowrap"), entry.description));
+        + "overflow-wrap:anywhere", entry.description));
     }
     const body = el("div", "flex:1 1 auto;min-height:0;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;"
       + `padding:${wide ? "10px 12px" : "6px 8px"};border-radius:6px;border:1px solid ${LOOK.border};`

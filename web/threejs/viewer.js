@@ -2,7 +2,7 @@
  * The Three.js viewer drawn on a node.
  *
  * A descriptor from the node's run is resolved into Three.js objects here. three.js is loaded
- * from `web/vendor/three`, so nothing is fetched over the network.
+ * from `web/vendor/three`.
  */
 
 import { app } from "../../../scripts/app.js";

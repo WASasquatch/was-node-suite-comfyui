@@ -12,11 +12,9 @@ from ...modules.interface import three_asset
 from ...modules.model import NETWORK_FEATURE, network_enabled
 from ...modules.threejs.spec import NETWORK_PARAM, create_spec
 from ...modules.threejs.textures import COLOR_SPACES, WRAP_MODES
+from ...modules.util.addresses import WEB_SCHEMES, refuse_local
 
 REQUIRES = "threejs"
-
-#: Schemes a web address may use once the network is allowed.
-WEB_SCHEMES = ("http", "https")
 
 
 def held_address(address: str) -> bool:
@@ -52,9 +50,10 @@ class ThreeTextureURL(io.ComfyNode):
             category="WAS Suite/Three",
             description=(
                 "A texture the browser reads for itself, from a data URL already holding the "
-                "bytes, or from a web address when features.network is on in config.yaml. A "
-                "remote address has to allow cross-origin reads or the texture arrives blank. "
-                "To use a picture from the graph, reach for Three Texture From Image instead."
+                "bytes, or from a public web address when features.network is on in "
+                "config.yaml. A remote address has to allow cross-origin reads or the texture "
+                "arrives blank. To use a picture from the graph, reach for Three Texture From "
+                "Image instead."
             ),
             inputs=[
                 io.String.Input(
@@ -63,8 +62,9 @@ class ThreeTextureURL(io.ComfyNode):
                     multiline=False,
                     tooltip=(
                         "Where to read from, as a `data:image/png;base64,` string, or "
-                        "`https://example.com/wood.jpg` with features.network on. Tokens "
-                        "such as [time] are left as typed."
+                        "`https://example.com/wood.jpg` with features.network on. Addresses on "
+                        "this computer or a local network are refused. Tokens such as [time] "
+                        "are left as typed."
                     ),
                 ),
                 io.Combo.Input(
@@ -199,6 +199,8 @@ class ThreeTextureURL(io.ComfyNode):
                 f"Three Texture URL cannot fetch {address[:80]}. Give an http:// or https:// "
                 "address, or a data:image/png;base64, string."
             )
+        if remote:
+            refuse_local(address, "Three Texture URL")
         return io.NodeOutput(
             create_spec(
                 "texture",
