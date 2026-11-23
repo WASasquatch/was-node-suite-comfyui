@@ -1,8 +1,8 @@
 {
   "id": "f8d9e17e-cdde-462d-8711-e7c63ed7485c",
   "revision": 0,
-  "last_node_id": 60,
-  "last_link_id": 44,
+  "last_node_id": 62,
+  "last_link_id": 46,
   "nodes": [
     {
       "id": 1,
@@ -2009,7 +2009,7 @@
           "name": "file_3d",
           "type": "FILE_3D",
           "links": [
-            13
+            45
           ]
         },
         {
@@ -2040,143 +2040,6 @@
         "embed_textures": true,
         "texture_format": "keep",
         "folder": "output"
-      }
-    },
-    {
-      "id": 18,
-      "type": "Preview3D",
-      "pos": [
-        5050.000193912128,
-        1587.0312167168822
-      ],
-      "size": [
-        1051,
-        1062
-      ],
-      "flags": {},
-      "order": 45,
-      "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "camera_info",
-          "name": "camera_info",
-          "shape": 7,
-          "type": "LOAD3D_CAMERA",
-          "link": null
-        },
-        {
-          "localized_name": "bg_image",
-          "name": "bg_image",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": null
-        },
-        {
-          "localized_name": "model_file",
-          "name": "model_file",
-          "type": "STRING,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
-          "widget": {
-            "name": "model_file"
-          },
-          "link": 13
-        },
-        {
-          "localized_name": "image",
-          "name": "image",
-          "type": "PREVIEW_3D",
-          "widget": {
-            "name": "image"
-          },
-          "link": null
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "Node name for S&R": "Preview3D",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "8.0"
-        },
-        "Last Time Model File": "preview3d_f16eaa13e90c463aacd94aeb7506ce2c.glb",
-        "Camera Config": {
-          "cameraType": "perspective",
-          "fov": 35,
-          "hasCustomUp": false,
-          "state": {
-            "position": {
-              "x": -4.135354477051262,
-              "y": 2.7944782707082663,
-              "z": 0.2385457432432561
-            },
-            "target": {
-              "x": -2.1778799375038463e-08,
-              "y": 0.8000000427607781,
-              "z": -2.1074454042979696e-08
-            },
-            "zoom": 1,
-            "cameraType": "perspective",
-            "quaternion": {
-              "x": -0.1617915071758626,
-              "y": -0.6692383030082286,
-              "z": -0.1527276054812224,
-              "w": 0.7089554855676069
-            },
-            "fov": 35,
-            "aspect": 1.1723744292237444,
-            "near": 0.01,
-            "far": 10000,
-            "frustum": {
-              "left": -5,
-              "right": 5,
-              "top": 5,
-              "bottom": -5
-            }
-          }
-        },
-        "Light Config": {
-          "intensity": 3,
-          "hdri": {
-            "enabled": false,
-            "hdriPath": "",
-            "showAsBackground": false,
-            "intensity": 1
-          }
-        },
-        "Scene Config": {
-          "showGrid": true,
-          "backgroundColor": "#282828",
-          "backgroundImage": "",
-          "backgroundRenderMode": "tiled",
-          "models": [
-            {
-              "position": {
-                "x": 0,
-                "y": 0,
-                "z": 0
-              },
-              "quaternion": {
-                "x": 0,
-                "y": 0,
-                "z": 0,
-                "w": 1
-              },
-              "scale": {
-                "x": 1,
-                "y": 1,
-                "z": 1
-              }
-            }
-          ]
-        }
-      },
-      "widgets_values": [
-        "preview3d_f16eaa13e90c463aacd94aeb7506ce2c.glb",
-        ""
-      ],
-      "widgets_values_named": {
-        "model_file": "preview3d_f16eaa13e90c463aacd94aeb7506ce2c.glb",
-        "image": ""
       }
     },
     {
@@ -2531,7 +2394,7 @@
       ],
       "size": [
         390,
-        440
+        456
       ],
       "flags": {},
       "order": 29,
@@ -2569,6 +2432,24 @@
             "name": "facing"
           },
           "link": null
+        },
+        {
+          "localized_name": "fingers",
+          "name": "fingers",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "fingers"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "eyes",
+          "name": "eyes",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "eyes"
+          },
+          "link": null
         }
       ],
       "outputs": [
@@ -2599,12 +2480,16 @@
       "widgets_values": [
         "T-pose",
         60000,
-        "auto"
+        "auto",
+        true,
+        true
       ],
       "widgets_values_named": {
         "rest_pose": "T-pose",
         "detail": 60000,
-        "facing": "auto"
+        "facing": "auto",
+        "fingers": true,
+        "eyes": true
       }
     },
     {
@@ -3031,7 +2916,7 @@
           "name": "file_3d",
           "type": "FILE_3D",
           "links": [
-            22
+            46
           ]
         },
         {
@@ -3062,113 +2947,6 @@
         "embed_textures": true,
         "texture_format": "keep",
         "folder": "output"
-      }
-    },
-    {
-      "id": 27,
-      "type": "Preview3D",
-      "pos": [
-        1960.0000789277713,
-        3685.031216716882
-      ],
-      "size": [
-        400,
-        550
-      ],
-      "flags": {},
-      "order": 40,
-      "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "camera_info",
-          "name": "camera_info",
-          "shape": 7,
-          "type": "LOAD3D_CAMERA",
-          "link": null
-        },
-        {
-          "localized_name": "bg_image",
-          "name": "bg_image",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": null
-        },
-        {
-          "localized_name": "model_file",
-          "name": "model_file",
-          "type": "STRING,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
-          "widget": {
-            "name": "model_file"
-          },
-          "link": 22
-        },
-        {
-          "localized_name": "image",
-          "name": "image",
-          "type": "PREVIEW_3D",
-          "widget": {
-            "name": "image"
-          },
-          "link": null
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "Node name for S&R": "Preview3D",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "8.0"
-        },
-        "Last Time Model File": "preview3d_6c6aead217d14fe0a93a028c5c2695f7.glb",
-        "Camera Config": {
-          "cameraType": "perspective",
-          "fov": 35,
-          "hasCustomUp": false
-        },
-        "Light Config": {
-          "intensity": 3,
-          "hdri": {
-            "enabled": false,
-            "hdriPath": "",
-            "showAsBackground": false,
-            "intensity": 1
-          }
-        },
-        "Scene Config": {
-          "showGrid": true,
-          "backgroundColor": "#282828",
-          "backgroundImage": "",
-          "backgroundRenderMode": "tiled",
-          "models": [
-            {
-              "position": {
-                "x": 0,
-                "y": 0,
-                "z": 0
-              },
-              "quaternion": {
-                "x": 0,
-                "y": 0,
-                "z": 0,
-                "w": 1
-              },
-              "scale": {
-                "x": 1,
-                "y": 1,
-                "z": 1
-              }
-            }
-          ]
-        }
-      },
-      "widgets_values": [
-        "preview3d_6c6aead217d14fe0a93a028c5c2695f7.glb",
-        ""
-      ],
-      "widgets_values_named": {
-        "model_file": "preview3d_6c6aead217d14fe0a93a028c5c2695f7.glb",
-        "image": ""
       }
     },
     {
@@ -4139,11 +3917,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "WASThreeLoadModel",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "WASThreeLoadModel"
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
       },
       "widgets_values": [
         "0a5e2939-8e98-42b2-ae09-0f3786689a71_model.glb [output]",
@@ -4282,11 +4061,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "WASThreeAnimateTransform",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "WASThreeAnimateTransform"
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
       },
       "widgets_values": [
         "per timeline",
@@ -4446,11 +4226,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "WASThreeLight",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "WASThreeLight"
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
       },
       "widgets_values": [
         "directional",
@@ -4616,11 +4397,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "WASThreeLight",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "WASThreeLight"
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
       },
       "widgets_values": [
         "hemisphere",
@@ -4752,11 +4534,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "WASThreeGroup",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "WASThreeGroup"
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
       },
       "widgets_values": [
         "character",
@@ -4862,11 +4645,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "WASThreeScene",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "WASThreeScene"
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
       },
       "widgets_values": [
         "#202428",
@@ -5000,11 +4784,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "WASThreePerspectiveCamera",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "WASThreePerspectiveCamera"
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
       },
       "widgets_values": [
         30,
@@ -5165,11 +4950,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "WASThreeApp",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "WASThreeApp"
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
       },
       "widgets_values": [
         true,
@@ -5252,11 +5038,12 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "WASThreeViewer",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "WASThreeViewer"
+          "input_ue_unconnectable": {},
+          "version": "8.0"
+        }
       },
       "widgets_values": [
         false,
@@ -5275,15 +5062,21 @@
         4331.031044576632
       ],
       "size": [
-        140,
-        60
+        210,
+        88
       ],
       "flags": {},
       "order": 14,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "properties": {},
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
       "widgets_values": [
         "## Springs in Three\n**Three Load Model** takes the rigged character whole, spring bones included. **Three Animate Transform** turns it and bobs it, and the hair swings in **Three Viewer**. Drag in the viewer to orbit."
       ],
@@ -5301,15 +5094,21 @@
         1107
       ],
       "size": [
-        140,
-        60
+        210,
+        88
       ],
       "flags": {},
       "order": 15,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "properties": {},
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "8.0",
+          "input_ue_unconnectable": {}
+        }
+      },
       "widgets_values": [
         "## Draw the head\n**Z-Image** draws a front view of the head and a long bare neck with no shoulders, on a plain background, and the bottom **Tripo: Generate model** turns that picture into the head. Give the head all the hair: it is kept whole, and long hair swings once the character has spring bones. Describe the head in the top **CLIP Text Encode**."
       ],
@@ -5318,6 +5117,316 @@
       },
       "color": "#432",
       "bgcolor": "#653"
+    },
+    {
+      "id": 61,
+      "type": "Preview3DAdvanced",
+      "pos": [
+        5050.000193912128,
+        1587.0312167168822
+      ],
+      "size": [
+        1051,
+        1062
+      ],
+      "flags": {},
+      "order": 45,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
+          "link": 45
+        },
+        {
+          "localized_name": "model_3d_info",
+          "name": "model_3d_info",
+          "shape": 7,
+          "type": "LOAD3D_MODEL_INFO",
+          "link": null
+        },
+        {
+          "localized_name": "camera_info",
+          "name": "camera_info",
+          "shape": 7,
+          "type": "LOAD3D_CAMERA",
+          "link": null
+        },
+        {
+          "localized_name": "viewport_state",
+          "name": "viewport_state",
+          "type": "LOAD_3D",
+          "widget": {
+            "name": "viewport_state"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "FILE_3D",
+          "links": null
+        },
+        {
+          "localized_name": "model_3d_info",
+          "name": "model_3d_info",
+          "type": "LOAD3D_MODEL_INFO",
+          "links": null
+        },
+        {
+          "localized_name": "camera_info",
+          "name": "camera_info",
+          "type": "LOAD3D_CAMERA",
+          "links": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "Preview3DAdvanced",
+        "Camera Config": {
+          "cameraType": "perspective",
+          "fov": 35,
+          "hasCustomUp": false
+        },
+        "Last Time Model File": "preview3d_advanced_0f94ae6ff82c4d18a1090d97a1741d39.glb",
+        "Last Time Model Folder": "temp",
+        "Light Config": {
+          "intensity": 3,
+          "hdri": {
+            "enabled": false,
+            "hdriPath": "",
+            "showAsBackground": false,
+            "intensity": 1
+          }
+        },
+        "Scene Config": {
+          "showGrid": true,
+          "backgroundColor": "#282828",
+          "backgroundImage": "",
+          "backgroundRenderMode": "tiled",
+          "models": [
+            {
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "quaternion": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          ]
+        }
+      },
+      "widgets_values": [
+        "",
+        1024,
+        1024
+      ],
+      "widgets_values_named": {
+        "viewport_state": "",
+        "width": 1024,
+        "height": 1024
+      }
+    },
+    {
+      "id": 62,
+      "type": "Preview3DAdvanced",
+      "pos": [
+        1960.0000789277713,
+        3685.031216716882
+      ],
+      "size": [
+        400,
+        550
+      ],
+      "flags": {},
+      "order": 40,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
+          "link": 46
+        },
+        {
+          "localized_name": "model_3d_info",
+          "name": "model_3d_info",
+          "shape": 7,
+          "type": "LOAD3D_MODEL_INFO",
+          "link": null
+        },
+        {
+          "localized_name": "camera_info",
+          "name": "camera_info",
+          "shape": 7,
+          "type": "LOAD3D_CAMERA",
+          "link": null
+        },
+        {
+          "localized_name": "viewport_state",
+          "name": "viewport_state",
+          "type": "LOAD_3D",
+          "widget": {
+            "name": "viewport_state"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model_3d",
+          "name": "model_3d",
+          "type": "FILE_3D",
+          "links": null
+        },
+        {
+          "localized_name": "model_3d_info",
+          "name": "model_3d_info",
+          "type": "LOAD3D_MODEL_INFO",
+          "links": null
+        },
+        {
+          "localized_name": "camera_info",
+          "name": "camera_info",
+          "type": "LOAD3D_CAMERA",
+          "links": null
+        },
+        {
+          "localized_name": "width",
+          "name": "width",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "localized_name": "height",
+          "name": "height",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "Node name for S&R": "Preview3DAdvanced",
+        "Camera Config": {
+          "cameraType": "perspective",
+          "fov": 35,
+          "hasCustomUp": false
+        },
+        "Last Time Model File": "preview3d_advanced_2da22e596e8b42a3bc5c85ac2a1d06f3.glb",
+        "Last Time Model Folder": "temp",
+        "Light Config": {
+          "intensity": 3,
+          "hdri": {
+            "enabled": false,
+            "hdriPath": "",
+            "showAsBackground": false,
+            "intensity": 1
+          }
+        },
+        "Scene Config": {
+          "showGrid": true,
+          "backgroundColor": "#282828",
+          "backgroundImage": "",
+          "backgroundRenderMode": "tiled",
+          "models": [
+            {
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "quaternion": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          ]
+        }
+      },
+      "widgets_values": [
+        "",
+        1024,
+        1024
+      ],
+      "widgets_values_named": {
+        "viewport_state": "",
+        "width": 1024,
+        "height": 1024
+      }
     }
   ],
   "links": [
@@ -5394,14 +5503,6 @@
       "WAS_MODEL_3D"
     ],
     [
-      13,
-      17,
-      0,
-      18,
-      2,
-      "FILE_3D"
-    ],
-    [
       14,
       5,
       0,
@@ -5456,14 +5557,6 @@
       26,
       0,
       "WAS_MODEL_3D"
-    ],
-    [
-      22,
-      26,
-      0,
-      27,
-      2,
-      "FILE_3D"
     ],
     [
       23,
@@ -5640,6 +5733,22 @@
       58,
       0,
       "THREE_APP"
+    ],
+    [
+      45,
+      17,
+      0,
+      61,
+      0,
+      "FILE_3D"
+    ],
+    [
+      46,
+      26,
+      0,
+      62,
+      0,
+      "FILE_3D"
     ]
   ],
   "groups": [
@@ -5749,6 +5858,25 @@
         120
       ]
     }
+  },
+  "extensions": {
+    "models": [
+      {
+        "name": "z_image_turbo_bf16.safetensors",
+        "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+        "directory": "diffusion_models"
+      },
+      {
+        "name": "qwen_3_4b.safetensors",
+        "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors",
+        "directory": "text_encoders"
+      },
+      {
+        "name": "ae.safetensors",
+        "url": "https://huggingface.co/Comfy-Org/Z-Image-Turbo/resolve/main/split_files/vae/ae.safetensors",
+        "directory": "vae"
+      }
+    ]
   },
   "version": 0.4,
   "models": [

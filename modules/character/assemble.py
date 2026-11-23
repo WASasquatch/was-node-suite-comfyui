@@ -57,6 +57,12 @@ HAIR_REACH = 0.45
 #: Rounds of region growing, a bound on the walk from the neck down the hair.
 HAIR_STEPS = 20000
 
+#: Distance from the cut plane, as a share of a part's size, within which a vertex lies on the cut.
+CUT_EDGE_TOLERANCE = 1e-5
+
+#: Least area of a cap on the cut that hanging hair is followed from, as a share of the neck's section.
+HAIR_CAP_SHARE = 0.05
+
 #: How a head is placed: fitted to the body's own head, sized by its neck, either by what the body
 #: has, or moved only as the body moved.
 HEAD_FITS = ("auto", "body's head", "neck width", "keep")
@@ -883,6 +889,32 @@ def head_hair(head: Model3D, level: float) -> list[torch.Tensor | None] | None:
     return masks
 
 
+def _cut_edge_faces(vertices: torch.Tensor, faces: torch.Tensor, level: float, neck_radius: float) -> torch.Tensor:
+    """``(F,)`` bool: faces below a cut at ``level`` that touch a cap on the plane, or an open border there.
+
+    Args:
+        vertices: ``(V, 3)`` welded positions.
+        faces: ``(F, 3)`` vertex indices into ``vertices``.
+        level: Height of the cut.
+        neck_radius: Radius of the neck at the cut; caps under `HAIR_CAP_SHARE` of its section are left out.
+    """
+    span = float((vertices.amax(dim=0) - vertices.amin(dim=0)).norm()) if vertices.shape[0] else 0.0
+    on_plane = (vertices[:, 1].double() - level).abs() <= CUT_EDGE_TOLERANCE * max(span, 1e-12)
+    plane_faces = on_plane[faces].all(dim=1)
+    at_cut = torch.zeros(vertices.shape[0], dtype=torch.bool)
+    if bool(plane_faces.any()):
+        caps = faces[plane_faces]
+        pieces = topology.face_components(caps, vertices.shape[0])
+        areas = torch.zeros(int(pieces.max()) + 1, dtype=torch.float64).index_add_(
+            0, pieces, topology.face_areas(vertices.double(), caps).double())
+        large = areas[pieces] >= HAIR_CAP_SHARE * math.pi * neck_radius ** 2
+        at_cut[caps[large].reshape(-1)] = True
+    edges = topology.edge_topology(faces, vertices.shape[0])
+    at_cut[edges.edges[edges.boundary].reshape(-1)] = True
+    at_cut &= on_plane
+    return at_cut[faces].any(dim=1) & ~plane_faces
+
+
 def clear_hanging_hair(body: Model3D, neck: dict, colour: tuple[torch.Tensor, torch.Tensor]) -> dict:
     """Remove the body's own hair hanging below the capped neck, and close the openings it leaves.
 
@@ -911,7 +943,7 @@ def clear_hanging_hair(body: Model3D, neck: dict, colour: tuple[torch.Tensor, to
         inside = (centres[:, 1] < neck_y) & (centres[:, 1] > reach)
         allowed = (((colours - middle) / loose).norm(dim=1) < 1.0) & inside
         seeds = (((colours - middle) / strict).norm(dim=1) < 1.0) & inside
-        region = seeds & (welded[faces][:, :, 1] > neck_y - 1e-4 * max(neck_y - low, 1e-6)).any(dim=1)
+        region = seeds & _cut_edge_faces(welded, faces, neck_y, float(neck["radius"]))
         region = _grow(region, allowed, first, second, HAIR_STEPS)
         if bool(region.any()):
             region = _grow(region, inside, first, second, HAIR_FRINGE)
