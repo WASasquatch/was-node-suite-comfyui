@@ -10,7 +10,7 @@ from ...modules.io import rooted
 from ...modules import log
 from ...modules.io.naming import next_name
 from ...modules.util import sandbox
-from .image_save import subfolder_of
+from .image_save import preview_place
 
 logger = log.get_logger("nodes.io")
 
@@ -242,7 +242,6 @@ class SaveVideo(io.ComfyNode):
             ValueError: Neither images nor a video was connected, the colour option is
                 unknown, or it or the dither needs one of the pack's codecs.
         """
-        import folder_paths
         from comfy_api.latest._util.video_types import VideoCodec, VideoContainer
 
         from ...modules.media import reader
@@ -315,12 +314,11 @@ class SaveVideo(io.ComfyNode):
                 written.saved()
         logger.info("wrote %s", target)
 
-        # A preview is addressed as a name and a subfolder of one of ComfyUI's own
-        # directories, so a file written anywhere else is saved without one.
-        subfolder = subfolder_of(str(destination), folder_paths.get_output_directory())
+        # A file outside ComfyUI's output, input and temp folders is saved with no preview.
+        place = preview_place(str(destination))
         preview = None
-        if subfolder is not None:
-            preview = ui.PreviewVideo([ui.SavedResult(name, subfolder, io.FolderType.output)])
+        if place is not None:
+            preview = ui.PreviewVideo([ui.SavedResult(name, *place)])
         return io.NodeOutput(written, str(target), name, ui=preview)
 
     @classmethod

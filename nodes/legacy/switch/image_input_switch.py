@@ -26,10 +26,12 @@ class ImageInputSwitch(io.ComfyNode):
             inputs=[
                 io.Image.Input(
                     "image_a",
+                    lazy=True,
                     tooltip="The image sent on when boolean is true.",
                 ),
                 io.Image.Input(
                     "image_b",
+                    lazy=True,
                     tooltip="The image sent on when boolean is false.",
                 ),
                 io.Boolean.Input(
@@ -46,6 +48,12 @@ class ImageInputSwitch(io.ComfyNode):
             ],
             is_deprecated=True,
         )
+
+    @classmethod
+    def check_lazy_status(cls, boolean=True, **values) -> list[str]:
+        """The input the boolean selects while it is still to be worked out; the other is never run."""
+        chosen = "image_a" if boolean else "image_b"
+        return [chosen] if values.get(chosen) is None else []
 
     @classmethod
     def execute(cls, image_a, image_b, boolean=True) -> io.NodeOutput:

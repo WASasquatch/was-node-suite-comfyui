@@ -30,10 +30,12 @@ class ControlNetModelInputSwitch(io.ComfyNode):
             inputs=[
                 io.ControlNet.Input(
                     "control_net_a",
+                    lazy=True,
                     tooltip="The ControlNet model sent on when boolean is true.",
                 ),
                 io.ControlNet.Input(
                     "control_net_b",
+                    lazy=True,
                     tooltip="The ControlNet model sent on when boolean is false.",
                 ),
                 io.Boolean.Input(
@@ -52,6 +54,12 @@ class ControlNetModelInputSwitch(io.ComfyNode):
             ],
             is_deprecated=True,
         )
+
+    @classmethod
+    def check_lazy_status(cls, boolean=True, **values) -> list[str]:
+        """The input the boolean selects while it is still to be worked out; the other is never run."""
+        chosen = "control_net_a" if boolean else "control_net_b"
+        return [chosen] if values.get(chosen) is None else []
 
     @classmethod
     def execute(cls, control_net_a, control_net_b, boolean=True) -> io.NodeOutput:

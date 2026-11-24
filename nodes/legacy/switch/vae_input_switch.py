@@ -26,10 +26,12 @@ class VAEInputSwitch(io.ComfyNode):
             inputs=[
                 io.Vae.Input(
                     "vae_a",
+                    lazy=True,
                     tooltip="The VAE sent on when boolean is true.",
                 ),
                 io.Vae.Input(
                     "vae_b",
+                    lazy=True,
                     tooltip="The VAE sent on when boolean is false.",
                 ),
                 io.Boolean.Input(
@@ -46,6 +48,12 @@ class VAEInputSwitch(io.ComfyNode):
             ],
             is_deprecated=True,
         )
+
+    @classmethod
+    def check_lazy_status(cls, boolean=True, **values) -> list[str]:
+        """The input the boolean selects while it is still to be worked out; the other is never run."""
+        chosen = "vae_a" if boolean else "vae_b"
+        return [chosen] if values.get(chosen) is None else []
 
     @classmethod
     def execute(cls, vae_a, vae_b, boolean=True) -> io.NodeOutput:

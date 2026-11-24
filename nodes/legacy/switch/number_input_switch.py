@@ -27,11 +27,13 @@ class NumberInputSwitch(io.ComfyNode):
                 io.MultiType.Input(
                     "number_a",
                     [NUMBER, io.Int, io.Float],
+                    lazy=True,
                     tooltip="The value sent on when boolean is true.",
                 ),
                 io.MultiType.Input(
                     "number_b",
                     [NUMBER, io.Int, io.Float],
+                    lazy=True,
                     tooltip="The value sent on when boolean is false.",
                 ),
                 io.Boolean.Input(
@@ -62,6 +64,12 @@ class NumberInputSwitch(io.ComfyNode):
             ],
             is_deprecated=True,
         )
+
+    @classmethod
+    def check_lazy_status(cls, boolean=True, **values) -> list[str]:
+        """The input the boolean selects while it is still to be worked out; the other is never run."""
+        chosen = "number_a" if boolean else "number_b"
+        return [chosen] if values.get(chosen) is None else []
 
     @classmethod
     def execute(cls, number_a, number_b, boolean=True) -> io.NodeOutput:

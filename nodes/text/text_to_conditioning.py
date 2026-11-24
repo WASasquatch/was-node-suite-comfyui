@@ -51,5 +51,8 @@ class TextToConditioning(io.ComfyNode):
     def execute(cls, clip, text) -> io.NodeOutput:
         import nodes
 
+        from ...modules.sampling import h3_scene_attention
+
         encoded = nodes.CLIPTextEncode().encode(clip=clip, text=text)
-        return io.NodeOutput(encoded[0], ui=ui.PreviewText(text))
+        conditioning = h3_scene_attention.with_shots(encoded[0], clip, text)
+        return io.NodeOutput(conditioning, ui=ui.PreviewText(text))

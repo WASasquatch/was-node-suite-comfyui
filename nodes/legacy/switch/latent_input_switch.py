@@ -26,10 +26,12 @@ class LatentInputSwitch(io.ComfyNode):
             inputs=[
                 io.Latent.Input(
                     "latent_a",
+                    lazy=True,
                     tooltip="The latent sent on when boolean is true.",
                 ),
                 io.Latent.Input(
                     "latent_b",
+                    lazy=True,
                     tooltip="The latent sent on when boolean is false.",
                 ),
                 io.Boolean.Input(
@@ -46,6 +48,12 @@ class LatentInputSwitch(io.ComfyNode):
             ],
             is_deprecated=True,
         )
+
+    @classmethod
+    def check_lazy_status(cls, boolean=True, **values) -> list[str]:
+        """The input the boolean selects while it is still to be worked out; the other is never run."""
+        chosen = "latent_a" if boolean else "latent_b"
+        return [chosen] if values.get(chosen) is None else []
 
     @classmethod
     def execute(cls, latent_a, latent_b, boolean=True) -> io.NodeOutput:

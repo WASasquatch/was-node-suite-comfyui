@@ -1,5 +1,5 @@
 /**
- * What H3 Load Clip, the MiniMax H3 writing nodes, the Pika H3 Flex nodes and H3 Hires Latent did,
+ * What the MiniMax H3 loading, writing, Pika H3 Flex, World and Structure nodes did,
  * drawn on the node.
  *
  * Draws each node's own counts as figures and its facts as rows, from its last run.
@@ -17,7 +17,8 @@ const LOG_NAME = "WASNodeSuite.H3Reports";
 const NODES = [
   "WASH3LoadClip", "WASH3SceneWriter", "WASH3PromptRewrite", "WASH3PlanTransitions",
   "WASPikaH3FlexLoRA", "WASPikaH3FlexSampling", "WASPikaH3FlexCanvas", "WASH3HiresLatent",
-  "WASH3SoundLoRA",
+  "WASH3SoundLoRA", "WASH3World", "WASH3StructureVideo",
+  "WASH3StructureRenderer",
 ];
 
 // Height of the panel in node units: the summary line, three figures and three fact rows.

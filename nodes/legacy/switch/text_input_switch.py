@@ -28,6 +28,7 @@ class TextInputSwitch(io.ComfyNode):
                     "text_a",
                     multiline=True,
                     placeholder="Eg: a long prompt",
+                    lazy=True,
                     tooltip=(
                         "Sent out when boolean is true; STRING."
                     ),
@@ -36,6 +37,7 @@ class TextInputSwitch(io.ComfyNode):
                     "text_b",
                     multiline=True,
                     placeholder="Eg: a short prompt",
+                    lazy=True,
                     tooltip=(
                         "Sent out when boolean is false; STRING."
                     ),
@@ -54,6 +56,12 @@ class TextInputSwitch(io.ComfyNode):
             ],
             is_deprecated=True,
         )
+
+    @classmethod
+    def check_lazy_status(cls, boolean=True, **values) -> list[str]:
+        """The input the boolean selects while it is still to be worked out; the other is never run."""
+        chosen = "text_a" if boolean else "text_b"
+        return [chosen] if values.get(chosen) is None else []
 
     @classmethod
     def execute(cls, text_a, text_b, boolean=True) -> io.NodeOutput:

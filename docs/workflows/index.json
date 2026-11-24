@@ -137,6 +137,12 @@
       "description": "The same crop and restore chain with Qwen-Image-Edit 2511: a striped awning found, cut out at 1536 pixels, turned plain green and pasted back."
     },
     {
+      "file": "moss-image-precise-edit.json",
+      "section": "Image editing",
+      "title": "Precise edit with MOSS-Image",
+      "description": "The same crop and restore chain with MOSS-Image SFT and its edit LoRA: a striped awning found, cut out at 1536 pixels, turned deep green and pasted back."
+    },
+    {
       "file": "wevisone-incremental-editing.json",
       "section": "Image editing",
       "title": "Six edits, one stage each",
@@ -381,6 +387,24 @@
       "section": "MiniMax H3 video",
       "title": "H3 sparse attention",
       "description": "One MiniMax H3 image to video clip sampled with dense attention and with H3 Sparse Attention, compared side by side."
+    },
+    {
+      "file": "minimax-h3-scene-attention.json",
+      "section": "MiniMax H3 video",
+      "title": "H3 scene attention",
+      "description": "A three-shot MiniMax H3 clip sampled with full attention and with H3 Scene Attention, each shot reading its own text, compared side by side."
+    },
+    {
+      "file": "minimax-h3-world.json",
+      "section": "MiniMax H3 video",
+      "title": "H3 World actions",
+      "description": "A first frame driven like a game with H3 World: walking forward, then strafing left, with a pan to the right, set on H3 World Actions' timeline."
+    },
+    {
+      "file": "minimax-h3-solar-renderer.json",
+      "section": "MiniMax H3 video",
+      "title": "Structure video rendered with H3",
+      "description": "A grey-box square turning around a standing figure, rendered in Three, then turned into finished MiniMax H3 footage in four steps with H3 Structure Video and H3 Structure Renderer."
     },
     {
       "file": "minimax-h3-ptd.json",

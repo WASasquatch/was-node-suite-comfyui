@@ -119,6 +119,7 @@ class ImageColorPalette(io.ComfyNode):
                     ),
                 ),
             ],
+            is_output_node=True,
         )
 
     @classmethod

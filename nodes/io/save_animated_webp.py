@@ -9,7 +9,7 @@ from ...modules.interface import file_report
 from ...modules.io import rooted
 from ...modules.media import webp_anim
 from ...modules.util import sandbox
-from .image_save import PLACEHOLDER_PREFIX, subfolder_of
+from .image_save import PLACEHOLDER_PREFIX, preview_place
 
 logger = log.get_logger("nodes.io")
 
@@ -98,9 +98,7 @@ class FastSaveAnimatedWEBP(io.ComfyNode):
         Raises:
             PathNotAllowed: The chosen root is not a folder this pack may write to.
         """
-        import folder_paths
-
-        wanted = (filename_prefix or "").replace("\\", "/")
+        wanted =(filename_prefix or "").replace("\\", "/")
         below, _, leaf = wanted.rpartition("/")
         base = str(rooted.destination(root, below))
         folder, name, counter, _, _ = sandbox.save_image_path(
@@ -129,8 +127,8 @@ class FastSaveAnimatedWEBP(io.ComfyNode):
             folder=str(destination),
             facts={"frames": len(frames), "fps": fps, "lossless": "yes" if lossless else "no"},
         )
-        subfolder = subfolder_of(str(destination), folder_paths.get_output_directory())
-        if subfolder is None:
+        place = preview_place(str(destination))
+        if place is None:
             return io.NodeOutput(images)
-        saved = ui.SavedResult(file, subfolder, io.FolderType.output)
+        saved = ui.SavedResult(file, *place)
         return io.NodeOutput(images, ui=ui.SavedImages([saved], is_animated=len(frames) > 1))

@@ -30,10 +30,12 @@ class ConditioningInputSwitch(io.ComfyNode):
             inputs=[
                 io.Conditioning.Input(
                     "conditioning_a",
+                    lazy=True,
                     tooltip="The encoded prompt sent on when boolean is true.",
                 ),
                 io.Conditioning.Input(
                     "conditioning_b",
+                    lazy=True,
                     tooltip="The encoded prompt sent on when boolean is false.",
                 ),
                 io.Boolean.Input(
@@ -52,6 +54,12 @@ class ConditioningInputSwitch(io.ComfyNode):
             ],
             is_deprecated=True,
         )
+
+    @classmethod
+    def check_lazy_status(cls, boolean=True, **values) -> list[str]:
+        """The input the boolean selects while it is still to be worked out; the other is never run."""
+        chosen = "conditioning_a" if boolean else "conditioning_b"
+        return [chosen] if values.get(chosen) is None else []
 
     @classmethod
     def execute(cls, conditioning_a, conditioning_b, boolean=True) -> io.NodeOutput:

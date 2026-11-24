@@ -1,16 +1,16 @@
 # Workflow index
 
-All 129 example graphs in [`docs/workflows`](workflows), by area. A file opens when it is dragged onto the ComfyUI canvas, or from the Workflows sidebar once it is in `ComfyUI/user/default/workflows`, and ComfyUI offers each model it lacks for download.
+All 133 example graphs in [`docs/workflows`](workflows), by area. A file opens when it is dragged onto the ComfyUI canvas, or from the Workflows sidebar once it is in `ComfyUI/user/default/workflows`, and ComfyUI offers each model it lacks for download.
 
 | Section | Workflows |
 |---|--:|
 | [Image generation and sampling](#image-generation-and-sampling) | 17 |
-| [Image editing](#image-editing) | 9 |
+| [Image editing](#image-editing) | 10 |
 | [Photo and film looks](#photo-and-film-looks) | 4 |
 | [Colour, HDR and scopes](#colour-hdr-and-scopes) | 5 |
 | [Masks, regions and subjects](#masks-regions-and-subjects) | 7 |
 | [Filters, layers and preprocessors](#filters-layers-and-preprocessors) | 10 |
-| [MiniMax H3 video](#minimax-h3-video) | 17 |
+| [MiniMax H3 video](#minimax-h3-video) | 20 |
 | [Kandinsky 6 video](#kandinsky-6-video) | 2 |
 | [Video editing and restoration](#video-editing-and-restoration) | 8 |
 | [3D and Three.js](#3d-and-threejs) | 15 |
@@ -52,6 +52,7 @@ All 129 example graphs in [`docs/workflows`](workflows), by area. A file opens w
 |  | **Edits picked on the picture** | Image Edit Regions finds things in a picture with SAM 3.1; each one clicked on the node is edited by MiniMax H3 Image through Image Edit Crop and pasted back by Image Edit Restore. | [open](workflows/image-edit-regions.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/image-edit-regions.json) |
 |  | **Precise edit with MiniMax H3 Image** | WeVisOne-VL Detect finds a raincoat, Image Edit Crop cuts it out, MiniMax H3 Image turns it into a navy wool coat, and Image Edit Restore pastes it back with the rest untouched. | [open](workflows/minimax-h3-image-precise-edit.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/minimax-h3-image-precise-edit.json) |
 |  | **Precise edit with Qwen-Image-Edit 2511** | The same crop and restore chain with Qwen-Image-Edit 2511: a striped awning found, cut out at 1536 pixels, turned plain green and pasted back. | [open](workflows/qwen-image-edit-precise-edit.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/qwen-image-edit-precise-edit.json) |
+|  | **Precise edit with MOSS-Image** | The same crop and restore chain with MOSS-Image SFT and its edit LoRA: a striped awning found, cut out at 1536 pixels, turned deep green and pasted back. | [open](workflows/moss-image-precise-edit.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/moss-image-precise-edit.json) |
 |  | **Six edits, one stage each** | Six edits to one street photograph with MiniMax H3 Image, each found by WeVisOne-VL Detect and made at the edit model's resolution: a car, an awning, coffee cups, a dog, a cap and an outfit. | [open](workflows/wevisone-incremental-editing.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/wevisone-incremental-editing.json) |
 |  | **Six edits in a For Loop** | The same six edits made by one stage inside a For Loop, read from three Multiline Text Lists; another edit is one more line in each list. | [open](workflows/wevisone-incremental-editing-loop.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/wevisone-incremental-editing-loop.json) |
 |  | **BluePixel 4K edit** | BluePixel-Turbo edits a picture at its full size from one English instruction in four steps, compared with the original. | [open](workflows/bluepixel-edit.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/bluepixel-edit.json) |
@@ -130,6 +131,9 @@ All 129 example graphs in [`docs/workflows`](workflows), by area. A file opens w
 |  | **De-RoPE a finished clip** | A finished MiniMax H3 clip stretched where it moves fastest by H3 De-RoPE Stretch, refined, and put back on its own timing by H3 De-RoPE Recover, compared with the source. | [open](workflows/minimax-h3-derope.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/minimax-h3-derope.json) |
 |  | **De-RoPE a text to video clip** | A MiniMax H3 clip generated from text, then stretched, refined and recovered by the De-RoPE nodes, compared with the plain render. | [open](workflows/minimax-h3-derope-t2v.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/minimax-h3-derope-t2v.json) |
 |  | **H3 sparse attention** | One MiniMax H3 image to video clip sampled with dense attention and with H3 Sparse Attention, compared side by side. | [open](workflows/minimax-h3-sparse-attention.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/minimax-h3-sparse-attention.json) |
+|  | **H3 scene attention** | A three-shot MiniMax H3 clip sampled with full attention and with H3 Scene Attention, each shot reading its own text, compared side by side. | [open](workflows/minimax-h3-scene-attention.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/minimax-h3-scene-attention.json) |
+|  | **H3 World actions** | A first frame driven like a game with H3 World: walking forward, then strafing left, with a pan to the right, set on H3 World Actions' timeline. | [open](workflows/minimax-h3-world.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/minimax-h3-world.json) |
+|  | **Structure video rendered with H3** | A grey-box square turning around a standing figure, rendered in Three, then turned into finished MiniMax H3 footage in four steps with H3 Structure Video and H3 Structure Renderer. | [open](workflows/minimax-h3-solar-renderer.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/minimax-h3-solar-renderer.json) |
 |  | **H3 in four steps with PTD** | H3 PTD Patch on an fl2va model for text to video with sound, and on a ref2va model from one reference picture, each in four steps. | [open](workflows/minimax-h3-ptd.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/minimax-h3-ptd.json) |
 |  | **Pika H3 Flex in two passes** | Pika H3 Flex image to video at 480p in six steps, then refined at 768p from a later knot through H3 Hires Latent. | [open](workflows/minimax-h3-pika-flex.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/minimax-h3-pika-flex.json) |
 |  | **PikaTD in four steps** | PikaTD files through H3 PTD Patch: a first frame to video, a clip from one reference picture, and text to video with speech, each in four steps with sound. | [open](workflows/minimax-h3-pikatd.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/minimax-h3-pikatd.json) |

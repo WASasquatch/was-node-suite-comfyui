@@ -26,10 +26,12 @@ class ModelInputSwitch(io.ComfyNode):
             inputs=[
                 io.Model.Input(
                     "model_a",
+                    lazy=True,
                     tooltip="The diffusion model sent on when boolean is true.",
                 ),
                 io.Model.Input(
                     "model_b",
+                    lazy=True,
                     tooltip="The diffusion model sent on when boolean is false.",
                 ),
                 io.Boolean.Input(
@@ -46,6 +48,12 @@ class ModelInputSwitch(io.ComfyNode):
             ],
             is_deprecated=True,
         )
+
+    @classmethod
+    def check_lazy_status(cls, boolean=True, **values) -> list[str]:
+        """The input the boolean selects while it is still to be worked out; the other is never run."""
+        chosen = "model_a" if boolean else "model_b"
+        return [chosen] if values.get(chosen) is None else []
 
     @classmethod
     def execute(cls, model_a, model_b, boolean=True) -> io.NodeOutput:

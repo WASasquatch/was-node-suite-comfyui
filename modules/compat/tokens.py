@@ -68,6 +68,7 @@ LITERAL_INPUTS = {
     "WASAudioEditor": ("cuts",),
     "WASAudioEqualizer": ("bands",),
     "WASPikaH3FlexSampling": ("knots",),
+    "WASH3WorldActions": ("actions",),
     "WASBoundingBoxEditor": ("layout",),
     "WASStringList": ("lines",),
     "WASLLMLoadWebPage": ("url",),

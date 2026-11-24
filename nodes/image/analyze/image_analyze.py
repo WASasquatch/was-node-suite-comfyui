@@ -121,6 +121,7 @@ class ImageAnalyze(io.ComfyNode):
                     tooltip="The blue channel, as 256 counts.",
                 ),
             ],
+            is_output_node=True,
         )
 
     @classmethod
@@ -141,4 +142,4 @@ class ImageAnalyze(io.ComfyNode):
 
         preview.publish(image)
         _publish_report(source, mode, len(planes))
-        return io.NodeOutput(pil2tensor(drawn), *counted)
+        return io.NodeOutput(pil2tensor(drawn.convert("RGB")), *counted)

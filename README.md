@@ -9,7 +9,7 @@ first packs to put hundreds of nodes into users' hands. WAS-NS has over a millio
 and is used by thousands of users daily. It has been MIT since the first commit: use it, change it, 
 teach with it, or run it in paid services.
 
-The pack contains **759 nodes for ComfyUI**, across images, filters and colour, masking, 
+The pack contains **765 nodes for ComfyUI**, across images, filters and colour, masking, 
 text and prompts, logic and flow, numbers, latents and sampling, files, animation and video, 
 and Llama-Index in ComfyUI. 
 
@@ -73,7 +73,7 @@ group's keys, model folders and servers: [`docs/LLM.md`](docs/LLM.md).
 
 # What changed since v2
 
-759 nodes across a package of source files. The pack itself needs no packages, and nothing is
+765 nodes across a package of source files. The pack itself needs no packages, and nothing is
 fetched from a git URL. What it bundles ships in the repository with its licence beside it,
 listed in [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
 
@@ -178,7 +178,7 @@ a core ComfyUI node. Only the label changed, and the old names still find them i
 
 # Nodes
 
-**759 nodes** across 75 categories. [`NODES.md`](NODES.md) carries every input, output and
+**765 nodes** across 75 categories. [`NODES.md`](NODES.md) carries every input, output and
 tooltip, and groups them by the `config.yaml` switch that gates them:
 [feature gates](NODES.md#feature-gates).
 

@@ -1315,19 +1315,23 @@ def encode(clip, prompt: str, images: list | None = None, references=None):
             place of ``images``, its blocks attached as ``minimax_refs``.
 
     Returns:
-        A conditioning.
+        A conditioning, carrying the prompt's timed shots where it has two or more.
     """
-    if references is None or not references.items:
-        tokens = clip.tokenize(prompt, images=list(images or []))
-        return clip.encode_from_tokens_scheduled(tokens)
-
     import node_helpers
 
-    tokens = clip.tokenize(prompt, minimax_ref_items=references.items)
+    from ..sampling import h3_scene_attention
+
+    values = {}
+    if references is None or not references.items:
+        tokens = clip.tokenize(prompt, images=list(images or []))
+    else:
+        tokens = clip.tokenize(prompt, minimax_ref_items=references.items)
+        values["minimax_refs"] = list(references.blocks)
     conditioning = clip.encode_from_tokens_scheduled(tokens)
-    return node_helpers.conditioning_set_values(
-        conditioning, {"minimax_refs": list(references.blocks)}
-    )
+    stash = h3_scene_attention.shot_stash(clip, tokens, prompt)
+    if stash is not None:
+        values[h3_scene_attention.STASH_KEY] = stash
+    return node_helpers.conditioning_set_values(conditioning, values) if values else conditioning
 
 
 def encoding_of(clip, text: str, shown, references) -> dict:

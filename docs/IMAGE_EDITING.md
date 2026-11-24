@@ -55,12 +55,22 @@ Each graph below carries the download link of every model it loads.
 | [`qwen_2.5_vl_7b_fp8_scaled.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors) | `ComfyUI/models/text_encoders` | 9.4 GB | Load CLIP, type `qwen_image` | Apache-2.0 |
 | [`qwen_image_vae.safetensors`](https://huggingface.co/Comfy-Org/Krea-2/blob/main/vae/qwen_image_vae.safetensors) | `ComfyUI/models/vae` | 0.25 GB | Load VAE | Apache-2.0 |
 
+### MOSS-Image
+
+| File | Folder | Size | Loaded by | Licence |
+|---|---|--:|---|---|
+| [`moss_image_sft_int8_convrot.safetensors`](https://huggingface.co/Comfy-Org/MOSS-Image/blob/main/diffusion_models/moss_image_sft_int8_convrot.safetensors) | `ComfyUI/models/diffusion_models` | 5.4 GB | Load Diffusion Model | Apache-2.0 |
+| [`moss_image_edit_lora_rank_64_bf16.safetensors`](https://huggingface.co/Comfy-Org/MOSS-Image/blob/main/loras/moss_image_edit_lora_rank_64_bf16.safetensors) | `ComfyUI/models/loras` | 0.30 GB | Load LoRA | Apache-2.0 |
+| [`qwen3.5_9b_w4a8_gptq.safetensors`](https://huggingface.co/Comfy-Org/MOSS-Image/blob/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors) | `ComfyUI/models/text_encoders` | 7.3 GB | Load CLIP, type `moss_image` | Apache-2.0 |
+| [`flux2-vae_small.safetensors`](https://huggingface.co/Comfy-Org/MOSS-Image/blob/main/vae/flux2-vae_small.safetensors) | `ComfyUI/models/vae` | 0.25 GB | Load VAE | Apache-2.0 |
+
 ## Edit models
 
 | Edit model | `max_resolution` | `min_resolution` | `multiple` | The prompt names the crop | Graph |
 |---|--:|--:|--:|---|---|
 | MiniMax H3 Image | 2048 | 1024 | 32 | `<Picture 1>` | [`minimax-h3-image-precise-edit.json`](workflows/minimax-h3-image-precise-edit.json) |
 | Qwen-Image-Edit 2511 | 1536 | 1024 | 16 | `the picture` | [`qwen-image-edit-precise-edit.json`](workflows/qwen-image-edit-precise-edit.json) |
+| MOSS-Image with its edit LoRA | 1536 | 1024 | 16 | the thing by name, such as `the striped awning` | [`moss-image-precise-edit.json`](workflows/moss-image-precise-edit.json) |
 
 A crop larger than `max_resolution` is shrunk to it for the edit and enlarged back when it is
 pasted. A smaller one is enlarged toward `min_resolution`, at most 4 times its size. Image Edit
@@ -80,6 +90,11 @@ Any other edit model takes the same wires:
 In [`qwen-image-edit-precise-edit.json`](workflows/qwen-image-edit-precise-edit.json), Text
 Encode Qwen Image Edit Plus reads the crop with no VAE wired, Set Reference Latent gives it the
 crop's own latent, and KSampler samples 4 steps at cfg 1 with the Lightning LoRA.
+
+In [`moss-image-precise-edit.json`](workflows/moss-image-precise-edit.json), the edit LoRA sits on
+MOSS-Image SFT at strength 1 with Skip Layer Guidance on layer 22. Both Text Encode MOSS-Image
+Edit nodes read the crop with the VAE wired and `edit_format` set to `Moss-Image-Edit`, and
+KSampler samples 30 steps at cfg 4, euler, normal.
 
 ## MiniMax H3 Image prompts
 
@@ -144,6 +159,7 @@ Every graph reads [`wevisone-busy-street.jpg`](workflows/wevisone-busy-street.jp
 |---|---|
 | [`minimax-h3-image-precise-edit.json`](workflows/minimax-h3-image-precise-edit.json) | One edit with MiniMax H3 Image: a raincoat turned into a navy wool coat |
 | [`qwen-image-edit-precise-edit.json`](workflows/qwen-image-edit-precise-edit.json) | One edit with Qwen-Image-Edit 2511: the striped awning turned plain green |
+| [`moss-image-precise-edit.json`](workflows/moss-image-precise-edit.json) | One edit with MOSS-Image and its edit LoRA: the striped awning turned deep forest green |
 | [`wevisone-incremental-editing.json`](workflows/wevisone-incremental-editing.json) | Six edits with MiniMax H3 Image, one stage each |
 | [`wevisone-incremental-editing-loop.json`](workflows/wevisone-incremental-editing-loop.json) | The same six edits from three lists, in a For Loop |
 | [`image-edit-regions.json`](workflows/image-edit-regions.json) | Edits picked on Image Edit Regions' panel, made with MiniMax H3 Image |
@@ -156,4 +172,5 @@ Every graph reads [`wevisone-busy-street.jpg`](workflows/wevisone-busy-street.jp
 | Part of a thing keeps its old colour | WeVisOne-VL Detect's mask missed that part | Add an edit naming the part, such as `the pink rear fender of the car` |
 | A replacement ends in a straight edge, or only fills the old thing's outline | The second WeVisOne-VL Detect names the old thing, or finds the new one reaching the edge of its crop, so the edit is pasted through the old area alone | Name the result in the second WeVisOne-VL Detect, such as `the cat`, and raise `context` until the crop holds all of it |
 | A Qwen-Image-Edit edit lands shifted | Text Encode Qwen Image Edit Plus has its `vae` wired, and resizes its reference picture to about one megapixel | Leave its `vae` unwired and give it the crop's latent through Set Reference Latent |
+| A MOSS-Image edit redraws the crop, or drifts in identity and framing | The two Text Encode MOSS-Image Edit nodes carry an `edit_format` the LoRA was not trained with, or the LoRA's strength is below 1 | Set `edit_format` to `Moss-Image-Edit` on both, and the LoRA's strength to 1 |
 | A large area comes back soft | Its crop was shrunk to `max_resolution` and enlarged back when pasted | Raise `max_resolution` to the largest size the edit model takes |

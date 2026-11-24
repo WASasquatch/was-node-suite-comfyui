@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **760** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **765** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-673 of them load in a fresh install. The other 87 wait behind a switch that starts off.
+678 of them load in a fresh install. The other 87 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 515 |
+| [Always loaded](#always-loaded) | always on | 520 |
 | [`features.llm`](#featuresllm) | off | 80 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,7 +41,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-515 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+520 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/3D/Character](#was-suite3dcharacter) (4)
 - [WAS Suite/3D/Mesh](#was-suite3dmesh) (13)
@@ -73,7 +73,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Latent](#was-suitelatent) (4)
 - [WAS Suite/Latent/Generate](#was-suitelatentgenerate) (1)
 - [WAS Suite/Latent/Transform](#was-suitelatenttransform) (3)
-- [WAS Suite/Latent/Video](#was-suitelatentvideo) (25)
+- [WAS Suite/Latent/Video](#was-suitelatentvideo) (27)
 - [WAS Suite/LoRA](#was-suitelora) (1)
 - [WAS Suite/Loaders](#was-suiteloaders) (6)
 - [WAS Suite/Logic](#was-suitelogic) (6)
@@ -82,7 +82,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (19)
-- [WAS Suite/Sampling](#was-suitesampling) (36)
+- [WAS Suite/Sampling](#was-suitesampling) (39)
 - [WAS Suite/Text](#was-suitetext) (13)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (12)
@@ -4418,6 +4418,7 @@ Find an image's dominant colours and return them both as a chart of swatches and
 | | |
 |---|---|
 | Node id | `Image Color Palette` |
+| Output node | Yes, it runs even with nothing wired after it |
 
 **Inputs**
 
@@ -4498,6 +4499,7 @@ Render a histogram of an image's tones as a chart image, either overall brightne
 | | |
 |---|---|
 | Node id | `Image Analyze` |
+| Output node | Yes, it runs even with nothing wired after it |
 
 **Inputs**
 
@@ -10269,6 +10271,77 @@ Lay one long soundtrack, a music bed or a recorded dialogue, under a MiniMax H3 
 
 </details>
 
+<a id="node-wash3structurevideo"></a>
+<details>
+<summary><b>H3 Structure Video</b></summary>
+
+Turn a structure video, such as a grey box, depth or skeleton render, plus an optional first frame and a written brief, into the conditioning and empty latent H3 Structure Renderer samples. The render follows the structure frame for frame and takes its look from the first frame and the prompt.
+
+| | |
+|---|---|
+| Node id | `WASH3StructureVideo` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `clip` | `CLIP` | Yes |  |  | MiniMax H3's text encoder, as Load CLIP with qwen3vl_32b_minimax_h3_int8_convrot. |
+| `vae` | `VAE` | Yes |  |  | The H3 video VAE, as Load VAE with minimax_h3_video_vae_fp16. |
+| `structure` | `IMAGE` | Yes |  |  | The structure video: a grey box, a segmentation, skeletons, depth or a sketch, as Three Render's images or Load Video. Cropped to 16:9 or 9:16 at the centre. |
+| `structure_type` | `COMBO` | Yes | grey box |  | What the structure video shows; picks the trained sentences naming it. `described below` = looks_like and not_shown; `prompt as written` = description is the whole prompt. |
+| `summary` | `STRING` | Yes |  |  | One paragraph: who does what and how the camera moves, as 'A courier cycles down a rainy street at night; the camera tracks beside her.' |
+| `description` | `STRING` | Yes |  |  | 350 to 500 words: the look first (style, light, weather), then [Shot 1] and what is seen, in order. Later shots open '[Shot 2] At 00:03.500, ...'. |
+| `soundscape` | `STRING` | Yes | N/A |  | The ambience in a sentence, as 'rain on tarmac and distant traffic'; N/A = none. |
+| `length` | `INT` | Yes | 158 |  | Frames to render at 24 fps, at most the structure video's; snapped down to 17n + 5. 158 = 6.6 s, as trained. |
+| `fps` | `FLOAT` | Yes | 24.0 |  | Rate the structure video was made at; frames are dropped or held onto 24 fps. 24 = as is. |
+| `width` | `INT` | Yes | 0 |  | 0 = 1344 for a wide structure video, 768 for a tall one, as trained; else a multiple of 32. |
+| `height` | `INT` | Yes | 0 |  | 0 = 768 for a wide structure video, 1344 for a tall one, as trained; else a multiple of 32. |
+| `looks_like` | `STRING` | Yes |  |  | For `described below`: what the structure video looks like, as 'a black pencil line sketch of the scene on white paper'. |
+| `not_shown` | `STRING` | Yes |  |  | For `described below`: what of its look must not appear, as 'the pencil lines and white paper'. |
+| `encoding` | `COMBO` | Yes | as trained | `as trained`, `posterior mean` | `as trained` = latents drawn from the VAE's posterior at seed 42, as the LoRAs saw them; `posterior mean` = the VAE's mean, as core's encode gives. |
+| `first_frame` | `IMAGE` | No |  |  | The shot's first frame, already in the finished look; its first picture is used. Unwired = the prompt alone sets the look. |
+| `structure_vae` | `VAE` | No |  |  | A VAE that encodes the structure video in place of vae, as taeh3: much faster, a little less exact. The first frame keeps vae. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `positive` | `CONDITIONING` | The prompt, the structure video and the first frame, for KSampler's positive. |
+| `negative` | `CONDITIONING` | The same with the prompt zeroed, for KSampler's negative; at cfg 1 it is never sampled. |
+| `latent` | `LATENT` | An empty video and sound latent of the render's size and length, for KSampler. |
+| `prompt` | `STRING` | The six-part prompt as the text encoder read it. |
+
+</details>
+
+<a id="node-wash3worldactions"></a>
+<details>
+<summary><b>H3 World Actions</b></summary>
+
+Say what the character and the camera do over time, as held keys on a timeline: walk, strafe, pan, tilt. Each video latent reads one sentence of what is held. Sample with the model from H3 World.
+
+| | |
+|---|---|
+| Node id | `WASH3WorldActions` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `clip` | `CLIP` | Yes |  |  | The MiniMax H3 text encoder, qwen3vl_32b_minimax_h3 from Load CLIP. |
+| `positive` | `CONDITIONING` | Yes |  |  | MiniMax H3 Image To Video's positive, with the first frame and a prompt describing the scene. |
+| `actions` | `STRING` | Yes | 0-5.2: forward |  | Held keys over time, in seconds: `0-2: forward; 1-3: pan-left fast`. Overlaps hold together; gaps stand still. Keys W A S D move, J L pan, I K tilt, F fast. |
+| `negative` | `CONDITIONING` | No |  |  | Only for CFG above 1: a negative that gets the standing-still sentence on every latent. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `positive` | `CONDITIONING` | The positive with the action sentences, bound to their latents by H3 World's model. |
+| `negative` | `CONDITIONING` | The negative with the standing-still sentence on every latent; blocked when none is wired. |
+
+</details>
+
 <a id="node-waskandinsky6imagetovideo"></a>
 <details>
 <summary><b>Kandinsky 6 Image To Video</b></summary>
@@ -13604,6 +13677,36 @@ Read the trained step times of the PTD file a MiniMax H3 model carries, for Samp
 
 </details>
 
+<a id="node-wash3sceneattention"></a>
+<details>
+<summary><b>H3 Scene Attention</b></summary>
+
+Make each shot of a multi-shot MiniMax H3 clip follow its own part of the prompt. Each scene attends to its own frames and shot text, plus a few frames shared from the other scenes for consistent characters, which also makes long clips faster. Scenes come from the prompt's timed shots, as [Shot 2] At 00:03.000.
+
+| | |
+|---|---|
+| Node id | `WASH3SceneAttention` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The MiniMax H3 video model, after any LoRA. |
+| `scenes` | `STRING` | Yes |  |  | Where scenes start: empty = default, read from the prompt's timed shots; `3.5, 7` = cuts at 3.5 s and 7 s, for prompts written without shot times. |
+| `shared_frames` | `INT` | Yes | 4 |  | Latent frames each scene reads from the other scenes, picked afresh each step: `4` = default; `0` = scenes fully apart, fastest, faces may drift; `8` = closer identities, slower. |
+| `positions` | `COMBO` | Yes | global | `global`, `scene` | `global` = default, frames and sound keep their place in the clip; `scene` = each scene's frames and sound counted from its own start. |
+| `select_block` | `INT` | Yes | 25 |  | Block whose input picks the shared frames: `25` = default, the middle of the 50. |
+| `start_percent` | `FLOAT` | Yes | 0.0 |  | Point in the schedule scene attention starts: `0` = default, the first step. |
+| `end_percent` | `FLOAT` | Yes | 1.0 |  | Point in the schedule scene attention stops: `1.0` = default, the last step. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The model attending scene by scene, for a guider or sampler. |
+
+</details>
+
 <a id="node-wash3soundlora"></a>
 <details>
 <summary><b>H3 Sound LoRA</b></summary>
@@ -13687,6 +13790,35 @@ Sample MiniMax H3's picture and sound in one pass with different step rules, by 
 | Name | Type | What it is |
 |---|---|---|
 | `sampler` | `SAMPLER` | For Sampler Custom Advanced on MiniMax H3, with picture sigmas such as Pika H3 Flex Sampling's. `lcm` on both = core's lcm. |
+
+</details>
+
+<a id="node-wash3structurerenderer"></a>
+<details>
+<summary><b>H3 Structure Renderer</b></summary>
+
+Make MiniMax H3 Ref2VA render a structure video, such as a grey box, depth or skeletons, into finished footage in 4 steps, with SolarRenderer's control and four-step LoRAs. Sample H3 Structure Video's outputs with KSampler: lcm, simple, 4 steps, cfg 1.
+
+| | |
+|---|---|
+| Node id | `WASH3StructureRenderer` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | MiniMax H3 Ref2VA from Load Diffusion Model, as minimax_h3_ref2va_pruned_int8_convrot; bf16 keeps the LoRAs exact. |
+| `audio_vae` | `VAE` | Yes |  |  | The H3 audio VAE, as Load VAE set to minimax_h3_audio_vae_fp32. It encodes the silence the soundtrack is held at, at the clip's own length. |
+| `control_lora` | `COMBO,STRING` | Yes |  |  | solarrenderer_control_lora in models/loras: follows the structure video and the first frame. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `steps_lora` | `COMBO,STRING` | Yes |  |  | solarrenderer_4step_lora in models/loras: renders in 4 steps at cfg 1. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `control_strength` | `FLOAT` | Yes | 1.0 |  | Control LoRA scale: 1.0 = as trained; lower follows the structure less. |
+| `steps_strength` | `FLOAT` | Yes | 1.0 |  | Four-step LoRA scale: 1.0 = as trained. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | MiniMax H3 with both LoRAs, its soundtrack held at encoded silence. Into KSampler with H3 Structure Video's positive, negative and latent. |
 
 </details>
 
@@ -13828,6 +13960,32 @@ Upscale a video of any length with MiniMax H3, enlarging it in the latent and re
 | `latent` | `LATENT` | The refined video latent of the whole clip, padded to an H3 length and before colour transfer, for H3 Decode Video or another pass. |
 | `frames` | `INT` | Frames written. |
 | `report` | `STRING` | The sizes, the chunks and how long each took. |
+
+</details>
+
+<a id="node-wash3world"></a>
+<details>
+<summary><b>H3 World</b></summary>
+
+Turn MiniMax H3 into a world model a keyboard drives: loads the H3-World LoRA and binds each action sentence from H3 World Actions to its own video latent while sampling. Feed the model to the sampler that takes the Actions conditioning.
+
+| | |
+|---|---|
+| Node id | `WASH3World` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | MiniMax H3 FL2VA from Load Diffusion Model, as minimax_h3_fl2va_int8_convrot. |
+| `lora_name` | `COMBO,STRING` | Yes |  |  | H3-World LoRA in models/loras, as `H3/H3-World/step-10000`. `None` = route only, for a model that already carries it. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `strength` | `FLOAT` | Yes | 1.0 |  | LoRA scale: `1.0` = as trained; `0` = routing alone, which the base model does not follow. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `model` | `MODEL` | The model with the LoRA, routing the sentences of any H3 World Actions conditioning it samples. |
 
 </details>
 

@@ -1021,8 +1021,8 @@ Suite/Sampling**. Weights and settings: [`docs/MODELS.md`](docs/MODELS.md#bluepi
 **Image Edit Crop** cuts the areas to edit out of a picture: every region of a mask, or each box
 where no mask marks anything. Regions near each other share one crop and are edited together,
 and regions far apart get crops of their own. `max_resolution` is the longest side a crop is
-handed to the edit model at, such as 1024 for older edit models, 1536 for Qwen-Image-Edit 2511 or
-2048 for MiniMax H3 Image. **Image Edit Restore** pastes each edited crop back through its own
+handed to the edit model at, such as 1024 for older edit models, 1536 for Qwen-Image-Edit 2511 and
+MOSS-Image, or 2048 for MiniMax H3 Image. **Image Edit Restore** pastes each edited crop back through its own
 region, feathered and with the edit model's colour drift removed, and leaves every other pixel of
 the picture as it was. Both draw the picture before and after on the node. **Image Edit Regions**
 finds the things in a picture with SAM 3.1 and picks what to change on the node: click a thing,
@@ -1049,7 +1049,9 @@ which read [`wevisone-busy-street.jpg`](docs/workflows/wevisone-busy-street.jpg)
 `input` folder,
 [`minimax-h3-image-precise-edit.json`](docs/workflows/minimax-h3-image-precise-edit.json),
 [`qwen-image-edit-precise-edit.json`](docs/workflows/qwen-image-edit-precise-edit.json), an edit
-made with Qwen-Image-Edit 2511, and
+made with Qwen-Image-Edit 2511,
+[`moss-image-precise-edit.json`](docs/workflows/moss-image-precise-edit.json), the same edit made
+with MOSS-Image and its edit LoRA, and
 [`image-edit-regions.json`](docs/workflows/image-edit-regions.json). Each graph carries the
 download link of every model it loads. Guide, models and troubleshooting:
 [`docs/IMAGE_EDITING.md`](docs/IMAGE_EDITING.md).
