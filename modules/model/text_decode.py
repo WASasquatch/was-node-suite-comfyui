@@ -89,7 +89,7 @@ def decoder_of(clip):
     """
     cond = getattr(clip, "cond_stage_model", None)
     name = getattr(cond, "clip", None)
-    inner = getattr(cond, name, None) if isinstance(name, str) else None
+    inner = getattr(cond, name, None) if isinstance(name, str) else cond
     transformer = getattr(inner, "transformer", None)
     model = getattr(transformer, "model", None)
     if transformer is None or model is None:

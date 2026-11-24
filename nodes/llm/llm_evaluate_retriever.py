@@ -48,7 +48,7 @@ class WASLLMEvaluateRetriever(io.ComfyNode):
                 ),
                 LLM.Input(
                     "llm",
-                    tooltip="The model that writes the test questions, such as LLM OpenAI or LLM GGUF Loader.",
+                    tooltip="The model that writes the test questions, such as LLM Loader or LLM OpenAI.",
                 ),
                 io.Int.Input(
                     "questions_per_chunk", default=2, min=1, max=10,

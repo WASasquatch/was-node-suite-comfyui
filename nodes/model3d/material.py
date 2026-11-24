@@ -1,4 +1,4 @@
-"""Correct the metalness and roughness of a model's parts, such as hair a generator made look like chrome."""
+"""Correct the metalness and roughness of a model's parts, such as hair or painted iron a generator made look like chrome."""
 
 from __future__ import annotations
 
@@ -18,12 +18,13 @@ class Model3DMaterial(io.ComfyNode):
             display_name="3D Model Material",
             search_aliases=[
                 "WASModel3DMaterial", "3D Model Material", "metalness", "roughness", "shiny hair",
-                "chrome hair", "material fix", "double sided",
+                "chrome hair", "material fix", "double sided", "black chrome", "dark metal", "PBR",
             ],
             category="WAS Suite/3D/Model",
             description=(
-                "Correct how a model's parts take light: scale metalness down and give every surface a "
-                "minimum roughness, for hair, skin or cloth a 3D generator made look like polished metal."
+                "Correct how a model's parts take light: scale metalness down, clear it from dark "
+                "texels and give every surface a minimum roughness. For hair, skin, cloth or painted "
+                "iron that a 3D generator made look like polished metal or black chrome."
             ),
             inputs=[
                 io.MultiType.Input("model_3d", types=[MODEL_3D, io.Mesh, FILE_3D, FILE_3D_GLB, FILE_3D_GLTF, FILE_3D_FBX, FILE_3D_OBJ], tooltip="The model to work on: a 3D model from another 3D node, a mesh from core's mesh nodes, or a GLB, glTF, VRM, FBX or OBJ file from Load 3D or a 3D generator such as Tripo."),
@@ -42,6 +43,12 @@ class Model3DMaterial(io.ComfyNode):
                             "only; `keep` = as the material says.",
                 ),
                 io.String.Input("parts", default="", tooltip="Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part."),
+                io.Float.Input(
+                    "metal_min_brightness", default=0.4, min=0.0, max=1.0, step=0.05,
+                    tooltip="Texels stay metal only where the base colour's brightest channel reaches this; "
+                            "darker ones become painted, non-metal surfaces. 0.4 = black iron turns matte, "
+                            "brass and steel stay metal; 0 = unchanged.",
+                ),
             ],
             outputs=[
                 MODEL_3D.Output("model_3d", tooltip="The whole model: parts with their materials, and the skeleton, skin, springs, expressions and animations it carries."),
@@ -51,7 +58,8 @@ class Model3DMaterial(io.ComfyNode):
         )
 
     @classmethod
-    def execute(cls, model_3d, metalness=0.2, min_roughness=0.5, double_sided="keep", parts="") -> io.NodeOutput:
+    def execute(cls, model_3d, metalness=0.2, min_roughness=0.5, double_sided="keep", parts="",
+                metal_min_brightness=0.4) -> io.NodeOutput:
         """Adjust the chosen parts' materials and publish what changed.
 
         Raises:
@@ -63,7 +71,8 @@ class Model3DMaterial(io.ComfyNode):
             raise ValueError(f"no part matches '{str(parts)[:80]}'; the model's parts are {edit.part_names(model)}. "
                              "Leave parts empty to change every part.")
         counts = materials.adjust(model, chosen, float(metalness), float(min_roughness),
-                                  double_sided if double_sided in materials.DOUBLE_SIDED else "keep")
+                                  double_sided if double_sided in materials.DOUBLE_SIDED else "keep",
+                                  float(metal_min_brightness))
         report.publish(model, f"{counts['materials changed']} material(s) on {len(chosen)} part(s)",
                        counts=counts, facts={"parts": edit.part_names(model, 8)})
         hidden = cls.hidden

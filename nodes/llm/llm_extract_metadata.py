@@ -48,7 +48,7 @@ class LLMExtractMetadata(io.ComfyNode):
                 ),
                 LLM.Input(
                     "llm",
-                    tooltip="The model that writes the metadata, such as LLM From CLIP, LLM GGUF Loader or LLM OpenAI.",
+                    tooltip="The model that writes the metadata, such as LLM Loader, LLM From CLIP or LLM OpenAI.",
                 ),
                 io.Int.Input(
                     "title",
@@ -136,7 +136,7 @@ class LLMExtractMetadata(io.ComfyNode):
             documents, wires.Documents, "LLM Extract Metadata", "documents", "LLM Split Documents"
         )
         model = wires.expect(
-            llm, wires.LanguageModel, "LLM Extract Metadata", "llm", "LLM From CLIP, LLM GGUF Loader or LLM OpenAI"
+            llm, wires.LanguageModel, "LLM Extract Metadata", "llm", "LLM Loader, LLM From CLIP or LLM OpenAI"
         )
         wires.ready(model)
         if not source.items:

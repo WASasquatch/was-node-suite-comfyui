@@ -1,6 +1,6 @@
 # Workflow index
 
-All 128 example graphs in [`docs/workflows`](workflows), by area. A file opens when it is dragged onto the ComfyUI canvas, or from the Workflows sidebar once it is in `ComfyUI/user/default/workflows`, and ComfyUI offers each model it lacks for download.
+All 129 example graphs in [`docs/workflows`](workflows), by area. A file opens when it is dragged onto the ComfyUI canvas, or from the Workflows sidebar once it is in `ComfyUI/user/default/workflows`, and ComfyUI offers each model it lacks for download.
 
 | Section | Workflows |
 |---|--:|
@@ -15,7 +15,7 @@ All 128 example graphs in [`docs/workflows`](workflows), by area. A file opens w
 | [Video editing and restoration](#video-editing-and-restoration) | 8 |
 | [3D and Three.js](#3d-and-threejs) | 15 |
 | [Prompts and text](#prompts-and-text) | 9 |
-| [Language models and Llama-Index](#language-models-and-llama-index) | 10 |
+| [Language models and Llama-Index](#language-models-and-llama-index) | 11 |
 | [Files, datasets and documents](#files-datasets-and-documents) | 7 |
 | [Logic, loops and apps](#logic-loops-and-apps) | 8 |
 
@@ -205,6 +205,7 @@ All 128 example graphs in [`docs/workflows`](workflows), by area. A file opens w
 
 | Preview | Workflow | What it does | Get it |
 |---|---|---|---|
+|  | **LLM Loader** | One picture captioned twice through LLM Loader and LLM Complete: JoyCaption as a GGUF on llama.cpp with its mmproj found beside it, and Qwen3-VL 4B as a safetensors file on ComfyUI. | [open](workflows/llm-loader.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/llm-loader.json) |
 |  | **Chat with a folder of notes** | A folder of notes indexed for keyword and meaning search, fused and reranked, and a chat about them with a local model, kept between runs. | [open](workflows/llm-chat-with-notes.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/llm-chat-with-notes.json) |
 |  | **Find pictures by what they show** | A folder of renders indexed by picture, searched by a sentence and by an example picture, with a vision model asked about what it found. | [open](workflows/llm-picture-search.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/llm-picture-search.json) |
 |  | **Research agent** | An agent with three tools, a folder of notes, a calculator and dates, answering a question by calling them. | [open](workflows/llm-research-agent.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/llm-research-agent.json) |

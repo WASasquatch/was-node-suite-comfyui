@@ -36,7 +36,7 @@ logger = log.get_logger("llm")
 #: Raised by a llama-index step that reached for a language model no node supplied.
 NO_LLM = (
     "This step needs a language model and none was connected. Connect an LLM output, such as "
-    "LLM From CLIP, LLM GGUF Loader or LLM OpenAI, to this node's llm input."
+    "LLM Loader, LLM From CLIP or LLM OpenAI, to this node's llm input."
 )
 
 #: Raised by a llama-index step that reached for an embedding model no node supplied.

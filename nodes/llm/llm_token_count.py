@@ -17,7 +17,7 @@ logger = log.get_logger("llm.generate")
 NODE = "LLM Token Count"
 
 #: The nodes that make a language model, for messages.
-LLM_HINT = "LLM From CLIP, LLM GGUF Loader or LLM OpenAI"
+LLM_HINT = "LLM Loader, LLM From CLIP or LLM OpenAI"
 
 
 class LLMTokenCount(io.ComfyNode):

@@ -10,6 +10,7 @@ from __future__ import annotations
 import gc
 import json
 import os
+import re
 import struct
 import time
 from collections import OrderedDict
@@ -21,6 +22,7 @@ from .clip_llm import ASSISTANT, TOOL, conversation, local_base
 
 __all__ = [
     "AUTO",
+    "AUTO_PROJECTOR",
     "CACHE_LIMIT",
     "CHAT_FORMATS",
     "LoadSpec",
@@ -34,6 +36,7 @@ __all__ = [
     "menu_name",
     "model_choices",
     "projector_choices",
+    "projector_for",
     "read_header",
     "release",
     "require",
@@ -87,6 +90,16 @@ MAX_SETTINGS_BYTES = 1024 * 1024
 
 #: The label the panel and messages give a file in one of LM Studio's folders.
 LMSTUDIO_LABEL = "LM Studio"
+
+#: The projector choice that takes the one beside the model made for it.
+AUTO_PROJECTOR = "auto"
+
+#: File name words shared by projectors and models of every family.
+GENERIC_WORDS = {"mmproj", "model", "gguf", "hf", "instruct", "it", "chat", "vision", "projector",
+                 "f16", "f32", "bf16", "fp16", "fp32", "static", "imatrix", "i1"}
+
+#: A quantization word in a file name, such as ``q8``, ``q4``, ``k``, ``iq4`` or ``xs``.
+QUANT_WORD = re.compile(r"(i?q\d+|k|m|s|l|xs|xxs|0|1)")
 
 #: Models kept loaded before the least recently used one is closed.
 CACHE_LIMIT = 2
@@ -279,6 +292,55 @@ def model_choices() -> list[str]:
 def projector_choices() -> list[str]:
     """The ``.gguf`` picture projector files a menu lists, each with ``mmproj`` in its name."""
     return [name for name in _names() if "mmproj" in os.path.basename(name).lower()]
+
+
+def _words(path: str) -> set[str]:
+    """The words of a file name that tell one model from another, quantization and format left out."""
+    stem = os.path.splitext(os.path.basename(path))[0].lower()
+    return {word for word in re.split(r"[^a-z0-9]+", stem)
+            if word and word not in GENERIC_WORDS and not QUANT_WORD.fullmatch(word)}
+
+
+def projector_for(path: str, meta: dict) -> str | None:
+    """The picture projector beside a model that was made for it.
+
+    Args:
+        path: The model file.
+        meta: Its header, from :func:`read_header`.
+
+    Returns:
+        The projector file in the model's own folder whose width fits the model and whose name
+        shares the most words with it, or ``None`` when no projector there fits.
+    """
+    arch = str(meta.get("general.architecture") or "")
+    width = meta.get(f"{arch}.embedding_length")
+    folder = os.path.dirname(path)
+    own = _words(path)
+    best, best_score = None, -1
+    try:
+        names = sorted(os.listdir(folder))
+    except OSError:
+        return None
+    for name in names:
+        if "mmproj" not in name.lower() or not name.lower().endswith(".gguf"):
+            continue
+        candidate = os.path.join(folder, name)
+        try:
+            header = read_header(candidate)
+        except (OSError, ValueError):
+            continue
+        if header.get("general.architecture") != "clip" or header.get("clip.has_vision_encoder") is False:
+            continue
+        reach = header.get("clip.vision.projection_dim")
+        score = len(own & _words(candidate))
+        if reach and width:
+            if int(reach) != int(width):
+                continue
+            # A projector whose width is recorded and fits counts as a match of its own.
+            score += 1
+        if score > best_score and score > 0:
+            best, best_score = candidate, score
+    return best
 
 
 def locate(name: str) -> str | None:
@@ -699,6 +761,7 @@ def gguf_model():
         top_k: int = 40
         min_p: float = 0.05
         repeat_penalty: float = 1.1
+        presence_penalty: float = 0.0
         seed: int = 0
         _spec = PrivateAttr(default=None)
 
@@ -815,6 +878,7 @@ def gguf_model():
                     top_k=int(self.top_k),
                     min_p=float(self.min_p),
                     repeat_penalty=float(self.repeat_penalty),
+                    presence_penalty=float(self.presence_penalty),
                     seed=int(self.seed) & 0xFFFFFFFF,
                     max_tokens=int(self.max_tokens),
                     stream=True,

@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-import os
-
 from comfy_api.latest import io
 
 from ...modules import log
 from ...modules.compat.types import LLM
 from ...modules.interface import run_result
 from ...modules.io import picker
-from ...modules.llm import gguf, runtime, wires
+from ...modules.llm import gguf, local_models
 
 REQUIRES = "llm"
 
@@ -20,7 +18,7 @@ logger = log.get_logger("llm.models")
 NO_MODELS = "put a .gguf model in models/LLM or models/text_encoders, or download one in LM Studio"
 
 #: The projector menu's entry for a model read as text only.
-NO_PROJECTOR = "none"
+NO_PROJECTOR = local_models.NO_PROJECTOR
 
 #: The largest seed llama.cpp takes, one below the value it reads as random.
 MAX_SEED = 0xFFFFFFFE
@@ -60,10 +58,11 @@ class WASLLMGGUFLoader(io.ComfyNode):
                     ),
                 ), model=True),
                 picker.path_input(io.Combo.Input(
-                    "mmproj", options=[NO_PROJECTOR, *gguf.projector_choices()], default=NO_PROJECTOR,
+                    "mmproj", options=[gguf.AUTO_PROJECTOR, NO_PROJECTOR, *gguf.projector_choices()],
+                    default=gguf.AUTO_PROJECTOR,
                     tooltip=(
-                        "`none` = text only; an mmproj .gguf made for this model = it reads pictures "
-                        "too, such as mmproj-Qwen2.5-VL-7B-f16.gguf. LM Studio keeps it beside the model."
+                        "`auto` = the mmproj beside the model made for it; `none` = text only; a "
+                        "named mmproj = pictures through that file, such as mmproj-Qwen2.5-VL-7B-f16.gguf."
                     ),
                 ), model=True),
                 io.Int.Input(
@@ -128,7 +127,7 @@ class WASLLMGGUFLoader(io.ComfyNode):
 
         Args:
             model: The model's menu name, or a full path wired in as text.
-            mmproj: The projector's menu name or full path, or ``none``.
+            mmproj: The projector's menu name or full path, ``auto`` or ``none``.
             n_ctx: The context length.
             gpu_layers: Layers offloaded to the GPU.
             flash_attn: Whether to use flash attention.
@@ -148,103 +147,13 @@ class WASLLMGGUFLoader(io.ComfyNode):
             PathNotAllowed: A wired path lies outside the LLM, text_encoders and LM Studio folders.
         """
         model = gguf.menu_name(model)
-        mmproj = gguf.menu_name(mmproj)
-        if chat_format not in gguf.CHAT_FORMATS:
-            raise ValueError(f"chat_format `{chat_format}` is not one this node offers. Pick one from the menu.")
-        if model == NO_MODELS or not model:
-            raise ValueError(
-                "LLM GGUF Loader found no .gguf model. Put one in ComfyUI/models/LLM or "
-                "models/text_encoders, or download one in LM Studio, then press R in ComfyUI to "
-                "refresh the menu."
-            )
-        path = gguf.locate(model)
-        if path is None:
-            raise ValueError(
-                f"`{model}` is not a .gguf file in models/LLM, models/text_encoders or LM Studio's "
-                "models folder. Pick one from the menu."
-            )
-        projector = ""
-        if mmproj and mmproj != NO_PROJECTOR:
-            projector = gguf.locate(mmproj)
-            if projector is None:
-                raise ValueError(
-                    f"The mmproj `{mmproj}` is not a .gguf file in models/LLM, models/text_encoders "
-                    "or LM Studio's models folder. Pick one from the menu."
-                )
-        if chat_format in gguf.VISION_FORMATS and not projector:
-            raise ValueError(
-                f"chat_format {chat_format} places pictures, which needs an mmproj. Pick the "
-                "model's mmproj file, or set chat_format to auto."
-            )
-        llama_cpp = gguf.require()
-        offload_ready = bool(llama_cpp.llama_supports_gpu_offload())
-        layers = int(gpu_layers) if offload_ready else 0
-        spec = gguf.LoadSpec(
-            name=model, path=path, projector_name=mmproj if projector else "", projector=projector,
-            n_ctx=int(n_ctx), gpu_layers=layers, flash_attn=bool(flash_attn),
+        if mmproj not in (gguf.AUTO_PROJECTOR, NO_PROJECTOR):
+            mmproj = gguf.menu_name(mmproj)
+        wire, report = local_models.from_gguf(
+            "LLM GGUF Loader", "" if model == NO_MODELS else model, mmproj, n_ctx, gpu_layers,
+            flash_attn, chat_format, temperature, top_p, top_k, min_p, repeat_penalty, seed,
+            max_tokens,
         )
-        with runtime.guarded():
-            loaded, fresh = gguf.load(spec, seed=int(seed))
-            meta = loaded.meta
-            title = str(meta.get("general.name") or os.path.splitext(os.path.basename(model))[0])
-            label = f"{title} on llama.cpp"
-            llm = gguf.gguf_model()(
-                spec,
-                model_label=label,
-                context=int(n_ctx),
-                max_tokens=int(max_tokens),
-                chat_format=chat_format,
-                temperature=float(temperature),
-                top_p=float(top_p),
-                top_k=int(top_k),
-                min_p=float(min_p),
-                repeat_penalty=float(repeat_penalty),
-                seed=int(seed),
-            )
-            wire = wires.LanguageModel(
-                llm=llm,
-                label=label,
-                provider="gguf",
-                local=True,
-                function_calling=False,
-                vision=bool(projector) and chat_format not in gguf.TEXT_FORMATS,
-                context_window=int(n_ctx),
-                release=lambda: gguf.release(spec.key),
-            )
-        arch = str(meta.get("general.architecture") or "unknown")
-        trained = meta.get(f"{arch}.context_length")
-        warnings = []
-        if int(gpu_layers) != 0 and not offload_ready:
-            warnings.append("this llama-cpp-python build cannot use the GPU, so gpu_layers was ignored")
-        if isinstance(trained, int) and int(n_ctx) > trained:
-            warnings.append(f"n_ctx is past the {trained} tokens the model was trained on")
-        if projector and chat_format in gguf.TEXT_FORMATS:
-            warnings.append(f"chat_format {chat_format} reads no pictures, so the mmproj is unused")
-        facts = {
-            "model": title,
-            "folder": gguf.folder_label(path) or "models",
-            "architecture": arch,
-            "file": f"{os.path.getsize(path) / 2**30:.2f} GB",
-            "gpu": ("every layer" if layers < 0 else f"{layers} layers") if layers else "CPU only",
-            "chat format": "from the file" if chat_format == gguf.AUTO else chat_format,
-            "pictures": f"through {mmproj}" if projector else "text only",
-        }
-        if fresh:
-            facts["loaded"] = f"{loaded.seconds:.2f} s"
-        else:
-            facts["loaded"] = "already in memory"
-        if warnings:
-            facts["note"] = "; ".join(warnings)
-        counts = {"context tokens": int(n_ctx), "max tokens": int(max_tokens)}
-        if isinstance(trained, int):
-            counts["trained context"] = trained
-        cache = gguf.cache_bytes(meta, int(n_ctx))
-        if cache:
-            counts["cache GB"] = round(cache / 2**30, 2)
-        run_result.publish(
-            status=run_result.WARNING if warnings else run_result.OK,
-            summary=f"{title} is ready, {facts['gpu']}" + (f" ({warnings[0]})" if warnings else ""),
-            counts=counts,
-            facts=facts,
-        )
+        run_result.publish(status=report.status, summary=report.summary, counts=report.counts,
+                           facts=report.facts)
         return io.NodeOutput(wire)

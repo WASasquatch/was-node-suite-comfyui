@@ -309,10 +309,17 @@ def require_vision(model, node: str, pictures: int) -> None:
         ValueError: Pictures would be sent and the model does not read them.
     """
     if pictures and not model.vision:
+        if model.provider == "gguf":
+            raise ValueError(
+                f"{node} was given {pictures} picture{'s' if pictures != 1 else ''}, and "
+                f"{model.label} was loaded without an mmproj, the file a GGUF model reads pictures "
+                "through. Put the model's mmproj .gguf in the same folder and set mmproj to auto, "
+                "or pick it in the loader's mmproj menu."
+            )
         raise ValueError(
             f"{node} was given {pictures} picture{'s' if pictures != 1 else ''}, and "
-            f"{model.label} does not read pictures. Connect a model that does, such as LLM From "
-            f"CLIP with Qwen3 VL or a vision model from LLM OpenAI, or disconnect the image."
+            f"{model.label} does not read pictures. Connect a model that does, such as LLM Loader "
+            f"with Qwen3 VL or JoyCaption, or a vision model from LLM OpenAI, or disconnect the image."
         )
 
 

@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **759** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **760** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-673 of them load in a fresh install. The other 86 wait behind a switch that starts off.
+673 of them load in a fresh install. The other 87 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -13,7 +13,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 | Section | In a fresh install | Nodes |
 |---|---|---:|
 | [Always loaded](#always-loaded) | always on | 515 |
-| [`features.llm`](#featuresllm) | off | 79 |
+| [`features.llm`](#featuresllm) | off | 80 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
 | [`legacy.debug`](#legacydebug) | off | 2 |
@@ -741,7 +741,7 @@ Read a GLB, glTF, VRM, FBX or OBJ file with its materials, skeleton, skin, shape
 <details>
 <summary><b>3D Model Material</b></summary>
 
-Correct how a model's parts take light: scale metalness down and give every surface a minimum roughness, for hair, skin or cloth a 3D generator made look like polished metal.
+Correct how a model's parts take light: scale metalness down, clear it from dark texels and give every surface a minimum roughness. For hair, skin, cloth or painted iron that a 3D generator made look like polished metal or black chrome.
 
 | | |
 |---|---|
@@ -756,6 +756,7 @@ Correct how a model's parts take light: scale metalness down and give every surf
 | `min_roughness` | `FLOAT` | Yes | 0.5 |  | Every texel of the chosen parts is at least this rough. 0.5 = satin, no mirror highlights; 0.8 = matte; 0 = unchanged. |
 | `double_sided` | `COMBO` | Yes | keep | `keep`, `on`, `off` | `on` = draw back faces too, for single-layer cloth and hair cards; `off` = front faces only; `keep` = as the material says. |
 | `parts` | `STRING` | Yes |  |  | Parts to work on: comma-separated names or labels, wildcards allowed, such as `head, hair*`. Empty works on every part. |
+| `metal_min_brightness` | `FLOAT` | Yes | 0.4 |  | Texels stay metal only where the base colour's brightest channel reaches this; darker ones become painted, non-metal surfaces. 0.4 = black iron turns matte, brass and steel stay metal; 0 = unchanged. |
 
 **Outputs**
 
@@ -16764,7 +16765,7 @@ Run a workflow saved in app mode as a single node. Its exposed inputs become val
 
 ## `features.llm`
 
-79 nodes. Off in a fresh install: set `features.llm: true` in `config.yaml` and restart ComfyUI to load these.
+80 nodes. Off in a fresh install: set `features.llm: true` in `config.yaml` and restart ComfyUI to load these.
 
 ### WAS Suite/LLM/Agents
 
@@ -17086,7 +17087,7 @@ Have a language model write a title, summaries, the questions a chunk answers, k
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | The chunks to enrich, from LLM Split Documents, or whole documents from a loader. |
-| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the metadata, such as LLM From CLIP, LLM GGUF Loader or LLM OpenAI. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the metadata, such as LLM Loader, LLM From CLIP or LLM OpenAI. |
 | `title` | `INT` | Yes | 5 |  | Chunks of each document its title is written from. `5` = the first five; `0` = no title. Every chunk of a document gets the same title. |
 | `summaries` | `COMBO` | Yes | none | `none`, `self`, `self and neighbours` | `none` = no summary; `self` = a summary of each chunk; `self and neighbours` = also the summaries of the chunks before and after it. |
 | `questions` | `INT` | Yes | 3 |  | Questions each chunk can answer, written onto it. `3` is usual; `0` = none. |
@@ -17476,7 +17477,7 @@ Test a retriever: a model writes questions from each chunk of the documents, the
 |---|---|---|---|---|---|
 | `retriever` | `WAS_LLM_RETRIEVER` | Yes |  |  | The retriever to test, built over an index of the same documents. |
 | `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | The documents the index was built from. Connect the same chunks the index holds to score by chunk, or the whole documents to score by document. |
-| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the test questions, such as LLM OpenAI or LLM GGUF Loader. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the test questions, such as LLM Loader or LLM OpenAI. |
 | `questions_per_chunk` | `INT` | Yes | 2 |  | Questions written per chunk. `2` is a quick test; `5` a closer one. |
 | `max_chunks` | `INT` | Yes | 20 |  | Chunks questions are written from, spread evenly across the documents. One model call per chunk, so `20` is twenty calls. |
 | `precision` | `BOOLEAN` | Yes | False |  | `true` adds precision to the report: the share of what was retrieved that is the source. |
@@ -17511,7 +17512,7 @@ Have a model write questions that the documents answer, a few per chunk, to test
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `documents` | `WAS_LLM_DOCUMENTS` | Yes |  |  | The documents or chunks to write questions about, such as from LLM Load Documents. Whole documents are split into chunks of about 1024 tokens first. |
-| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the questions, such as LLM OpenAI or LLM GGUF Loader. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that writes the questions, such as LLM Loader or LLM OpenAI. |
 | `questions_per_chunk` | `INT` | Yes | 2 |  | Questions asked for per chunk. `2` covers a document lightly; `5` tests it closely. |
 | `max_chunks` | `INT` | Yes | 20 |  | Chunks read at most, spread evenly across the documents. One model call per chunk, so `20` is twenty calls. |
 
@@ -17542,7 +17543,7 @@ Talk with a language model one turn at a time. Connect a memory to keep the conv
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `llm` | `WAS_LLM` | Yes |  |  | The model that answers, from LLM From CLIP, LLM GGUF Loader, LLM OpenAI or another LLM model node. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that answers, from LLM Loader, LLM From CLIP, LLM OpenAI or another LLM model node. |
 | `message` | `STRING` | No |  |  | What to say next, such as `And in winter?`. With a saved memory the same message twice in a row is answered once, so change it to ask again; left empty, nothing is asked and the newest reply comes back. |
 | `messages` | `WAS_LLM_MESSAGES` | No |  |  | The conversation before this turn, from LLM Message, such as a system message setting a persona. With a memory, messages it already holds are not added again. |
 | `image` | `IMAGE` | No |  |  | Pictures sent with the message, for a model that reads them. Every frame of a batch is sent, up to 64. |
@@ -17574,7 +17575,7 @@ Ask a language model one question and get its answer as text, such as turning a 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `llm` | `WAS_LLM` | Yes |  |  | The model that answers, from LLM From CLIP, LLM GGUF Loader, LLM OpenAI or another LLM model node. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that answers, from LLM Loader, LLM From CLIP, LLM OpenAI or another LLM model node. |
 | `prompt` | `STRING` | Yes |  |  | What to ask, such as `Expand into a detailed photo prompt: a lighthouse in a storm`. |
 | `max_tokens` | `INT` | Yes | 0 |  | 0 = the model's own limit; 300 = about 225 words at most. Lower it to keep answers short. |
 | `system_prompt` | `STRING` | No |  |  | Standing instructions placed before the prompt, such as from Load System Prompt: `You write vivid, concise image prompts.` |
@@ -17637,7 +17638,7 @@ Have a language model fill in named fields, such as a subject, a mood and a list
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `llm` | `WAS_LLM` | Yes |  |  | The model that fills the fields, from LLM From CLIP, LLM GGUF Loader, LLM OpenAI or another LLM model node. |
+| `llm` | `WAS_LLM` | Yes |  |  | The model that fills the fields, from LLM Loader, LLM From CLIP, LLM OpenAI or another LLM model node. |
 | `text` | `STRING` | Yes |  |  | What to read the fields from, or the request itself, such as a caption, an article or `Invent a fantasy character.` |
 | `schema` | `STRING` | Yes | subject: string  The main subject, in a few words mood: one of calm, tense, joyful, gloomy  The overall mood colours: list of string  The dominant colours people: integer  How many people appear |  | One field per line, `name: type  description`, with types string, number, integer, boolean, `list of string` or `one of a, b, c`; or a JSON Schema object. At most 64 fields, nested 4 deep. |
 | `instructions` | `STRING` | No |  |  | Standing instructions placed before the text, such as `Use British spelling. Leave a field empty rather than guess.` |
@@ -18298,7 +18299,7 @@ Load a GGUF language model from models/LLM, models/text_encoders or LM Studio's 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `model` | `COMBO,STRING` | Yes |  |  | The .gguf model file, from ComfyUI/models/LLM, models/text_encoders or the folder LM Studio downloads into, such as a Qwen3 4B Instruct Q8_0. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
-| `mmproj` | `COMBO,STRING` | Yes | none |  | `none` = text only; an mmproj .gguf made for this model = it reads pictures too, such as mmproj-Qwen2.5-VL-7B-f16.gguf. LM Studio keeps it beside the model. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `mmproj` | `COMBO,STRING` | Yes | auto |  | `auto` = the mmproj beside the model made for it; `none` = text only; a named mmproj = pictures through that file, such as mmproj-Qwen2.5-VL-7B-f16.gguf. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
 | `n_ctx` | `INT` | Yes | 8192 |  | The most tokens the model reads at once, conversation and reply together. `8192` suits chat; larger values take more memory. |
 | `gpu_layers` | `INT` | Yes | -1 |  | `-1` = every layer on the GPU; `0` = CPU only; `20` = the first 20 layers. Needs a llama-cpp-python build with GPU support. |
 | `flash_attn` | `BOOLEAN` | Yes | False |  | `true` uses flash attention, which saves memory on a long context where the build supports it. |
@@ -18374,6 +18375,40 @@ Choose a CLIP or SigLIP model that places pictures and text in the same space, s
 | Name | Type | What it is |
 |---|---|---|
 | `image_embedding` | `WAS_LLM_EMBEDDING` | The picture model, for LLM Image Index or the image_embedding input of LLM Load Index. |
+
+</details>
+
+<a id="node-wasllmloader"></a>
+<details>
+<summary><b>LLM Loader</b></summary>
+
+Load a local language model as the LLM for chat, captions, retrieval and agents, from one menu of text_encoders files and GGUF models. A GGUF runs on llama.cpp and reads pictures through the mmproj beside it; any other file runs on ComfyUI's own loader. The panel shows the model, how it runs and whether it reads pictures.
+
+| | |
+|---|---|
+| Node id | `WASLLMLoader` |
+| Enable with | `features.llm: true` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `COMBO,STRING` | Yes |  |  | A language model from models/text_encoders, models/LLM or LM Studio's downloads, such as qwen3_32b_w4a8.safetensors, qwen3vl_8b.safetensors or llama-joycaption-beta-one-hf-llava.Q8_0.gguf. A .gguf runs on llama.cpp. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `mmproj` | `COMBO,STRING` | Yes | auto |  | For a .gguf model. `auto` = the mmproj beside the model made for it; `none` = text only; a named mmproj = pictures through that file. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `sampling_mode` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `on` draws each token at random within the limits below. `off` always takes the likeliest token and writes the same text every time. |
+| `max_tokens` | `INT` | Yes | 1024 |  | The most tokens one reply writes. `1024` is about 750 words. |
+| `thinking` | `BOOLEAN` | Yes | False |  | `true` lets a model that reasons, such as Qwen3, think before answering. A .gguf follows the chat template in its file. |
+| `n_ctx` | `INT` | Yes | 8192 |  | For a .gguf model: the most tokens it reads at once, conversation and reply together. `8192` suits chat; larger values take more memory. |
+| `gpu_layers` | `INT` | Yes | -1 |  | For a .gguf model: `-1` = every layer on the GPU; `0` = CPU only; `20` = the first 20 layers. |
+| `flash_attn` | `BOOLEAN` | Yes | False |  | For a .gguf model: `true` uses flash attention, which saves memory on a long context where the build supports it. |
+| `chat_format` | `COMBO` | Yes | auto |  | For a .gguf model: `auto` = the chat template inside the file; `chatml` or `llama-3` overrides it; `llava-1-5` or `qwen2.5-vl` places pictures for that family. |
+| `fast_decode` | `BOOLEAN` | Yes | True |  | For other files: `true` writes on ComfyUI's fixed cache, graph captured decode where the model allows it; `false` runs exactly as core Generate Text. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `llm` | `WAS_LLM` | The model, for LLM Complete, LLM Chat, the query engines and the agents. |
 
 </details>
 
@@ -18490,7 +18525,7 @@ Free the memory a language model and an embedding model hold, then pass a value 
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `llm` | `WAS_LLM` | No |  |  | The language model to release, from LLM From CLIP, LLM GGUF Loader or LLM Transformers Loader. It reloads if used again. |
+| `llm` | `WAS_LLM` | No |  |  | The language model to release, from LLM Loader, LLM From CLIP, LLM GGUF Loader or LLM Transformers Loader. It reloads if used again. |
 | `embedding` | `WAS_LLM_EMBEDDING` | No |  |  | The embedding model to release, from LLM Embedding Model. It reloads if used again. |
 | `passthrough` | `*` | No |  |  | Any value, such as the text an LLM step wrote. Wiring it here makes the release wait for that step. |
 
@@ -18554,7 +18589,7 @@ Combine a retriever and a language model into a query engine that answers questi
 | `response_mode` | `COMBO` | Yes | compact | `compact`, `refine`, `tree_summarize`, `simple_summarize`, `accumulate`, `compact_accumulate`, `generation`, `no_text`, `context_only` | `compact` = chunks packed into few calls; `refine` = one call a chunk; `tree_summarize` = summarised upward; `simple_summarize` = one call; `accumulate` = one answer a chunk, `compact_accumulate` in fewer calls; `generation` = chunks ignored; `no_text` = chunks only; `context_only` = chunks as the answer. |
 | `citations` | `BOOLEAN` | Yes | False |  | `true` cuts the chunks into numbered sources and asks the model to cite them, such as `[1]`; `false` answers without citations. |
 | `citation_chunk_size` | `INT` | Yes | 512 |  | Tokens in one numbered source while citations is `true`. `256` cites finely, `1024` cites whole passages. |
-| `qa_prompt` | `STRING` | No |  |  | Replaces the question prompt. Must hold `{context_str}` and `{query_str}`, such as `Answer from this only:\n{context_str}\nQuestion: {query_str}`. Empty uses the built-in prompt. |
+| `qa_prompt` | `STRING` | No |  |  | Replaces the question prompt. Plain instructions get the retrieved chunks above them and the question below; `{context_str}` and `{query_str}` place them by hand. Empty uses the built-in prompt. |
 | `postprocessors` | `WAS_LLM_POSTPROCESSORS` | No |  |  | Filters and rerankers run over the retrieved chunks before the answer is written, in chain order. |
 | `system_prompt` | `STRING` | No |  |  | Standing instructions the model follows in every answer, such as a skill from Load System Prompt whose documents feed the retriever, or `Answer in British English.` Unconnected = none. |
 

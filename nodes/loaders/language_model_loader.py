@@ -26,8 +26,6 @@ class WASLanguageModelLoader(io.ComfyNode):
             search_aliases=[
                 "WASLanguageModelLoader", NODE_NAME,
                 "load language model",
-                "Load LLM",
-                "LLM Loader",
                 "Load CLIP",
                 "CLIP Loader",
                 "qwen3 32b",

@@ -487,7 +487,9 @@ model already loaded for the generation.
 **Language Model Loader** loads a language model from `ComfyUI/models/text_encoders` as a CLIP
 that writes text, for core Generate Text, **Fast Generate Text** and **LLM From CLIP**. It reads
 Qwen3 14B and 32B as one safetensors file in Hugging Face key names, in bfloat16 or quantized in
-ComfyUI's own formats, and loads every other language model as ComfyUI reads it. Its panel shows
+ComfyUI's own formats, and loads every other language model as ComfyUI reads it. Qwen2.5-VL 7B,
+the Qwen-Image encoder, writes text and reads pictures with the output layer its file carries, and
+Gemma 3 12B, the LTX-2 encoder, reads pictures too. Its panel shows
 the model, its size, its layers and how its weights are stored. A prompt encoder with no output
 layer, such as MiniMax H3's Qwen3-VL 32B, is refused by name.
 
@@ -506,7 +508,10 @@ The nodes under **WAS Suite/LLM** are llama-index on the canvas: each part of a 
 pipeline, from the model to the agent, is a node, wired and queued like any other and run on the
 models a graph wires in:
 
-- **Models.** **LLM From CLIP** uses the language model inside a core **Load CLIP** or a
+- **Models.** **LLM Loader** lists every local language model in one menu, text_encoders files and
+  GGUF models together, so one graph takes either: a GGUF runs on llama.cpp with the mmproj
+  beside it for pictures, any other file on ComfyUI's loader
+  ([`llm-loader.json`](docs/workflows/llm-loader.json)). **LLM From CLIP** uses the language model inside a core **Load CLIP** or a
   **Language Model Loader**, such as Qwen3 or Gemma, with pictures. **LLM GGUF Loader** runs a GGUF file, the models LM Studio has downloaded included, and **LLM Transformers
   Loader** a Hugging Face model folder. **LLM OpenAI**, **LLM Anthropic**, **LLM Google Gemini**
   and **LLM Provider** reach hosted models and local servers such as Ollama and LM Studio, with

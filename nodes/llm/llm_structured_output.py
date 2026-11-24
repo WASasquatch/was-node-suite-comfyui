@@ -20,7 +20,7 @@ logger = log.get_logger("llm.generate")
 NODE = "LLM Structured Output"
 
 #: The nodes that make a language model, for messages.
-LLM_HINT = "LLM From CLIP, LLM GGUF Loader or LLM OpenAI"
+LLM_HINT = "LLM Loader, LLM From CLIP or LLM OpenAI"
 
 #: The schema a new node starts with.
 DEFAULT_SCHEMA = (
@@ -60,7 +60,7 @@ class LLMStructuredOutput(io.ComfyNode):
                 LLM.Input(
                     "llm",
                     tooltip=(
-                        "The model that fills the fields, from LLM From CLIP, LLM GGUF Loader, LLM "
+                        "The model that fills the fields, from LLM Loader, LLM From CLIP, LLM "
                         "OpenAI or another LLM model node."
                     ),
                 ),

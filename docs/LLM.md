@@ -83,9 +83,19 @@ llm:
 | Model | Folder |
 |---|---|
 | Language models for LLM From CLIP | `models/text_encoders`, loaded by core **Load CLIP** |
+| Language models for LLM Loader | `models/text_encoders`, plus every `.gguf` in `models/LLM` and the folder LM Studio downloads models into |
 | GGUF language and embedding models | `models/LLM`, `models/text_encoders` and the folder LM Studio downloads models into |
 | Hugging Face folders: language, embedding and reranker models | `models/LLM`, one folder per model holding its `config.json` |
 | Picture models for LLM Image Embedding Model | `models/LLM`, one CLIP or SigLIP folder holding its `config.json` |
+
+A GGUF model reads pictures only through its `mmproj` file. With `mmproj` on `auto`, LLM Loader
+and LLM GGUF Loader take the mmproj `.gguf` in the model's own folder whose recorded width matches
+the model and whose file name shares the model's name words.
+
+| Symptom | Fix |
+|---|---|
+| A vision GGUF such as JoyCaption is refused a picture, `loaded without an mmproj` | Download the model's mmproj `.gguf` into the model's folder and keep `mmproj` on `auto`, or pick the file in the `mmproj` menu |
+| The panel reads `text only, no mmproj beside the model` | The model's folder holds no mmproj made for it |
 
 The GGUF menus list LM Studio's downloads under their LM Studio names, such as
 `lmstudio-community/Qwen3-4B-GGUF/Qwen3-4B-Q8_0.gguf`, with the `mmproj` file beside each model on

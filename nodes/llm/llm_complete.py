@@ -18,7 +18,7 @@ logger = log.get_logger("llm.generate")
 NODE = "LLM Complete"
 
 #: The nodes that make a language model, for messages.
-LLM_HINT = "LLM From CLIP, LLM GGUF Loader or LLM OpenAI"
+LLM_HINT = "LLM Loader, LLM From CLIP or LLM OpenAI"
 
 #: The most tokens the answer may be held to.
 MAX_TOKENS = 131072
@@ -54,7 +54,7 @@ class LLMComplete(io.ComfyNode):
                 LLM.Input(
                     "llm",
                     tooltip=(
-                        "The model that answers, from LLM From CLIP, LLM GGUF Loader, LLM OpenAI "
+                        "The model that answers, from LLM Loader, LLM From CLIP, LLM OpenAI "
                         "or another LLM model node."
                     ),
                 ),

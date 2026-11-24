@@ -6,6 +6,8 @@ names, plain or ``comfy_quant``, ``down_proj`` optionally in ``parts`` column sl
 
 from __future__ import annotations
 
+import contextlib
+import dataclasses
 import json
 import os
 import re
@@ -73,6 +75,12 @@ NO_HEAD = {
         "output layer, so it cannot write text. Pick a whole language model, such as "
         "qwen3_32b_w4a8.safetensors, or keep this file in Load CLIP for H3."
     ),
+}
+
+
+#: ComfyUI configs built without the output layer their files carry, and the tokens that end an answer.
+HEADLESS = {
+    "Qwen25_7BVLI_Config": (151643, 151645),
 }
 
 
@@ -203,10 +211,50 @@ def load(name: str) -> Loaded:
     return _core(path, name, header)
 
 
-def load_patcher(path: str):
+def load_patcher(path: str, disable_dynamic: bool = False):
     """Build the model at ``path`` again and answer its patcher, for a copy on another device."""
     header = _header(path)
     return _build(path, dense_qwen3(header)).clip.patcher
+
+
+def load_core_patcher(path: str, disable_dynamic: bool = False):
+    """Build a file through ComfyUI's loader again, output layer included, and answer its patcher."""
+    import comfy.sd
+    import folder_paths
+
+    with _with_head(_header(path) or {}):
+        return comfy.sd.load_clip_model_patcher(
+            [path], folder_paths.get_folder_paths("embeddings"), comfy.sd.CLIPType.STABLE_DIFFUSION, {},
+            disable_dynamic=disable_dynamic,
+        )
+
+
+@contextlib.contextmanager
+def _with_head(header: dict):
+    """While ComfyUI loads a file, build each `HEADLESS` config with an output layer and stop tokens.
+
+    Yields:
+        True when the file carries an output layer and a config was swapped in.
+    """
+    import comfy.text_encoders.llama as llama
+
+    if "lm_head.weight" not in header and "model.lm_head.weight" not in header:
+        yield False
+        return
+    saved = {}
+    for name, stops in HEADLESS.items():
+        base = getattr(llama, name, None)
+        if base is None or not dataclasses.is_dataclass(base):
+            continue
+        writer = dataclasses.make_dataclass(name, [("lm_head", bool, field(default=True))], bases=(base,))
+        writer.stop_tokens = list(stops)
+        saved[name] = base
+        setattr(llama, name, writer)
+    try:
+        yield bool(saved)
+    finally:
+        for name, base in saved.items():
+            setattr(llama, name, base)
 
 
 def _header(path: str) -> dict | None:
@@ -245,12 +293,16 @@ def _core(path: str, name: str, header: dict | None) -> Loaded:
     found = comfy.sd.detect_te_model(header) if header is not None else None
     if found is not None and found.name in NO_HEAD:
         raise ValueError(NO_HEAD[found.name].format(name=name))
-    clip = comfy.sd.load_clip(
-        ckpt_paths=[path],
-        embedding_directory=folder_paths.get_folder_paths("embeddings"),
-        clip_type=comfy.sd.CLIPType.STABLE_DIFFUSION,
-    )
+    with _with_head(header or {}) as swapped:
+        clip = comfy.sd.load_clip(
+            ckpt_paths=[path],
+            embedding_directory=folder_paths.get_folder_paths("embeddings"),
+            clip_type=comfy.sd.CLIPType.STABLE_DIFFUSION,
+        )
     transformer, _ = text_decode.decoder_of(clip)
+    config = getattr(getattr(transformer, "model", None), "config", None)
+    if swapped and type(config).__name__ in HEADLESS:
+        clip.patcher.cached_patcher_init = (load_core_patcher, (path,))
     if transformer is None or not callable(getattr(transformer, "generate", None)):
         raise ValueError(
             f"{name} is a text encoder that conditions images and cannot write text. Pick a "

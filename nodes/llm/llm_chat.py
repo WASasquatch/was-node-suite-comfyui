@@ -19,7 +19,7 @@ logger = log.get_logger("llm.chat")
 NODE = "LLM Chat"
 
 #: The nodes that make a language model, for messages.
-LLM_HINT = "LLM From CLIP, LLM GGUF Loader or LLM OpenAI"
+LLM_HINT = "LLM Loader, LLM From CLIP or LLM OpenAI"
 
 
 class LLMChat(io.ComfyNode):
@@ -50,7 +50,7 @@ class LLMChat(io.ComfyNode):
                 LLM.Input(
                     "llm",
                     tooltip=(
-                        "The model that answers, from LLM From CLIP, LLM GGUF Loader, LLM OpenAI "
+                        "The model that answers, from LLM Loader, LLM From CLIP, LLM OpenAI "
                         "or another LLM model node."
                     ),
                 ),

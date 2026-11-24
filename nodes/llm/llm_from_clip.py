@@ -7,7 +7,7 @@ from comfy_api.latest import io
 from ...modules import log
 from ...modules.compat.types import LLM
 from ...modules.interface import run_result
-from ...modules.llm import clip_llm, runtime, wires
+from ...modules.llm import local_models
 
 REQUIRES = "llm"
 
@@ -15,13 +15,6 @@ logger = log.get_logger("llm.models")
 
 #: The largest seed the sampler takes.
 MAX_SEED = 0xFFFFFFFFFFFFFFFF
-
-#: How each tokenizer family is described on the panel.
-FORMATS = {
-    clip_llm.CHATML: "ChatML conversation",
-    clip_llm.MISTRAL: "Mistral instruction",
-    clip_llm.TEMPLATE: "model template, earlier turns as a transcript",
-}
 
 
 class WASLLMFromCLIP(io.ComfyNode):
@@ -128,66 +121,11 @@ class WASLLMFromCLIP(io.ComfyNode):
         Returns:
             The LLM wire.
         """
-        if clip is None:
-            raise ValueError(
-                "LLM From CLIP needs a CLIP. Connect Load CLIP with a language model such as "
-                "qwen_3_4b.safetensors."
-            )
-        if clip_llm.generator_of(clip) is None:
-            raise ValueError(
-                "This CLIP holds no language model that writes text, such as CLIP-L or T5. Load "
-                "one that does, such as qwen_3_4b.safetensors with type lumina2, qwen3vl_4b or "
-                "gemma_3_4b_it."
-            )
-        mode = dict(sampling_mode or {})
-        sampled = mode.get("sampling_mode") == "on"
-        settings = {
-            "on": sampled,
-            "temperature": mode.get("temperature", 1.0),
-            "top_k": mode.get("top_k", 50),
-            "top_p": mode.get("top_p", 1.0),
-            "min_p": mode.get("min_p", 0.0),
-            "repetition_penalty": mode.get("repetition_penalty", 1.0),
-            "presence_penalty": mode.get("presence_penalty", 0.0),
-            "seed": mode.get("seed"),
-        }
-        with runtime.guarded():
-            family = clip_llm.family_of(clip)
-            name = family.name or "CLIP"
-            context = clip_llm.context_of(clip)
-            label = f"{name} on CLIP"
-            model = clip_llm.clip_model()(
-                clip,
-                model_label=label,
-                context=context,
-                max_tokens=int(max_tokens),
-                thinking=bool(thinking),
-                fast_decode=bool(fast_decode),
-                sampling=settings,
-            )
-            wire = wires.LanguageModel(
-                llm=model,
-                label=label,
-                provider="clip",
-                local=True,
-                function_calling=False,
-                vision=family.vision,
-                context_window=context,
-                release=lambda: clip_llm.release_clip(clip),
-            )
-        logger.info("LLM From CLIP wrapped %s (%s, context %d)", name, family.kind, context)
-        facts = {
-            "model": name,
-            "chat format": FORMATS.get(family.kind, family.kind),
-            "pictures": "reads them" if family.vision else "text only",
-            "thinking": "on" if thinking else "off",
-            "sampling": f"on, temperature {settings['temperature']}" if sampled else "off, likeliest token",
-            "decode": "fast where the model allows" if fast_decode else "core",
-        }
-        run_result.publish(
-            status=run_result.OK,
-            summary=f"{name} is ready as an LLM, {facts['pictures']}",
-            counts={"context tokens": context, "max tokens": int(max_tokens)},
-            facts=facts,
+        wire, report = local_models.from_clip(
+            "LLM From CLIP", clip, local_models.sampling_settings(sampling_mode), max_tokens,
+            thinking=thinking, fast_decode=fast_decode,
         )
+        logger.info("LLM From CLIP wrapped %s", wire.label)
+        run_result.publish(status=report.status, summary=report.summary, counts=report.counts,
+                           facts=report.facts)
         return io.NodeOutput(wire)

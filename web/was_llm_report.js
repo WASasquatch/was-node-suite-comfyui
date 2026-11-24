@@ -28,6 +28,7 @@ const PANELS = {
   WASLLMFromCLIP: [160, "run to see the model"],
   WASLanguageModelLoader: [200, "run to load the model"],
   WASLLMGGUFLoader: [200, "run to load the model"],
+  WASLLMLoader: [220, "run to load the model"],
   WASLLMTransformersLoader: [180, "run to load the model"],
   WASLLMUnload: [140, "run to free the models"],
   WASLLMMessage: [200, "run to see the conversation"],

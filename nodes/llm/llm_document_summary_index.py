@@ -113,7 +113,7 @@ class LLMDocumentSummaryIndex(io.ComfyNode):
             The document summary index.
         """
         docs = wires.expect(documents, wires.Documents, NODE, "documents", "LLM Load Documents")
-        model = wires.expect(llm, wires.LanguageModel, NODE, "llm", "LLM From CLIP, LLM GGUF Loader or LLM OpenAI")
+        model = wires.expect(llm, wires.LanguageModel, NODE, "llm", "LLM Loader, LLM From CLIP or LLM OpenAI")
         embed = None
         if embedding is not None:
             embed = wires.expect(embedding, wires.EmbeddingModel, NODE, "embedding", "LLM Embedding Model")

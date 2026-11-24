@@ -605,6 +605,12 @@
       "description": "A short idea expanded by a built-in system prompt, then rendered as typed and as expanded on the same seed."
     },
     {
+      "file": "llm-loader.json",
+      "section": "Language models and Llama-Index",
+      "title": "LLM Loader",
+      "description": "One picture captioned twice through LLM Loader and LLM Complete: JoyCaption as a GGUF on llama.cpp with its mmproj found beside it, and Qwen3-VL 4B as a safetensors file on ComfyUI."
+    },
+    {
       "file": "llm-chat-with-notes.json",
       "section": "Language models and Llama-Index",
       "title": "Chat with a folder of notes",

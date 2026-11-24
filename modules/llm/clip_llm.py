@@ -382,7 +382,7 @@ def family_of(clip) -> Family:
         The :class:`Family`.
     """
     tokenizer = getattr(clip, "tokenizer", None)
-    name = str(getattr(tokenizer, "clip_name", "") or "")
+    name = str(getattr(tokenizer, "clip_name", "") or getattr(tokenizer, "embedding_key", "") or "")
     # The pack's own encoders carry a was_ prefix before the family name.
     lowered = name.lower().removeprefix("was_")
     template = str(getattr(tokenizer, "llama_template", "") or "")
@@ -406,9 +406,11 @@ def family_of(clip) -> Family:
 
 
 def _inner(tokenizer):
-    """The tokenizer object inside a ComfyUI ``SD1Tokenizer``, or ``None``."""
+    """The tokenizer object inside a ComfyUI ``SD1Tokenizer``, a bare ``SDTokenizer`` itself, or ``None``."""
     key = getattr(tokenizer, "clip", None)
-    return getattr(tokenizer, key, None) if isinstance(key, str) else None
+    if isinstance(key, str):
+        return getattr(tokenizer, key, None)
+    return tokenizer if hasattr(tokenizer, "embedding_key") else None
 
 
 def generator_of(clip):

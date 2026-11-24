@@ -38,7 +38,7 @@ class WASLLMUnload(io.ComfyNode):
             inputs=[
                 LLM.Input(
                     "llm", optional=True,
-                    tooltip="The language model to release, from LLM From CLIP, LLM GGUF Loader or LLM Transformers Loader. It reloads if used again.",
+                    tooltip="The language model to release, from LLM Loader, LLM From CLIP, LLM GGUF Loader or LLM Transformers Loader. It reloads if used again.",
                 ),
                 LLM_EMBEDDING.Input(
                     "embedding", optional=True,
