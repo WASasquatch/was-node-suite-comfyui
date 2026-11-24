@@ -17,7 +17,7 @@ REQUIRES = "extras"
 CHANNEL_LABELS = ("R", "G", "B")
 
 #: Slot the scope drawn for the node's own panel is published under.
-#: ``web/was_channel_waveform.js`` names the same.
+#: ``web/was_channel_waveform.mjs`` names the same.
 PARADE_SLOT = "parade_scope"
 
 #: The fact the report carries the scope's own resampling under.

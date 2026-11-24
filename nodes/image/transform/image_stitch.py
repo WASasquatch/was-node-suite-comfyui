@@ -11,7 +11,7 @@ from ....modules.interface import size_report
 
 
 #: Every slot the series grows through, in the order they are stitched. image_a and image_b
-#: are the frozen v2 pair; the rest are revealed by web/was_growing_inputs.js as each fills.
+#: are the frozen v2 pair; the rest are revealed by web/was_growing_inputs.mjs as each fills.
 SLOT_NAMES = tuple(f"image_{letter}" for letter in "abcdefghijklmnopqrstuvwxyz")
 
 

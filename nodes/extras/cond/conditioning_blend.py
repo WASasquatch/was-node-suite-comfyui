@@ -105,7 +105,7 @@ def pooled_output(conditioning, socket):
 
 
 #: Every slot the series grows through, in the order they are blended. conditioning_a and
-#: conditioning_b are always drawn; the rest are revealed by web/was_growing_sockets.js as each
+#: conditioning_b are always drawn; the rest are revealed by web/was_growing_sockets.mjs as each
 #: one is wired.
 SLOT_NAMES = tuple(f"conditioning_{letter}" for letter in "abcdefghijklmnopqrstuvwxyz")
 

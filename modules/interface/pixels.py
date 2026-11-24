@@ -23,17 +23,17 @@ IMAGE_TYPE = "IMAGE"
 #: once. A second frame would file every picture twice under the same key.
 MARKER = "_was_pixels_preview"
 
-#: The node ids that file a before and an after. ``web/was_pixels_before_after.js`` holds the
+#: The node ids that file a before and an after. ``web/was_pixels_before_after.mjs`` holds the
 #: same list read from the other end, and draws the band for exactly these.
 #:
 #: `Image Seamless Texture` is deliberately absent although the edge blend it does is a
 #: member's job. Its ``tiled`` combo repeats the answer ``tiles`` times along each side, so the
 #: pair is two frames of different sizes, which the measurement band refuses and the fidelity
-#: glyph can then claim nothing about. ``web/was_geometry_readout.js`` draws that multiplier as
+#: glyph can then claim nothing about. ``web/was_geometry_readout.mjs`` draws that multiplier as
 #: a size instead, and one node carrying two panels leaves neither of them room.
 #:
 #: `Image Gradient Map` is absent for the same
-#: reason. `web/was_image_generate_gradient.js` draws the ramp they read and the stops they are
+#: reason. `web/was_image_generate_gradient.mjs` draws the ramp they read and the stops they are
 #: edited through, and one node carrying two panels leaves neither of them room.
 #:
 #: `Image Flip` is here rather than among the sizes. A mirror moves every pixel and changes no
