@@ -1,6 +1,8 @@
-# **WAS** Node Suite v3 &nbsp; ![ComfyUI](https://img.shields.io/badge/ComfyUI-Custom_Node-blue) [![Open Manager](https://img.shields.io/badge/Open_Manager-Compatible-yellow)](https://github.com/WASasquatch/open-manager-comfyui) ![License](https://img.shields.io/badge/License-MIT-green) [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://paypal.me/ThompsonJordan?country.x=US&locale.x=en_US) 
+# **WAS** Node Suite v3 &nbsp; ![ComfyUI](https://img.shields.io/badge/ComfyUI-Custom_Node-blue) [![Open Manager](https://img.shields.io/badge/Open_Manager-Compatible-yellow)](https://github.com/WASasquatch/open-manager-comfyui) ![License](https://img.shields.io/badge/License-MIT-green) [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://paypal.me/ThompsonJordan?country.x=US&locale.x=en_US) [![Discord](https://img.shields.io/badge/Discord-Open_Nodes-5865F2?logo=discord&logoColor=white)](https://discord.gg/y7FRDaNNun)
 
 <img src="was-node-suite-v3.png" width="600">
+
+### Join [Open Nodes on Discord](https://discord.gg/y7FRDaNNun) for help, release news and node development.
 
 WAS Node Suite has been going since 2023 on Civitai and on GitHub, and was among the
 first packs to put hundreds of nodes into users' hands. WAS-NS has over a million downloads, 
