@@ -24,6 +24,7 @@ __all__ = [
     "BRAVE_KEY",
     "KINDS",
     "MAX_DESCRIPTION_CHARS",
+    "MONID_KEY",
     "TAVILY_KEY",
     "brave_tools",
     "calculator_tools",
@@ -34,6 +35,7 @@ __all__ = [
     "document_options",
     "document_stamp",
     "document_tools",
+    "monid_tools",
     "names",
     "page_text",
     "query_engine_tool",
@@ -54,6 +56,7 @@ KINDS = (
     "web page",
     "web search (Tavily)",
     "web search (Brave)",
+    "web search (Monid)",
     "document reader",
 )
 
@@ -62,6 +65,22 @@ TAVILY_KEY = "TAVILY_API_KEY"
 
 #: The environment variable holding the Brave Search key.
 BRAVE_KEY = "BRAVE_API_KEY"
+
+#: The environment variable holding the Monid key.
+MONID_KEY = "MONID_API_KEY"
+
+#: Where a Monid search starts, and where a search that is still going is read back.
+MONID_RUN = "https://api.monid.ai/v1/run"
+MONID_RUNS = "https://api.monid.ai/v1/runs/"
+
+#: Seconds a Monid search waits at most for a search that is still going.
+MONID_WAIT = 60.0
+
+#: Seconds between two reads of a Monid search that is still going.
+MONID_POLL = 2.0
+
+#: The states a Monid search ends in.
+MONID_ENDED = frozenset({"COMPLETED", "FAILED", "TIMED_OUT", "STOPPED", "BLOCKED"})
 
 #: Bytes of a document file read at most.
 MAX_DOCUMENT_BYTES = 32 * 1024 * 1024
@@ -473,7 +492,8 @@ async def _get_json(url: str, *, params=None, headers=None, body=None) -> dict:
     sent = {"User-Agent": USER_AGENT, "Accept": "application/json", **(headers or {})}
     async with httpx.AsyncClient(timeout=API_TIMEOUT, follow_redirects=False) as client:
         method = "POST" if body is not None else "GET"
-        request = client.build_request(method, url, params=params, headers=sent, json=body)
+        payload = {"content": body} if isinstance(body, bytes) else {"json": body}
+        request = client.build_request(method, url, params=params, headers=sent, **payload)
         host = request.url.host
         for _ in range(MAX_API_REDIRECTS + 1):
             response = await client.send(request, stream=True)
@@ -772,6 +792,83 @@ def brave_tools(results: int = 5, max_characters: int = 6000) -> list:
     return [
         _function_tool(
             brave_search, "brave_search",
+            f"Searches the web and lists up to {count} results, each with its address and a short "
+            "description. Read a result in full with fetch_web_page where that tool is offered.",
+        )
+    ]
+
+
+async def _monid_search(query: str, count: int, key: str) -> list:
+    """The result rows of one web search run through Monid, which runs Context.dev's search.
+
+    Raises:
+        ValueError: The search failed, took longer than :data:`MONID_WAIT` or found an error.
+        httpx.HTTPError: A request failed.
+    """
+    headers = {"Authorization": f"Bearer {key}"}
+    body = {"provider": "context.dev", "endpoint": "/web/search", "input": {"body": {"query": query, "numResults": count}}}
+    run = await _get_json(
+        MONID_RUN,
+        headers={**headers, "Content-Type": "application/json; charset=utf-8"},
+        body=json.dumps(body, ensure_ascii=False).encode("utf-8"),
+    )
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + MONID_WAIT
+    while "output" not in run and run.get("status") not in MONID_ENDED:
+        if not run.get("runId"):
+            raise ValueError("Monid answered without results or a search to wait for")
+        if loop.time() >= deadline:
+            raise ValueError(f"the search was still going after {MONID_WAIT:g} seconds")
+        await asyncio.sleep(MONID_POLL)
+        runtime.check_interrupt()
+        run = await _get_json(MONID_RUNS + quote(str(run["runId"]), safe=""), headers=headers)
+    status = run.get("status")
+    if status not in (None, "COMPLETED"):
+        raise ValueError(f"the search ended {str(status)[:20]}")
+    answered = (run.get("providerResponse") or {}).get("httpStatus") or 200
+    if answered >= 400:
+        raise ValueError(f"the service answered HTTP {answered}")
+    output = run.get("output") if isinstance(run.get("output"), dict) else {}
+    return output.get("results") if isinstance(output.get("results"), list) else []
+
+
+def monid_tools(results: int = 5, max_characters: int = 6000) -> list:
+    """Web search through Monid, as one function tool. Monid bills the key's account per call.
+
+    Args:
+        results: Results a search lists.
+        max_characters: Characters handed to the model at most.
+
+    Returns:
+        ``[monid_search]``.
+
+    Raises:
+        ValueError: :data:`MONID_KEY` is not set.
+    """
+    _key(MONID_KEY, "Monid")
+    count = max(1, int(results))
+    characters = max(1, int(max_characters))
+
+    async def monid_search(
+        query: Annotated[str, "What to search the web for."],
+    ) -> str:
+        """Web results for a query."""
+        refused = _refusal("The Monid search tool")
+        if refused:
+            return refused
+        runtime.check_interrupt()
+        try:
+            key = _key(MONID_KEY, "Monid")
+            rows = await _monid_search(str(query or "")[:MAX_QUERY_CHARS], count, key)
+        except Exception as error:
+            return _failed("The web search", error)
+        if not rows:
+            return "The web search found nothing. Try other words."
+        return _clip("Web results:\n" + "\n".join(_search_lines(rows, count, "title", "url", "description")), characters)
+
+    return [
+        _function_tool(
+            monid_search, "monid_search",
             f"Searches the web and lists up to {count} results, each with its address and a short "
             "description. Read a result in full with fetch_web_page where that tool is offered.",
         )
