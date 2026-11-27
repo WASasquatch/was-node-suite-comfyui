@@ -6,6 +6,7 @@
 
 import * as THREE from "../vendor/three/three.module.mjs";
 import { readSprings } from "./springs.mjs";
+import { bodyPath, buildBlockoutProp, cameraMoves, cameraShots } from "./blockout.mjs";
 
 // Spring bones of each loaded model, by the object the loader answered.
 const springsOf = new WeakMap();
@@ -1679,6 +1680,26 @@ export function createRuntime(canvas, statusElement, options = {}) {
             return tag(mesh);
         }
 
+        if (spec.type === "BlockoutBody") {
+            const body = new THREE.Group();
+            body.name = typeof params.name === "string" ? params.name : "Blockout";
+            if (Array.isArray(params.position)) body.position.fromArray(params.position.map((v) => Number(v) || 0));
+            body.rotation.y = Number(params.turn) || 0;
+            for (const childSpec of spec.children || []) {
+                body.add(await buildObject(childSpec));
+            }
+            if (Array.isArray(params.path) && params.path.length > 1) {
+                updateFunctions.push(bodyPath(body, params, alongFor));
+            }
+            return tag(body);
+        }
+
+        if (spec.type === "BlockoutProp") {
+            const { object, resources } = buildBlockoutProp(THREE, params);
+            for (const resource of resources) disposableResources.add(resource);
+            return tag(object);
+        }
+
         if (spec.type === "Group") {
             const group = applyTransform(new THREE.Group(), params);
             for (const childSpec of spec.children || []) {
@@ -2068,6 +2089,10 @@ export function createRuntime(canvas, statusElement, options = {}) {
      * @returns {void}
      */
     function attachCameraTrack(camera, spec, scene) {
+        const shots = spec?.params?.shots;
+        const moves = spec?.params?.moves;
+        if (Array.isArray(shots) && shots.length) updateFunctions.push(cameraShots(THREE, camera, shots, alongFor, scene));
+        else if (Array.isArray(moves) && moves.length) updateFunctions.push(cameraMoves(THREE, camera, moves, alongFor));
         if (spec?.deps?.track) applyTrack(camera, spec.deps.track, scene);
     }
 
@@ -2213,7 +2238,7 @@ export function createRuntime(canvas, statusElement, options = {}) {
                     if (!started) mount.copy(turn).invert().multiply(camera.quaternion);
                     camera.quaternion.copy(turn).multiply(mount);
                 }
-            } else {
+            } else if (!camera.userData.wasMoves) {
                 camera.position.copy(rest);
             }
 

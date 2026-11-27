@@ -23,6 +23,7 @@ runs.
 | ⤷ [MMAudio](https://github.com/hkchengrex/MMAudio) | MIT, Sony Research Inc. | The audio autoencoder **Kandinsky 6 Audio VAE Loader** builds, taken with Kandinsky 6 | [`LICENSE.mmaudio`](../modules/vendor/kandinsky6/licenses/LICENSE.mmaudio) |
 | ⤷ [BigVGAN](https://github.com/NVIDIA/BigVGAN) | MIT, NVIDIA Corporation, with the MIT, Apache-2.0 and BSD-3-Clause notices of the projects it carries | The vocoder that loader builds, taken with Kandinsky 6 | [`LICENSE.bigvgan`](../modules/vendor/kandinsky6/licenses/LICENSE.bigvgan), `LICENSE.bigvgan_1` to `_8` beside it |
 | [transformers](https://github.com/huggingface/transformers), EmbeddingGemma 2 | Apache-2.0, The Hugging Face team | The EmbeddingGemma 2 text and vision towers and picture preprocessing **Image Library Search** runs, ported in [`modules/vendor/embedding_gemma2/`](../modules/vendor/embedding_gemma2/). No weights are bundled | [`LICENSE`](../modules/vendor/embedding_gemma2/LICENSE), [`NOTICE.md`](../modules/vendor/embedding_gemma2/NOTICE.md) |
+| [Shot Reader v2](https://huggingface.co/voyager-so/shot-reader-v2) | Apache-2.0, Voyager | The prompt, schema note and frame-geometry line **Video Blueprint** asks Shot Reader v2 with, vendored in [`modules/vendor/shot_reader/`](../modules/vendor/shot_reader/). No weights are bundled | [`LICENSE`](../modules/vendor/shot_reader/LICENSE), [`NOTICE.md`](../modules/vendor/shot_reader/NOTICE.md) |
 | [Qwen2.5-VL-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct) | Apache-2.0, Alibaba Cloud | The text encoder's final norm weight, 3,584 numbers, which the Kandinsky 6 model applies to its prompts, in [`modules/data/models/`](../modules/data/models/) | [`models/LICENSE`](../modules/data/models/LICENSE) |
 | [Prism.js](https://prismjs.com/) | MIT, Lea Verou | Syntax highlighting in the **Content Viewer** | [`code_scripts/LICENSE`](../web/viewer/views/code_scripts/LICENSE) |
 | [KaTeX](https://katex.org/) 0.16.9 | MIT, Khan Academy and other contributors | Maths in the viewer's Markdown view | [`markdown_scripts/LICENSE`](../web/viewer/views/markdown_scripts/LICENSE) |
@@ -52,9 +53,9 @@ restrictions. The two font licences ask that the licence and copyright travel wi
 which is what the `LICENSE` and `AUTHORS` beside each family are, and the OFL reserves the
 Liberation names against modified copies. These are unmodified.
 
-Counting every file rather than every component, the pack carries 172 third-party files, 27.8 MB
-of the repository: browser libraries, fonts, the eight face cascades, three sets of weights and
-five networks. ZenTrainer, the meshoptimizer decoders, MikkTSpace and the three-vrm conversions
+Counting every file rather than every component, the pack carries 176 third-party files, 27.8 MB
+of the repository: browser libraries, fonts, the eight face cascades, three sets of weights, five
+networks and one prompt. ZenTrainer, the meshoptimizer decoders, MikkTSpace and the three-vrm conversions
 are not among them: they are ported into the pack's own modules, and their licences ship beside
 them.
 

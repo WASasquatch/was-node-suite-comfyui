@@ -291,6 +291,93 @@ def analyse(audio: dict, fps: float, beats_per_bar: int) -> Beats:
     )
 
 
+def _times(values: list[float], limit: int) -> str:
+    shown = ", ".join(f"{t:.2f}" for t in values[:limit])
+    return shown + (f" and {len(values) - limit} more" if len(values) > limit else "")
+
+
+def sections(beats: Beats) -> list[tuple[float, float, str]]:
+    """The track split at bar starts into quiet, steady and loud stretches.
+
+    Args:
+        beats: The analysis.
+
+    Returns:
+        ``(start, end, level)`` in seconds, in order.
+    """
+    energy = np.asarray(beats.energy, dtype=np.float64)
+    if not len(energy):
+        return []
+    edges = [0.0] + [t for t in beats.downbeats if 0.05 < t < beats.duration - 0.05] + [beats.duration]
+    bars = []
+    for a, b in zip(edges, edges[1:]):
+        chunk = energy[int(a * beats.fps):max(int(a * beats.fps) + 1, int(b * beats.fps))]
+        bars.append((a, b, float(chunk.mean()) if len(chunk) else 0.0))
+    levels = np.array([v for _, _, v in bars])
+    if len(levels) > 2:
+        padded = np.concatenate([levels[:1], levels, levels[-1:]])
+        levels = 0.25 * padded[:-2] + 0.5 * padded[1:-1] + 0.25 * padded[2:]
+        bars = [(a, b, float(v)) for (a, b, _), v in zip(bars, levels)]
+    low, high = np.percentile(levels, 30), np.percentile(levels, 75)
+    out: list[list] = []
+    for a, b, v in bars:
+        level = "quiet" if v < low * 0.98 else "loud" if v > high * 1.02 else "steady"
+        if out and out[-1][2] == level:
+            out[-1][1] = b
+        else:
+            out.append([a, b, level])
+    return [(round(a, 2), round(b, 2), level) for a, b, level in out]
+
+
+def hits(beats: Beats, most: int = 8) -> list[float]:
+    """The strongest onsets, at least a beat apart.
+
+    Args:
+        beats: The analysis.
+        most: How many to keep.
+
+    Returns:
+        Times in seconds, rising.
+    """
+    onset = np.asarray(beats.onset, dtype=np.float64)
+    if not len(onset):
+        return []
+    gap = max(1, int(round(60.0 / max(beats.tempo, 1e-6) * beats.fps)))
+    order = np.argsort(-onset)
+    kept: list[int] = []
+    for frame in order:
+        if onset[frame] < 0.6 or len(kept) >= most:
+            break
+        if all(abs(int(frame) - k) >= gap for k in kept):
+            kept.append(int(frame))
+    return sorted(round(k / beats.fps, 2) for k in kept)
+
+
+def brief(beats: Beats) -> str:
+    """The track as plain lines for a language model: tempo, bars, loud and quiet stretches and the strongest hits.
+
+    Args:
+        beats: The analysis.
+
+    Returns:
+        The text.
+    """
+    lines = [f"Music: {beats.duration:.1f} seconds at {beats.tempo:.0f} BPM, {beats.beats_per_bar} beats to a bar; "
+             f"one beat is {60.0 / max(beats.tempo, 1e-6):.3f} seconds and one bar {beats.bar_seconds:.2f} seconds."]
+    if beats.downbeats:
+        lines.append(f"Bars start at {_times(beats.downbeats, 40)} seconds.")
+    parts = sections(beats)
+    if parts:
+        lines.append("Stretches: " + "; ".join(f"{a:.2f} to {b:.2f} s {level}" for a, b, level in parts) + ".")
+        rises = [b for (_, _, before), (b, _, after) in zip(parts, parts[1:]) if before != "loud" and after == "loud"]
+        if rises:
+            lines.append(f"The music lifts into a loud stretch at {_times(rises, 6)} seconds.")
+    strong = hits(beats)
+    if strong:
+        lines.append(f"The strongest hits are at {_times(strong, 8)} seconds.")
+    return "\n".join(lines)
+
+
 def plot(beats: Beats, width: int = 1280, height: int = 240) -> torch.Tensor:
     """A strip showing the energy curve, onsets, beats and downbeats over time.
 

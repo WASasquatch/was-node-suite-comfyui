@@ -26,6 +26,22 @@ The audio autoencoder upstream carries from two further projects, whose licences
 | `piflow.py` | `kandinsky/core/algo/piflow_math.py` | none |
 | `audio.py` | `comfyui/kandinsky6/mmaudio/ext/autoencoder/`, `ext/mel_converter.py`, `ext/bigvgan_v2/` | the three folded into one file, inference only |
 
+## Video super-resolution, taken from Diffusers
+
+The super-resolution transformer's attention, the K-VAE and the latent upscalers of **Kandinsky 6
+Video Super-Resolution** come from their port in Diffusers, copyright the Kandinsky Team and the
+HuggingFace Team.
+
+- Upstream: <https://github.com/huggingface/diffusers>
+- Taken at commit `16eb5cc4fd8262fd33b3c9119a12977c25cc4985` (2026-11-25)
+- Licence: Apache-2.0, retained verbatim in `licenses/LICENSE.diffusers`
+
+| File | Upstream path | Changed |
+|---|---|---|
+| `sr_dit.py` | `src/diffusers/models/transformers/transformer_kandinsky6_sr.py` | blocks built from `dit.py`'s layers on ComfyUI's operations; NABLA mask built as a block pattern, run by compiled flex attention or, without it, masked attention |
+| `kvae.py` | `src/diffusers/models/autoencoders/autoencoder_kandinsky6_sr.py` | convolutions from ComfyUI's operations; `encode` answers the posterior mean, `decode` the video; Diffusers' model and output classes gone; the RMS norm sums its squares in float32 over channel chunks and the latent modulation applies in place; decode segments shorten to 4 to 16 frames by frame area |
+| `latent_upscaler.py` | `src/diffusers/models/latent_upscaler/latent_upscaler_kandinsky6_sr.py` | convolutions from ComfyUI's operations; each model holds only the layers its scale runs; the bank class gone |
+
 ## Every change made
 
 1. **Layers from ComfyUI.** Every `nn.Linear`, `nn.LayerNorm`, `nn.RMSNorm` and `nn.Embedding`

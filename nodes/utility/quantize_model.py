@@ -165,7 +165,8 @@ class QuantizeModel(io.ComfyNode):
             attention, scales, advance,
         )
         saved = _write(state, filename_prefix, format, layers) if filename_prefix.strip() else ""
-        built = comfy.sd.load_diffusion_model_state_dict(state)
+        rebuild = getattr(getattr(model.model, "model_config", None), "was_rebuild", None)
+        built = rebuild(state) if callable(rebuild) else comfy.sd.load_diffusion_model_state_dict(state)
         if built is None:
             raise ValueError(
                 "Quantize Model could not build the quantized weights back into a model that "

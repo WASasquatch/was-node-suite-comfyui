@@ -69,7 +69,7 @@ Choosing `Marigold v2` on Power Preprocessor names any of its ten files the mode
 in ComfyUI's missing models list, each with its fixed address under
 `https://huggingface.co/Comfy-Org/marigold-v2-0/resolve/main/`. The example workflows in
 `docs/workflows/` list the models they load, and opening one puts the listed files the model
-folders lack in the same list. Every listed model is a `.safetensors` file at an `https` address
+folders lack in the same list. Every listed model is a `.safetensors` or `.gguf` file at an `https` address
 on one of two hosts: a file under a repository's `resolve/` path on `huggingface.co`, or the
 `https://civitai.com/api/download/models/` address of one model version on Civitai.
 
@@ -293,7 +293,7 @@ folder, and the temporary folder the ODT export makes for itself.
 | `modules/interface/compare_files.py` | Files it kept for the compare panels in `ComfyUI/user/was-node-suite/compare`, named by 32 hex digits and `.mp4`, `.png` or `.wav`, least recently used first once the folder holds more than 2 GB or 2000 of them, and its own `.part` files there older than an hour. A file is kept through a `.part` file renamed over its name |
 | `modules/viewer/parsers/canvas_parser.py` | The `.part` file the Content Viewer writes a picture into, renamed to `input/was_viewer/<md5>.png` once complete |
 | `nodes/threejs/load_model.py` | The `.partial` file Three Load Model writes for `keep_as`, renamed over the model it keeps in `input/` once complete or removed when the write fails |
-| `modules/model/h3_latent_upscaler.py`, `modules/model/flow_networks.py` | The download folder a checkpoint lands in, once the checkpoint is moved out of it |
+| `modules/model/h3_latent_upscaler.py`, `modules/model/flow_networks.py`, `modules/model/anysplat.py` | The download folder a checkpoint lands in, once the checkpoint is moved out of it |
 | `modules/llm/storage.py` | In `ComfyUI/user/was-node-suite/llm/indexes/<name>/`, the llama-index files and marker it wrote there, before a save under the same name, and only in a folder carrying its marker. In `ComfyUI/user/was-node-suite/llm/sessions/`, a session's `<name>.json` and the `<name>.<block>.vectors.json` files it lists, while LLM Clear Memory's `confirm` or LLM Chat Session's `reset` is on, or when the chat panel deletes that conversation. A rename moves the same files to the new name and refuses a name already saved. Each file is written through a `.part` file renamed over its name |
 
 Some nodes replace a file of the same name: Zip Extract, Save LUT and the save nodes'

@@ -17,6 +17,7 @@ __all__ = [
     "CLIPSEG_MODEL",
     "CONDITIONING_SEQ",
     "CROP_DATA",
+    "DA3_GEOMETRY",
     "DATASET",
     "DICT",
     "DOC",
@@ -52,10 +53,12 @@ __all__ = [
     "LLM_TABLES",
     "LLM_VECTOR_STORE",
     "LLM_TOOLS",
+    "LOAD3D_CAMERA",
     "LORA_STACK",
     "LUT",
     "MIDAS_MODEL",
     "MODEL_3D",
+    "MOGE_GEOMETRY",
     "MOTION",
     "MOTION_MODEL",
     "VIDEO_TRACK",
@@ -64,6 +67,7 @@ __all__ = [
     "SAM_MODEL",
     "SAM_PARAMETERS",
     "SEED",
+    "SPLAT",
     "THREE_APP",
     "THREE_CAMERA",
     "THREE_EFFECT",
@@ -185,6 +189,19 @@ FILE_3D_FBX = io.Custom("FILE_3D_FBX")
 FILE_3D_OBJ = io.Custom("FILE_3D_OBJ")
 FILE_3D_STL = io.Custom("FILE_3D_STL")
 FILE_3D_PLY = io.Custom("FILE_3D_PLY")
+
+#: Core's gaussian splat batch, which the point cloud nodes read and write as round, opaque
+#: splats. Carries core's ``SPLAT`` geometry object.
+SPLAT = io.Custom("SPLAT")
+
+#: Core's camera socket: one ``camera_info`` dictionary or a list of them, one per frame.
+LOAD3D_CAMERA = io.Custom("LOAD3D_CAMERA")
+
+#: Core's `MoGe Inference` geometry: points, depth, intrinsics and a mask per picture.
+MOGE_GEOMETRY = io.Custom("MOGE_GEOMETRY")
+
+#: Core's `DA3 Inference` geometry: depth per picture, with intrinsics and poses in multi-view mode.
+DA3_GEOMETRY = io.Custom("DA3_GEOMETRY")
 
 #: The dictionary passed between the dictionary nodes. Wire-compatible with core's
 #: `io.Dict`, which emits the same io_type; declared here so all custom sockets resolve

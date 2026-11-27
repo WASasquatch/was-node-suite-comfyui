@@ -455,6 +455,12 @@
       "description": "The same prompt on Kandinsky 6 Pro distilled, the picture and the sound sampled together and saved as video."
     },
     {
+      "file": "kandinsky6-video-upscale.json",
+      "section": "Kandinsky 6 video",
+      "title": "Kandinsky 6 video upscale",
+      "description": "A clip upscaled 2.25x with Kandinsky 6 video super-resolution, 864x480 to 1944x1080, saved with the clip's own sound."
+    },
+    {
       "file": "edit-and-titles.json",
       "section": "Video editing and restoration",
       "title": "Edit and titles",
@@ -489,6 +495,60 @@
       "section": "3D and Three.js",
       "title": "A Three.js scene",
       "description": "Every node in WAS Suite/Three in one scene: textures, materials, geometry, lights, two cameras, drawn on the canvas, rendered as frames and compiled into a web page."
+    },
+    {
+      "file": "point-cloud-reshoot.json",
+      "section": "3D and Three.js",
+      "title": "Video reshot from a new angle by H3",
+      "description": "A walking video lifted into a point cloud with its tracked walker held frame by frame, rendered from a camera drifting away from the original, then repainted by H3 Structure Renderer from the depth and the first frame."
+    },
+    {
+      "file": "point-cloud-world-explore.json",
+      "section": "3D and Three.js",
+      "title": "Worlds grown by H3 from a video or a photo",
+      "description": "A drone video and a street photo lifted into worlds, flown past what was filmed with H3 Structure Renderer, each shot baked back to grow the world, then fitted as Gaussians and toured."
+    },
+    {
+      "file": "point-cloud-world-scenes.json",
+      "section": "3D and Three.js",
+      "title": "Three H3 clips grown into worlds",
+      "description": "A cottage, a ruined courtyard and a desert camp: each clip lifted into a world, flown on past its end in two H3 shots, both baked back, then fitted as Gaussians and toured."
+    },
+    {
+      "file": "h3-source-clips-for-worlds.json",
+      "section": "3D and Three.js",
+      "title": "H3 clips made to grow into worlds",
+      "description": "Three H3 text to video clips written to lift cleanly into point clouds: slow arcs round still, matte, layered scenes in daylight. Run before Three H3 clips grown into worlds."
+    },
+    {
+      "file": "point-cloud-picture-tour.json",
+      "section": "3D and Three.js",
+      "title": "Point cloud: tour a picture, rebuild it as a splat",
+      "description": "H3 Image draws a scene and H3 tours it in a slow frozen arc; Point Cloud From Pictures and Refine rebuild the tour as a Gaussian splat, and Kandinsky 6 Upscale Video finishes its render at twice the size."
+    },
+    {
+      "file": "blockout-shot.json",
+      "section": "3D and Three.js",
+      "title": "Blockout shot",
+      "description": "A set blocked out from chained Three Blockout Props, a camera given a push in, a crane and an orbit with Three Camera Move, and MiniMax H3 painting the grey box as a finished shot."
+    },
+    {
+      "file": "blockout-scene-film.json",
+      "section": "3D and Three.js",
+      "title": "Blockout scene filmed by H3, cut to a song",
+      "description": "A local Qwen3 32B writes a Three Blockout Scene from one sentence and Audio Beats' text of a song; the grey box cuts on the beat, and MiniMax H3 Reference to Video films it with the song under it."
+    },
+    {
+      "file": "video-blueprint-reshoot.json",
+      "section": "3D and Three.js",
+      "title": "Reshoot a video from its blueprint",
+      "description": "Video Blueprint measures a clip's cuts, cameras, people and objects; Gemma 4 12B writes its blockout with a change asked for, and MiniMax H3 Reference to Video films it again."
+    },
+    {
+      "file": "point-cloud-world.json",
+      "section": "3D and Three.js",
+      "title": "Point cloud worlds repainted by H3",
+      "description": "A street photo and a walking video turned into point clouds and Gaussian splats, flown through with camera moves and the navigator, repainted by H3 Structure Renderer and grown from H3's own frames."
     },
     {
       "file": "three-environment.json",

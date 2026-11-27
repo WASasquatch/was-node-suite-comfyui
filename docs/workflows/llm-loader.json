@@ -257,7 +257,14 @@
           "input_ue_unconnectable": {}
         },
         "Node name for S&R": "WASLLMLoader",
-        "was_show_advanced": false
+        "was_show_advanced": false,
+        "models": [
+          {
+            "name": "llama-joycaption-beta-one-hf-llava.Q8_0.gguf",
+            "url": "https://huggingface.co/mradermacher/llama-joycaption-beta-one-hf-llava-GGUF/resolve/main/llama-joycaption-beta-one-hf-llava.Q8_0.gguf",
+            "directory": "LLM"
+          }
+        ]
       },
       "widgets_values": [
         "llama-joycaption-beta-one-hf-llava.Q8_0.gguf",
@@ -889,6 +896,11 @@
   },
   "version": 0.4,
   "models": [
+    {
+      "name": "llama-joycaption-beta-one-hf-llava.Q8_0.gguf",
+      "url": "https://huggingface.co/mradermacher/llama-joycaption-beta-one-hf-llava-GGUF/resolve/main/llama-joycaption-beta-one-hf-llava.Q8_0.gguf",
+      "directory": "LLM"
+    },
     {
       "name": "qwen3vl_4b_fp8_scaled.safetensors",
       "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors",

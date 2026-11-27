@@ -391,6 +391,23 @@ function hidePlainPreview(node, keep) {
   }
 }
 
+const PREVIEW_STYLE_ID = "was-video-player-preview";
+
+/**
+ * Hide the video preview Nodes 2.0 draws under the widgets of a node that carries this player.
+ *
+ * @returns {void}
+ */
+function hideRendererPreview() {
+  if (document.getElementById(PREVIEW_STYLE_ID)) return;
+  const style = document.createElement("style");
+  style.id = PREVIEW_STYLE_ID;
+  style.textContent =
+    `[data-node-id]:has([data-was-interface="${UI_WIDGET_NAME}"]) .lg-node-content > .video-preview`
+    + "{display:none !important;}";
+  document.head.appendChild(style);
+}
+
 /**
  * Where the picture, the track and the info line sit inside the element.
  *
@@ -1264,6 +1281,7 @@ function createVideoPlayer(node) {
   let releaseTheme = onThemeChange(schedulePaint);
   loadPlaceholder().then(() => schedulePaint());
 
+  hideRendererPreview();
   const last = SWEEP_DELAYS[SWEEP_DELAYS.length - 1];
   for (const delay of SWEEP_DELAYS) {
     timers.push(setTimeout(() => {

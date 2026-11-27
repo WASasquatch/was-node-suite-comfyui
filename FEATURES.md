@@ -977,6 +977,24 @@ settings: [`docs/MODELS.md`](docs/MODELS.md#kandinsky-6). Graphs:
 
 ---
 
+## Video enlarged with Kandinsky 6
+
+**Kandinsky 6 Upscale Video** enlarges a clip two, 2.25 or four times with Kandinsky 6 video
+super-resolution, redrawing fine detail in two steps per tile while the motion stays as it was.
+**Kandinsky 6 Upscale Model Loader** loads the upscaler and **Kandinsky 6 Upscale VAE Loader** its
+K-VAE. Any clip works, filmed or generated, at any size and any length: it is cut into the tiles
+and five-second windows the model was trained on and blended back without seams. A VIDEO goes in and
+comes out with its sound, written to disk as it is finished, so a long clip never has to fit in
+memory. The upscaler comes as the int8 ConvRot, W6A8 and W4A8 files the pack publishes.
+
+For finishing a generated or filmed clip at 1080p and above, with texture a resize cannot add.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Sampling** and **WAS Suite/Loaders**. Weights and
+settings: [`docs/MODELS.md`](docs/MODELS.md#video-super-resolution). Graph:
+[`kandinsky6-video-upscale.json`](docs/workflows/kandinsky6-video-upscale.json).
+
+---
+
 ## Fibo 2.0 images and edits
 
 Bria's Fibo 2.0 runs in ComfyUI: **Load Diffusion Model** loads Dev or Edit Turbo, **Load CLIP**
@@ -1335,7 +1353,7 @@ exist: [Image Search](https://github.com/WASasquatch/ComfyUI_Viewer_Image_Search
 
 ## Three.js scenes
 
-44 nodes for geometry, materials, lights, cameras, model loading, rendering and path tracing,
+47 nodes for geometry, materials, lights, cameras, model loading, rendering and path tracing,
 with the scene drawn on the canvas. For building and rendering a 3D scene inside a graph.
 
 **Three Viewer** is a viewport: orbit and frame a shot inside a gate the size of the Three Render
@@ -1349,11 +1367,67 @@ orbited or touched. **Three Track** with `offset_space` on `object` rides with i
 it turns, which is a chase camera. **Three Follow Ground** keeps a walking character on uneven
 ground, a terrain or a cave floor, so it neither floats over dips nor sinks into rocks.
 
-The group starts on. Set `features.threejs` to false in `config.yaml` to leave the 44 nodes
+The group starts on. Set `features.threejs` to false in `config.yaml` to leave the 47 nodes
 out.
 
 [`NODES.md`](NODES.md) under **WAS Suite/Three**. Five graphs in
 [`docs/workflows/`](docs/workflows). Guide, graphs and troubleshooting: [`docs/3D.md`](docs/3D.md).
+
+---
+
+## Blockout scenes filmed by MiniMax H3
+
+**Three Blockout Scene** builds a grey-box set, its people, their motion and a list of shots from
+a JSON scene, and writes the MiniMax H3 prompt to match, one line per shot. A language model writes
+that JSON from one sentence through the built-in **Three Blockout Scene Writer** skill, and **MiniMax
+H3 Reference to Video** films the render as live action with every block replaced by the real
+thing. For directing the camera, the blocking and the cuts of a generated film without drawing a
+frame. With **Audio Beats** wired to `beats`, shots are counted and cut on a song's beats, and a
+shot's `sounds` land at set moments in it.
+
+**Three Blockout Prop** stands a plain shape on the ground, chained one into the next to build a
+set by hand, and **Three Camera Move** moves a camera with a preset move, from push in and orbit
+to dolly zoom, chained to cut one move into the next.
+
+| Graph | Makes |
+|---|---|
+| [`blockout-scene-film.json`](docs/workflows/blockout-scene-film.json) | A song and a sentence, a language model writing the scene, the grey box cut to the beat and filmed by H3 with the song under it |
+| [`blockout-shot.json`](docs/workflows/blockout-shot.json) | A set built from chained Blockout Props, a push in, a crane and an orbit from Camera Moves, and H3 painting the grey box as a finished shot |
+| [`video-blueprint-reshoot.json`](docs/workflows/video-blueprint-reshoot.json) | A video measured by Video Blueprint, written back as a blockout with a change asked for, and filmed again by H3 |
+
+**Video Blueprint** turns a finished video into a blockout: it finds the cuts, measures each shot's
+camera path and lens, places the people and objects it sees at their real size, and marks the sound
+hits. Its brief and pictures go to the same writer skill, and `reshoot_directions` asks for a change,
+such as another season or time of day. For remaking a shot you like with new people, places or
+weather while keeping its camera and timing. With a hearing language model on `listener`, the sound
+hits are named and the speech written down; with Shot Reader on `shot_reader`, each shot also gets
+its own description.
+
+Scene format, shot keys and troubleshooting: [`docs/BLOCKOUT.md`](docs/BLOCKOUT.md).
+[`NODES.md`](NODES.md) under **WAS Suite/Three**.
+
+---
+
+## Point cloud worlds
+
+**Point Cloud From Pictures** turns a few photos or a video's frames into a Gaussian splat and the
+camera each was taken from, and **Point Cloud From Depth** lifts a picture or a video into a coloured
+point cloud, holding a video's moving people frame by frame. **Point Cloud Camera Path** and **Point
+Cloud Navigator** fly a camera through it, and **Point Cloud Render** draws each view with its depth
+and the holes nothing covers. For walking a camera through a place seen in one photo or clip, past
+where it was filmed. MiniMax H3 repaints the views whole, and **Point Cloud Refine** fits those
+repainted views back into a sharp splat, so the world grows with every shot.
+
+| Graph | Makes |
+|---|---|
+| [`point-cloud-world.json`](docs/workflows/point-cloud-world.json) | A street photo and a walking video turned into point clouds and splats, flown through and repainted by H3 |
+| [`point-cloud-world-explore.json`](docs/workflows/point-cloud-world-explore.json) | A drone video and a street photo grown into worlds by H3 shots baked back in, then toured |
+| [`point-cloud-world-scenes.json`](docs/workflows/point-cloud-world-scenes.json) | Three H3 clips each lifted into a world and flown on past its end |
+| [`point-cloud-reshoot.json`](docs/workflows/point-cloud-reshoot.json) | A walking video reshot from a camera drifting away from the original |
+| [`point-cloud-picture-tour.json`](docs/workflows/point-cloud-picture-tour.json) | An H3 Image scene toured by H3, rebuilt as a splat and finished by Kandinsky 6 Upscale Video |
+| [`h3-source-clips-for-worlds.json`](docs/workflows/h3-source-clips-for-worlds.json) | H3 clips made to be grown into worlds |
+
+[`NODES.md`](NODES.md) under **WAS Suite/3D/Point Cloud**.
 
 ---
 

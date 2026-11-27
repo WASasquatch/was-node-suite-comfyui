@@ -5,7 +5,7 @@ from __future__ import annotations
 from comfy_api.latest import io
 
 from ...modules.compat.types import THREE_APP
-from ...modules.interface import three_render
+from ...modules.interface import run_result, three_render
 from ...modules.threejs.spec import refuse_script, require_spec
 
 REQUIRES = "threejs"
@@ -219,6 +219,12 @@ class ThreeRender(io.ComfyNode):
                 f"The browser could not draw the scene: {message or 'it gave no reason'}. The "
                 f"viewer's own error line usually says more."
             )
+        captured = len(bodies["png"])
+        run_result.publish(
+            status=run_result.OK,
+            summary=f"{captured} frames at {float(fps):g} fps from {float(start):.2f} s",
+            counts={"frames": captured, "fps": float(fps), "start": float(start)},
+        )
         return io.NodeOutput(
             cls.as_batch(bodies["png"], alpha=bool(transparent)),
             cls.as_batch(bodies["depth"]),

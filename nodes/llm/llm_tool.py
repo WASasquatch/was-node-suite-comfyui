@@ -134,6 +134,8 @@ class WASLLMTool(io.ComfyNode):
                 "calculator",
                 "wikipedia",
                 "web search",
+                "Tavily",
+                "Brave Search",
                 "Monid",
                 "fetch web page",
                 "document reader",

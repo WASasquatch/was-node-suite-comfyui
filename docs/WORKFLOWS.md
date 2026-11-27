@@ -1,6 +1,6 @@
 # Workflow index
 
-All 133 example graphs in [`docs/workflows`](workflows), by area. A file opens when it is dragged onto the ComfyUI canvas, or from the Workflows sidebar once it is in `ComfyUI/user/default/workflows`, and ComfyUI offers each model it lacks for download.
+All 143 example graphs in [`docs/workflows`](workflows), by area. A file opens when it is dragged onto the ComfyUI canvas, or from the Workflows sidebar once it is in `ComfyUI/user/default/workflows`, and ComfyUI offers each model it lacks for download.
 
 | Section | Workflows |
 |---|--:|
@@ -11,9 +11,9 @@ All 133 example graphs in [`docs/workflows`](workflows), by area. A file opens w
 | [Masks, regions and subjects](#masks-regions-and-subjects) | 7 |
 | [Filters, layers and preprocessors](#filters-layers-and-preprocessors) | 10 |
 | [MiniMax H3 video](#minimax-h3-video) | 20 |
-| [Kandinsky 6 video](#kandinsky-6-video) | 2 |
+| [Kandinsky 6 video](#kandinsky-6-video) | 3 |
 | [Video editing and restoration](#video-editing-and-restoration) | 8 |
-| [3D and Three.js](#3d-and-threejs) | 15 |
+| [3D and Three.js](#3d-and-threejs) | 24 |
 | [Prompts and text](#prompts-and-text) | 9 |
 | [Language models and Llama-Index](#language-models-and-llama-index) | 11 |
 | [Files, datasets and documents](#files-datasets-and-documents) | 7 |
@@ -149,6 +149,7 @@ All 133 example graphs in [`docs/workflows`](workflows), by area. A file opens w
 |---|---|---|---|
 |  | **Kandinsky 6 Lite distilled** | Text to video with a soundtrack from Kandinsky 6 Lite distilled, the picture and the sound sampled together and saved as video. | [open](workflows/kandinsky6-lite-distill.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/kandinsky6-lite-distill.json) |
 |  | **Kandinsky 6 Pro distilled** | The same prompt on Kandinsky 6 Pro distilled, the picture and the sound sampled together and saved as video. | [open](workflows/kandinsky6-pro-distill.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/kandinsky6-pro-distill.json) |
+|  | **Kandinsky 6 video upscale** | A clip upscaled 2.25x with Kandinsky 6 video super-resolution, 864x480 to 1944x1080, saved with the clip's own sound. | [open](workflows/kandinsky6-video-upscale.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/kandinsky6-video-upscale.json) |
 
 ---
 
@@ -172,6 +173,15 @@ All 133 example graphs in [`docs/workflows`](workflows), by area. A file opens w
 | Preview | Workflow | What it does | Get it |
 |---|---|---|---|
 |  | **A Three.js scene** | Every node in WAS Suite/Three in one scene: textures, materials, geometry, lights, two cameras, drawn on the canvas, rendered as frames and compiled into a web page. | [open](workflows/three-scene.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/three-scene.json) |
+|  | **Video reshot from a new angle by H3** | A walking video lifted into a point cloud with its tracked walker held frame by frame, rendered from a camera drifting away from the original, then repainted by H3 Structure Renderer from the depth and the first frame. | [open](workflows/point-cloud-reshoot.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/point-cloud-reshoot.json) |
+|  | **Worlds grown by H3 from a video or a photo** | A drone video and a street photo lifted into worlds, flown past what was filmed with H3 Structure Renderer, each shot baked back to grow the world, then fitted as Gaussians and toured. | [open](workflows/point-cloud-world-explore.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/point-cloud-world-explore.json) |
+|  | **Three H3 clips grown into worlds** | A cottage, a ruined courtyard and a desert camp: each clip lifted into a world, flown on past its end in two H3 shots, both baked back, then fitted as Gaussians and toured. | [open](workflows/point-cloud-world-scenes.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/point-cloud-world-scenes.json) |
+|  | **H3 clips made to grow into worlds** | Three H3 text to video clips written to lift cleanly into point clouds: slow arcs round still, matte, layered scenes in daylight. Run before Three H3 clips grown into worlds. | [open](workflows/h3-source-clips-for-worlds.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/h3-source-clips-for-worlds.json) |
+|  | **Point cloud: tour a picture, rebuild it as a splat** | H3 Image draws a scene and H3 tours it in a slow frozen arc; Point Cloud From Pictures and Refine rebuild the tour as a Gaussian splat, and Kandinsky 6 Upscale Video finishes its render at twice the size. | [open](workflows/point-cloud-picture-tour.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/point-cloud-picture-tour.json) |
+|  | **Blockout shot** | A set blocked out from chained Three Blockout Props, a camera given a push in, a crane and an orbit with Three Camera Move, and MiniMax H3 painting the grey box as a finished shot. | [open](workflows/blockout-shot.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/blockout-shot.json) |
+|  | **Blockout scene filmed by H3, cut to a song** | A local Qwen3 32B writes a Three Blockout Scene from one sentence and Audio Beats' text of a song; the grey box cuts on the beat, and MiniMax H3 Reference to Video films it with the song under it. | [open](workflows/blockout-scene-film.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/blockout-scene-film.json) |
+|  | **Reshoot a video from its blueprint** | Video Blueprint measures a clip's cuts, cameras, people and objects; Gemma 4 12B writes its blockout with a change asked for, and MiniMax H3 Reference to Video films it again. | [open](workflows/video-blueprint-reshoot.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/video-blueprint-reshoot.json) |
+|  | **Point cloud worlds repainted by H3** | A street photo and a walking video turned into point clouds and Gaussian splats, flown through with camera moves and the navigator, repainted by H3 Structure Renderer and grown from H3's own frames. | [open](workflows/point-cloud-world.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/point-cloud-world.json) |
 |  | **Environment lighting** | A mirror, brushed metal, painted metal and clear glaze sphere lit by Three Environment. | [open](workflows/three-environment.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/three-environment.json) |
 |  | **Path tracing** | Boxes and spheres under an area light, path traced on the node and rendered as a still. | [open](workflows/three-path-tracing.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/three-path-tracing.json) |
 |  | **A skinned model playing its animation** | A rigged .dae model playing its own animation, rendered to video. Reads stormtrooper.dae and Stormtrooper_D.jpg from ComfyUI/input. | [open](workflows/three-skinned-model.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/three-skinned-model.json) |

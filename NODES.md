@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **765** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **778** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-678 of them load in a fresh install. The other 87 wait behind a switch that starts off.
+691 of them load in a fresh install. The other 87 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 520 |
+| [Always loaded](#always-loaded) | always on | 530 |
 | [`features.llm`](#featuresllm) | off | 80 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -28,7 +28,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 | [`features.photoshop`](#featuresphotoshop) | on | 2 |
 | [`features.preprocessors`](#featurespreprocessors) | on | 7 |
 | [`features.sam`](#featuressam) | on | 4 |
-| [`features.threejs`](#featuresthreejs) | on | 44 |
+| [`features.threejs`](#featuresthreejs) | on | 47 |
 | [`features.viewer`](#featuresviewer) | on | 2 |
 | [`features.yunet`](#featuresyunet) | on | 2 |
 | [`legacy.core_dupes`](#legacycore_dupes) | on | 3 |
@@ -41,11 +41,12 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-520 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+530 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/3D/Character](#was-suite3dcharacter) (4)
 - [WAS Suite/3D/Mesh](#was-suite3dmesh) (13)
 - [WAS Suite/3D/Model](#was-suite3dmodel) (6)
+- [WAS Suite/3D/Point Cloud](#was-suite3dpoint-cloud) (6)
 - [WAS Suite/Animation](#was-suiteanimation) (34)
 - [WAS Suite/Archive](#was-suitearchive) (9)
 - [WAS Suite/Conditioning](#was-suiteconditioning) (4)
@@ -75,14 +76,14 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Latent/Transform](#was-suitelatenttransform) (3)
 - [WAS Suite/Latent/Video](#was-suitelatentvideo) (27)
 - [WAS Suite/LoRA](#was-suitelora) (1)
-- [WAS Suite/Loaders](#was-suiteloaders) (6)
+- [WAS Suite/Loaders](#was-suiteloaders) (8)
 - [WAS Suite/Logic](#was-suitelogic) (6)
 - [WAS Suite/Logic/Boolean](#was-suitelogicboolean) (16)
 - [WAS Suite/Logic/Loop](#was-suitelogicloop) (6)
 - [WAS Suite/Logic/Switch](#was-suitelogicswitch) (9)
 - [WAS Suite/Number](#was-suitenumber) (5)
 - [WAS Suite/Number/Operations](#was-suitenumberoperations) (19)
-- [WAS Suite/Sampling](#was-suitesampling) (39)
+- [WAS Suite/Sampling](#was-suitesampling) (40)
 - [WAS Suite/Text](#was-suitetext) (13)
 - [WAS Suite/Text/Dictionary](#was-suitetextdictionary) (7)
 - [WAS Suite/Text/List](#was-suitetextlist) (12)
@@ -93,6 +94,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/Text/System Prompts](#was-suitetextsystem-prompts) (2)
 - [WAS Suite/Text/Terminology](#was-suitetextterminology) (4)
 - [WAS Suite/Text/Tokens](#was-suitetexttokens) (3)
+- [WAS Suite/Three](#was-suitethree) (1)
 - [WAS Suite/Utilities](#was-suiteutilities) (11)
 - [WAS Suite/Workflow](#was-suiteworkflow) (1)
 
@@ -910,6 +912,205 @@ Move, rotate and scale a whole model, or turn a rigged character to face forward
 
 </details>
 
+### WAS Suite/3D/Point Cloud
+
+<a id="node-waspointcloudcamerapath"></a>
+<details>
+<summary><b>Point Cloud Camera Path</b></summary>
+
+Make a camera move, such as a push in, truck, crane, pan or orbit, as one camera per frame. Distances follow the point cloud's depth, so one setting suits any scene. Feed Point Cloud Render or core's Render Splat.
+
+| | |
+|---|---|
+| Node id | `WASPointCloudCameraPath` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `move` | `COMBO` | Yes | push in |  | `push in`/`pull out` = forward or back; `truck` = sideways; `crane` = up or down; `orbit` = circle the subject; `follow the wired cameras` = a steady path through camera_info; `carry on the wired turn` = orbit on past a video's end, its way. |
+| `frames` | `INT` | Yes | 158 |  | Cameras to make, one per frame. 158 = 6.6 s at 24 fps, H3 Structure Video's trained length. |
+| `travel` | `FLOAT` | Yes | 0.25 |  | Distance moved, as a share of how far the scene sits from the camera. 0.25 = a quarter of the way in; 1.0 = all the way. |
+| `angle` | `FLOAT` | Yes | 20.0 |  | Degrees a pan, tilt or orbit turns through. 20 = a gentle move; 90 = a quarter turn. |
+| `easing` | `COMBO` | Yes | ease in and out |  | How the move speeds up and slows down. `ease in and out` = starts and stops gently; `linear` = constant speed. |
+| `smooth` | `INT` | Yes | 2 |  | For a followed or ridden path: neighbours each side every wired camera is averaged with. 0 = exactly through them; 2 = steadies a shaky estimate; 8 = a slow glide. Always 0 for a cloud whose frames are kept apart. |
+| `wired_path` | `COMBO` | Yes | carry on from its end | `carry on from its end`, `ride along it` | With a list of cameras wired: `carry on from its end` = the move starts at the last camera; `ride along it` = the move is added to each camera in turn, reshooting a video from an angle that drifts away from its own. |
+| `point_cloud` | `SPLAT` | No |  |  | The cloud the camera moves through, which sets the scale of travel and the centre of an orbit. Unwired = the scene is taken as 1 unit away. |
+| `camera_info` | `LOAD3D_CAMERA` | No |  |  | Where the move starts: a camera, or a path it carries on from or rides along, as wired_path sets. Unwired = at the origin looking down -Z. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `camera_info` | `LOAD3D_CAMERA` | One camera per frame, for Point Cloud Render, core's Render Splat or a next Point Cloud Camera Path. |
+| `frames` | `INT` | How many cameras the path holds. |
+
+</details>
+
+<a id="node-waspointcloudfromdepth"></a>
+<details>
+<summary><b>Point Cloud From Depth</b></summary>
+
+Lift a picture, or a video's frames placed by DA3 Inference in multi-view mode, into a coloured point cloud to fly a camera through. Each later picture, and each picture added to a wired point cloud, is scaled to meet it and fills only what it lacked. A video's moving people can be held frame by frame.
+
+| | |
+|---|---|
+| Node id | `WASPointCloudFromDepth` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `geometry` | `MOGE_GEOMETRY,DA3_GEOMETRY` | Yes |  |  | Depth for each picture, from MoGe Inference or DA3 Inference. DA3 in multi-view mode also places each picture's camera. |
+| `stride` | `INT` | Yes | 1 |  | 1 = a point per pixel; 2 = every second pixel each way, a quarter of the points. Raise it for large or many pictures. Holes filled in a wired point_cloud take every pixel. |
+| `edge_cut` | `FLOAT` | Yes | 0.04 |  | Drops pixels whose depth jumps by more than this share to a neighbour, the smeared points between a subject and what is behind it. 0 = keep all; 0.04 = typical. |
+| `add` | `COMBO` | Yes | holes | `holes`, `everything` | With point_cloud wired: `holes` = add points only where the cloud showed nothing from that camera; `everything` = add every point. |
+| `motion` | `COMBO` | Yes | still scene | `still scene`, `find what moves`, `each frame apart` | For a video: `still scene` = every frame joins one cloud; `find what moves` = whatever crosses the view is held per frame; `each frame apart` = every frame keeps only its own points, the steadiest choice for reshooting a video. |
+| `image` | `IMAGE` | No |  |  | Colours for the points, one picture per depth map. Unwired = the picture the depth was estimated from. |
+| `camera_info` | `LOAD3D_CAMERA` | No |  |  | Where each picture was taken, such as the path a render followed. Unwired = the first picture's camera at the origin, or DA3's own cameras. |
+| `point_cloud` | `SPLAT` | No |  |  | A cloud to grow. Each picture's depth is scaled to meet it before its points are added. Unwired = a new cloud. |
+| `moving` | `MASK` | No |  |  | What moves in each picture, 1 = moving, such as a tracked person mask per frame. Held per frame whatever motion says. Unwired = found from the depth when motion asks. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `point_cloud` | `SPLAT` | The coloured points as a splat, for Point Cloud Render, Point Cloud Camera Path or core's splat nodes. |
+| `camera_info` | `LOAD3D_CAMERA` | The camera each picture was lifted from; one camera for one picture, a list for several. Start a camera path here. |
+
+</details>
+
+<a id="node-waspointcloudfrompictures"></a>
+<details>
+<summary><b>Point Cloud From Pictures</b></summary>
+
+Turn a few photos or a video's frames, with no camera information, into a Gaussian splat and the camera each picture was taken from, in one pass. Point Cloud Refine sharpens the result against the same pictures.
+
+| | |
+|---|---|
+| Node id | `WASPointCloudFromPictures` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `images` | `IMAGE` | Yes |  |  | Pictures of one scene, such as a video's frames or an H3 tour of a picture, in any order. Longer batches are thinned to `pictures`. |
+| `model` | `COMBO,STRING` | Yes |  |  | The AnySplat checkpoint, from ComfyUI/models/geometry_estimation; `anysplat.safetensors` is fetched on first use with features.network on. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `size` | `INT` | Yes | 448 |  | Shorter side, in pixels, the pictures are read at. 448 = the trained size; 672 = finer detail with about twice the splats and memory. |
+| `framing` | `COMBO` | Yes | whole picture | `whole picture`, `square crop` | `whole picture` = every picture kept whole; `square crop` = a centred square cut from each, as the model was trained. |
+| `pictures` | `INT` | Yes | 24 |  | Most pictures read, evenly spaced through the batch, first and last kept. 7 = one a second of a 6.6 s H3 clip; 24 = every seventh frame; 64 = one pass's most. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `point_cloud` | `SPLAT` | The Gaussian splat, for Point Cloud Refine, Render, the Navigator or core's splat nodes. |
+| `camera_info` | `LOAD3D_CAMERA` | The camera of each picture, the first at the origin. |
+| `images` | `IMAGE` | The pictures as the model read them, sized and framed to match camera_info; wire both into Point Cloud Refine. |
+
+</details>
+
+<a id="node-waspointcloudnavigator"></a>
+<details>
+<summary><b>Point Cloud Navigator</b></summary>
+
+Fly a camera through a point cloud on the node, recording the flight or placing keys, and import or export camera rigs. Hands on one camera per frame for Point Cloud Render. Run once to see the cloud.
+
+| | |
+|---|---|
+| Node id | `WASPointCloudNavigator` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `point_cloud` | `SPLAT` | Yes |  |  | The cloud to fly through, from Point Cloud From Depth, Point Cloud Refine or a splat node. A fitted splat is drawn as splats. |
+| `frames` | `INT` | Yes | 158 |  | Cameras to make along the path. 158 = 6.6 s at 24 fps; 0 = the path's own length at fps, as flown. |
+| `easing` | `COMBO` | Yes | linear |  | Speed between placed keys. `linear` = one smooth glide; `ease in and out` = settles on each key. A recording always plays as flown. |
+| `fps` | `FLOAT` | Yes | 24.0 |  | Frames a second when frames is 0. 24 = H3's rate. |
+| `path` | `STRING` | Yes |  |  | The flight or keys, written by the navigator as JSON in world space. Empty = hold camera_info. |
+| `camera_info` | `LOAD3D_CAMERA` | No |  |  | Where the navigator opens and the camera held while no path is stored, such as Point Cloud From Depth's camera. Unwired = at the origin looking down -Z. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `camera_info` | `LOAD3D_CAMERA` | One camera per frame, for Point Cloud Render or core's Render Splat. |
+| `frames` | `INT` | How many cameras the path holds. |
+
+</details>
+
+<a id="node-waspointcloudrefine"></a>
+<details>
+<summary><b>Point Cloud Refine</b></summary>
+
+Turn a point cloud into a sharp Gaussian splat by fitting it to the pictures it was made from. Add repainted views from a camera path, with their cameras, to fill what the source never saw. A video's moving people are left out of the fit and kept frame by frame.
+
+| | |
+|---|---|
+| Node id | `WASPointCloudRefine` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `point_cloud` | `SPLAT` | Yes |  |  | The cloud to start from, from Point Cloud From Depth or an earlier Point Cloud Refine. |
+| `images` | `IMAGE` | Yes |  |  | The pictures to match, one per camera: the source frames, repainted views, or both batched together. |
+| `camera_info` | `LOAD3D_CAMERA` | Yes |  |  | Where each picture was taken, in the same order: Point Cloud From Depth's cameras for its own pictures, the path's cameras for rendered or repainted views. |
+| `steps` | `INT` | Yes | 2000 |  | Fitting steps, one picture each. 0 = the cloud unchanged; 2000 = sharp from a few dozen pictures; 5000 = finer detail and slower. |
+| `size` | `INT` | Yes | 768 |  | Longest side, in pixels, the pictures are fitted at. 768 = quick; 1344 = H3's full width and about three times slower. Never larger than the pictures. |
+| `refine_cameras` | `BOOLEAN` | Yes | True |  | `true` = every camera after the first may turn and shift slightly to agree with the others, sharpening estimated cameras. `false` = cameras held exactly as wired. |
+| `view_colour` | `INT` | Yes | 1 |  | How much a splat's colour may change with the viewing angle. 0 = one colour; 1 = gentle sheen; 3 = reflections, which need many pictures from many sides. |
+| `add_splats` | `INT` | Yes | 100 |  | Most splats added where the match is worst, as a percent of those wired. 0 = none; 100 = up to twice as many, for finer detail from a thin cloud. Stops at four splats per pixel of a picture. |
+| `repainted_weight` | `FLOAT` | Yes | 0.5 |  | How much a repainted view counts beside a real picture. 1 = the same; 0.5 = half, so the source wins where both saw the scene; 0 = ignored. |
+| `weight` | `MASK` | No |  |  | How much each pixel counts, one mask per picture or one for all: 1 = fully, 0.5 = half, as for repainted views beside real frames; 0 = ignored. Unwired = fully. |
+| `repainted` | `IMAGE` | No |  |  | Views a model painted from new cameras, such as H3's frames along a camera path, fitted beside the pictures to fill what they never saw. |
+| `repainted_cameras` | `LOAD3D_CAMERA` | No |  |  | The camera of each repainted view, in order: the path the guide render followed. Held exactly; only the pictures' cameras are refined. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `point_cloud` | `SPLAT` | The fitted Gaussian splat, for Point Cloud Render, the Navigator or core's splat nodes. |
+| `camera_info` | `LOAD3D_CAMERA` | Each picture's camera, as refined. The wired cameras unchanged when refine_cameras is off. |
+| `images` | `IMAGE` | Each picture's view drawn from the fitted splat at the fitted size, to compare with the pictures. |
+
+</details>
+
+<a id="node-waspointcloudrender"></a>
+<details>
+<summary><b>Point Cloud Render</b></summary>
+
+Draw a point cloud from every camera of a path, giving colour, depth and a mask of the holes nothing covers. Feed the depth to H3 Structure Video as near depth, or the colour and holes to an inpainting model, to repaint each view whole.
+
+| | |
+|---|---|
+| Node id | `WASPointCloudRender` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `point_cloud` | `SPLAT` | Yes |  |  | The cloud, from Point Cloud From Depth, Point Cloud Refine or any splat node. |
+| `camera_info` | `LOAD3D_CAMERA` | Yes |  |  | One camera or a path, from Point Cloud Camera Path, Point Cloud From Depth or core's camera nodes. One picture per camera; a cloud holding a video's moving people plays them across the path. |
+| `width` | `INT` | Yes | 1344 |  | Picture width in pixels. 1344 x 768 = H3 Structure Video's trained landscape size. |
+| `height` | `INT` | Yes | 768 |  | Picture height in pixels. 768 = H3's landscape height; 1344 = portrait. The field of view spans the shorter side. |
+| `point_size` | `FLOAT` | Yes | 1.0 |  | Size of every dot or splat. 1.0 = a lifted cloud's dots just close the gaps between neighbours, a fitted splat as fitted; higher fills cracks seen close up but thickens edges. |
+| `hole_grow` | `INT` | Yes | 2 |  | Pixels each hole is widened by in the holes mask, taking in the ragged edges round it. 0 = exactly where nothing landed. |
+| `depth_style` | `COMBO` | Yes | inverse | `inverse`, `linear` | `inverse` = most of the grey range spent near the camera, as depth estimators draw it; `linear` = evenly by distance. White is nearest, black is empty. |
+| `background` | `FLOAT` | Yes | 0.0 |  | Grey of the holes in the colour pictures. 0 = black; 0.5 = mid grey. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The colour of each view, holes in the background grey. |
+| `depth` | `IMAGE` | Each view's depth on one scale for the whole path: white nearest, black where empty. |
+| `holes` | `MASK` | 1 where nothing covers the view and a model has to paint, 0 elsewhere. |
+
+</details>
+
 ### WAS Suite/Animation
 
 <a id="node-wasaudiobeats"></a>
@@ -943,6 +1144,7 @@ Find a song's beats, the first beat of each bar, its tempo and how loud it is at
 | `beat_count` | `INT` | Beats found. |
 | `plot` | `IMAGE` | The strip drawn on the node. |
 | `report` | `STRING` | Tempo, counts and the first beat and bar times. |
+| `brief` | `STRING` | The music as text for a language model: tempo, bar starts, quiet and loud stretches and the strongest hits, in seconds. |
 
 </details>
 
@@ -11238,6 +11440,55 @@ Load the Kandinsky 6 audio VAE, which turns the sound half of a Kandinsky 6 late
 
 </details>
 
+<a id="node-waskandinsky6upscalemodelloader"></a>
+<details>
+<summary><b>Kandinsky 6 Upscale Model Loader</b></summary>
+
+Load the Kandinsky 6 video super-resolution model, which redraws a video at two, 2.25 or four times its size with sharp, natural detail. Wire it into Kandinsky 6 Upscale Video. The panel shows the file's size, its parameter count and how its weights are stored.
+
+| | |
+|---|---|
+| Node id | `WASKandinsky6UpscaleModelLoader` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `unet_name` | `COMBO,STRING` | Yes |  |  | A Kandinsky 6 VSR transformer in models/diffusion_models: kandinsky6_vsr2_int8_convrot (1.8 GB), _w6a8 (1.5 GB), _w4a8 (1.1 GB), or a release's own transformer file. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `weight_dtype` | `COMBO` | Yes | default | `default`, `fp8_e4m3fn`, `fp8_e4m3fn_fast`, `fp8_e5m2` | default = as stored; fp8_e4m3fn or fp8_e5m2 = store a bf16 file at 8 bits, half the memory; fp8_e4m3fn_fast = also multiply at 8 bits on cards that can. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `<output0>` | `MODEL` | The upscaler, for Kandinsky 6 Upscale Video. |
+
+</details>
+
+<a id="node-waskandinsky6upscalevaeloader"></a>
+<details>
+<summary><b>Kandinsky 6 Upscale VAE Loader</b></summary>
+
+Load the K-VAE that Kandinsky 6 video super-resolution reads and writes video through. Wire it into Kandinsky 6 Upscale Video; VAE Encode and VAE Decode take it too. The panel shows the file's size and how the autoencoder runs.
+
+| | |
+|---|---|
+| Node id | `WASKandinsky6UpscaleVAELoader` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `vae_name` | `COMBO,STRING` | Yes |  |  | The K-VAE in models/vae: kandinsky6_vsr_kvae_bf16.safetensors (3.5 GB), or the vae file of a kandinskylab/Kandinsky-6.0-VSR repository (7 GB, float32). A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `<output0>` | `VAE` | The K-VAE: 64 channels at a 16th of the width and height and a quarter of the frames. |
+
+</details>
+
 <a id="node-waslanguagemodelloader"></a>
 <details>
 <summary><b>Language Model Loader</b></summary>
@@ -13989,6 +14240,42 @@ Turn MiniMax H3 into a world model a keyboard drives: loads the H3-World LoRA an
 
 </details>
 
+<a id="node-waskandinsky6upscalevideo"></a>
+<details>
+<summary><b>Kandinsky 6 Upscale Video</b></summary>
+
+Enlarge a video two, 2.25 or four times with Kandinsky 6 video super-resolution, which redraws fine detail while keeping every frame of the motion. Any video works, generated or filmed, of any length. The panel shows the size before and after.
+
+| | |
+|---|---|
+| Node id | `WASKandinsky6UpscaleVideo` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `model` | `MODEL` | Yes |  |  | The upscaler from Kandinsky 6 Upscale Model Loader. |
+| `vae` | `VAE` | Yes |  |  | The K-VAE from Kandinsky 6 Upscale VAE Loader. |
+| `images` | `IMAGE,VIDEO` | Yes |  |  | The clip: IMAGE frames, or a VIDEO, which keeps its frame rate and sound and is read without holding a long clip in memory. Every frame is kept. |
+| `upscaler` | `COMBO,STRING` | Yes | auto |  | The latent upscaler, from ComfyUI/models/latent_upscale_models: `auto` = the Kandinsky 6 x2 or x4 file the scale needs; `pixels` = enlarge each tile in pixels first, softer. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `scale` | `COMBO` | Yes | 2x | `2x`, `2.25x`, `4x` | `2x` = 960x544 to 1920x1088; `2.25x` = 864x480 to 1944x1080; `4x` = 480x272 to 1920x1088. |
+| `seed` | `INT` | Yes | 0 |  | Seed of the noise each tile starts from: `0` and `1` give two different redraws of the same detail. |
+| `steps` | `INT` | Yes | 0 |  | Model passes per tile: `0` = the model's own, 2 for the distilled release. |
+| `noise` | `FLOAT` | Yes | 0.7 |  | Noise mixed into the source before redrawing: `0.7` = as trained; lower keeps more of the source. |
+| `overlap` | `FLOAT` | Yes | 0.2 |  | Least share of each tile its neighbours also cover: `0.2` = as released; higher hides seams, slower. |
+| `tiles_per_pass` | `INT` | Yes | 1 |  | Tiles refined at once: `1` = least memory; more is faster on a large card. |
+| `window_frames` | `INT` | Yes | 121 |  | Frames upscaled together: `121` = five seconds at 24 fps, as trained; a longer clip is cut into windows of this length. Fewer = less memory. |
+| `window_overlap` | `INT` | Yes | 8 |  | Frames two windows share, crossfaded, at most half a window: `8` = a third of a second at 24 fps; `0` = a cut. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `images` | `IMAGE` | The enlarged frames, as many as came in. Built only when wired; a long clip is kept on disk. |
+| `video` | `VIDEO` | The enlarged clip with the source's sound and frame rate, read from disk by Save Video. |
+
+</details>
+
 <a id="node-wasksampleraffineadvanced"></a>
 <details>
 <summary><b>KSampler Affine Advanced</b></summary>
@@ -16570,6 +16857,48 @@ Replace suite tokens such as [time], [hostname] and [user], plus any custom toke
 
 </details>
 
+### WAS Suite/Three
+
+<a id="node-wasvideoblueprint"></a>
+<details>
+<summary><b>Video Blueprint</b></summary>
+
+Measure a video into a blueprint for Three Blockout Scene: where it cuts, each shot's camera path and lens, and its sound hits. Hand the brief and pictures to a language model with the Three Blockout Scene Writer skill; reshoot_directions asks it to change parts of the shot.
+
+| | |
+|---|---|
+| Node id | `WASVideoBlueprint` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `video` | `VIDEO` | Yes |  |  | The footage to blueprint, with its sound. |
+| `camera_model` | `COMBO,STRING` | Yes |  |  | The AnySplat checkpoint that solves each shot's camera, from ComfyUI/models/geometry_estimation; `anysplat.safetensors` is fetched on first use with features.network on. A wired name, or a full path inside that model's folders such as `E:\models\loras\style.safetensors`, works too. |
+| `reshoot_directions` | `STRING` | Yes |  |  | What to change from the original, in plain words: `make it night`, `turn shot 2 into an orbit`, `the man becomes a woman in a red coat`. Empty = recreate it as filmed. |
+| `cut_threshold` | `FLOAT` | Yes | 0.4 |  | Share of the picture that must still follow from the frame before for the shot to continue: 0.4 = default; 0.6 = finds softer cuts; 0.2 = only hard cuts. |
+| `min_shot_frames` | `INT` | Yes | 6 |  | Fewest frames a shot holds: 6 = default; 24 = one second at 24 fps. |
+| `frames_per_shot` | `INT` | Yes | 12 |  | Frames each shot's camera is solved from, evenly spaced, first and last kept: 12 = default; 4 = faster and coarser; 32 = a finer path for long moves. |
+| `pictures_per_shot` | `INT` | Yes | 1 |  | Pictures of each shot handed to the language model: 1 = its middle frame; 3 = its first, middle and last. |
+| `solve` | `COMBO` | Yes | each shot | `each shot`, `whole clip` | `each shot` = every shot solved on its own and joined to the one before by the people seen on both sides of the cut; `whole clip` = every shot's frames solved together, for shots that overlap heavily. |
+| `find_people` | `BOOLEAN` | Yes | True |  | On = people and objects such as benches, cars and chairs are found and measured, and the people's size sets the scale and the camera's height; off = the language model places everything, the camera taken at eye level. |
+| `person_height` | `FLOAT` | Yes | 1.7 |  | How tall the people in the clip stand, in metres, which sets the scale: 1.7 = adults; 1.2 = young children; 1.0 = toddlers. |
+| `environment_context` | `BOOLEAN` | Yes | False |  | `true` = the brief also asks the language model to describe the set in words: every object and surface, where each stands from the people and each other, and how the people use them; `false` = the set is only placed as blocks. |
+| `listener` | `WAS_LLM` | No |  |  | A model that hears, from LLM Loader, such as Qwen2.5-Omni-7B-Q8_0.gguf with its mmproj: it names each sound hit and writes down what is said in each shot. Unwired = hits are given as times only. |
+| `shot_reader` | `WAS_LLM` | No |  |  | Shot Reader v2 from LLM Loader, such as shot-reader-v2-MTP.Q8_0.gguf with its mmproj: its reading of each shot's move, zoom, angle, height, set and tags joins the brief, and its camera height is used where no people set the scale. Unwired = the measurement alone. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `brief` | `STRING` | The request for the language model: every shot's length, its camera keys and move in words, the sound hits and the reshoot directions. |
+| `pictures` | `IMAGE` | The pictures the brief names, shot by shot, at most 768 pixels on the long side, for the language model's image input. |
+| `audio` | `AUDIO` | The clip's own sound, silence where it has none, for a model that hears or to lay under the film. |
+| `blueprint` | `STRING` | The measurements as JSON: each shot's start, seconds, camera keys, move and handheld flag, and the sound hits in seconds. |
+| `shot_count` | `INT` | How many shots were found, 1 or more. |
+
+</details>
+
 ### WAS Suite/Utilities
 
 <a id="node-bus-node"></a>
@@ -17082,7 +17411,7 @@ Send a message to an agent, or a team of agents that hand the conversation to ea
 <details>
 <summary><b>LLM Tool</b></summary>
 
-Give an agent a ready-made tool: a calculator, the date and time, Wikipedia, a web page reader, web search through Tavily or Brave, or a reader for one picked document. Chain several and connect the last to LLM Agent.
+Give an agent a ready-made tool: a calculator, the date and time, Wikipedia, a web page reader, web search through Tavily, Brave or Monid, or a reader for one picked document. Chain several and connect the last to LLM Agent.
 
 | | |
 |---|---|
@@ -17093,7 +17422,7 @@ Give an agent a ready-made tool: a calculator, the date and time, Wikipedia, a w
 
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
-| `tool` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `calculator` = exact arithmetic; `date and time` = today's date and date sums; `wikipedia` = search and page summaries; `web page` = reads one address; `web search` = Tavily or Brave, keyed by TAVILY_API_KEY or BRAVE_API_KEY; `document reader` = one picked file. |
+| `tool` | `COMFY_DYNAMICCOMBO_V3` | Yes |  |  | `calculator` = exact arithmetic; `date and time` = today's date and date sums; `wikipedia` = search and page summaries; `web page` = reads one address; `web search` = Tavily, Brave or Monid, keyed by TAVILY_API_KEY, BRAVE_API_KEY or MONID_API_KEY (Monid bills per call); `document reader` = one picked file. |
 | `tools` | `WAS_LLM_TOOLS` | No |  |  | Tools from earlier LLM Tool, LLM Query Engine Tool or LLM Retriever Tool nodes, kept ahead of this one. |
 
 **Outputs**
@@ -22721,7 +23050,7 @@ Load a Segment Anything model for SAM Image Mask, which turns clicked points int
 
 ## `features.threejs`
 
-44 nodes. On in a fresh install: set `features.threejs: false` in `config.yaml` and restart ComfyUI to leave these out.
+47 nodes. On in a fresh install: set `features.threejs: false` in `config.yaml` and restart ComfyUI to leave these out.
 
 ### WAS Suite/Three
 
@@ -22887,6 +23216,75 @@ A surface that ignores every light and draws its colour flat, so a sphere reads 
 
 </details>
 
+<a id="node-wasthreeblockoutprop"></a>
+<details>
+<summary><b>Three Blockout Prop</b></summary>
+
+Stand a plain shape on the ground to block out a shot: a box, a floor, a person, a ramp, stairs, an arch, a cylinder, a capsule, a sphere or a cone. Chain props one into the next to build a set, then wire the last into Three Scene.
+
+| | |
+|---|---|
+| Node id | `WASThreeBlockoutProp` |
+| Turn off with | `features.threejs: false` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `shape` | `COMBO` | Yes | box | `box`, `ground`, `person`, `ramp`, `stairs`, `arch`, `cylinder`, `capsule`, `sphere`, `cone` | `ground` = a flat floor; `person` = a standing figure whose nose faces forward; `ramp` and `stairs` rise toward the back; the others are the plain solids. |
+| `width` | `FLOAT` | Yes | 1.0 |  | Size along X, in scene units. 1.0 = one metre; a person ignores it. |
+| `height` | `FLOAT` | Yes | 1.0 |  | Size upward, in scene units. 1.8 = a standing adult; a ground ignores it. |
+| `depth` | `FLOAT` | Yes | 1.0 |  | Size along Z, front to back, in scene units. 1.0 = one metre; 0.2 = a thin wall; a person ignores it. |
+| `position_x` | `FLOAT` | Yes | 0.0 |  | Where its centre stands along X. 0.0 = the origin; positive is right of a camera at +Z. |
+| `position_z` | `FLOAT` | Yes | 0.0 |  | Where its centre stands along Z. 0.0 = the origin; positive is toward a camera at +Z. |
+| `turn` | `FLOAT` | Yes | 0.0 |  | Degrees it turns about the upward axis. 0.0 faces +Z; 90.0 faces +X; 180.0 faces away. |
+| `colour` | `STRING` | Yes | #a0a0a0 |  | Its colour as #rrggbb. #a0a0a0 = blockout grey; #c8a070 = a warm wood. |
+| `elevation` | `FLOAT` | Yes | 0.0 |  | How far its base sits above the ground, in scene units. 0.0 = on the ground. |
+| `steps` | `INT` | Yes | 6 |  | Number of steps when shape is stairs. 6 = a short flight; other shapes ignore it. |
+| `objects` | `THREE_OBJECT` | No |  |  | Props and objects placed before this one, from another Three Blockout Prop or any Three object. This prop is added beside them. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `objects` | `THREE_OBJECT` | This prop with everything wired into objects, for Three Scene, Three Group or the next Three Blockout Prop. |
+
+</details>
+
+<a id="node-wasthreeblockoutscene"></a>
+<details>
+<summary><b>Three Blockout Scene</b></summary>
+
+Build a grey-box scene from a JSON description: ready-made props, props made of shapes, posed people and a list of shots the camera cuts between. It also writes the matching MiniMax H3 prompt, one line per shot, so a language model can block out a whole sequence.
+
+| | |
+|---|---|
+| Node id | `WASThreeBlockoutScene` |
+| Turn off with | `features.threejs: false` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `scene` | `STRING` | Yes | {   "setting": "A small kitchen in the evening.",   "props": [     {"id": "table", "type": "table"},     {"id": "chair_a", "type": "chair", "at": "table.left"},     {"id": "chair_b", "type": "chair", "at": "table.right"},     {"id": "plate", "type": "plate", "on": "table", "count": 2},     {"id": "back_wall", "type": "wall_with_window", "position": [0, -2.5]}   ],   "people": [     {"id": "anna", "sit_on": "chair_a", "look_at": "ben", "description": "a woman in a green sweater"},     {"id": "ben", "sit_on": "chair_b", "look_at": "anna", "description": "a man in a grey shirt"}   ],   "shots": [     {"seconds": 3, "rig": "two shot", "subjects": ["anna", "ben"], "move": "push in"},     {"seconds": 2, "rig": "over the shoulder", "from": "ben", "onto": "anna", "action": "Anna talks and smiles."},     {"seconds": 2, "rig": "over the shoulder", "from": "anna", "onto": "ben", "action": "Ben laughs."}   ] } |  | The scene as JSON: `props`, `people`, `shots`, and optionally `kinds`, `setting`, `look`, `sound`, `lighting`, `floor`. Up to 64 KB, 150 props, 12 people and 24 shots. |
+| `fps` | `INT` | Yes | 24 |  | Frames per second the shots are timed at. 24 matches MiniMax H3. |
+| `beats` | `WAS_BEATS` | No |  |  | A song's beats from Audio Beats: a shot's `beats` count on them and every cut lands on the nearest beat. Unwired = `tempo` from the JSON, cuts where the seconds fall. |
+| `blueprint` | `STRING` | No |  |  | Video Blueprint's blueprint: every shot written `"rig": "measured"` takes the camera keys, seconds and handheld shake measured for the shot of the same number. Unwired = no shot may be measured. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `objects` | `THREE_OBJECT` | The set, people and lights, for the root socket on Three Scene. |
+| `camera` | `THREE_CAMERA` | One camera that cuts between the shots, for the camera socket on Three App. |
+| `summary` | `STRING` | One line saying what the scene is, for summary on H3 Structure Video. |
+| `description` | `STRING` | The H3 prompt with one [Shot N] line per shot, for description on H3 Structure Video. |
+| `soundscape` | `STRING` | The scene's sound, for soundscape on H3 Structure Video. Empty when none is given. |
+| `frames` | `INT` | Frames all the shots take at fps, for frame_count on Three Render and length on H3. The last shot is lengthened to the next count H3 accepts: 158, 175, 192 and so on. |
+| `prompt` | `STRING` | The whole MiniMax H3 reference prompt, the block-out a loose guide to placement, camera and cuts, for prompt on MiniMax H3 Reference to Video with the render as its first video. |
+
+</details>
+
 <a id="node-wasthreebloom"></a>
 <details>
 <summary><b>Three Bloom</b></summary>
@@ -22942,6 +23340,38 @@ A rectangular box, sized in scene units and centred on its own origin, for Three
 | Name | Type | What it is |
 |---|---|---|
 | `geometry` | `THREE_GEOMETRY` | The box shape, for the geometry socket on Three Mesh. |
+
+</details>
+
+<a id="node-wasthreecameramove"></a>
+<details>
+<summary><b>Three Camera Move</b></summary>
+
+Move a camera through a shot with a preset move: push in, orbit, truck, crane, pedestal, pan, tilt, zoom, dolly zoom or dutch. Chain several to cut one move into the next, each over its own part of the shot.
+
+| | |
+|---|---|
+| Node id | `WASThreeCameraMove` |
+| Turn off with | `features.threejs: false` in `config.yaml` |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `camera` | `THREE_CAMERA` | Yes |  |  | The camera to move, from Three Perspective Camera or another Three Camera Move. |
+| `move` | `COMBO` | Yes | push in | `push in`, `orbit`, `truck`, `crane`, `pedestal`, `pan`, `tilt`, `zoom`, `dolly zoom`, `dutch` | `push in` toward the target; `orbit` round it; `truck` sideways; `crane` up with the target held; `pedestal` up with the target; `pan` and `tilt` turn on the spot; `zoom` changes the lens; `dolly zoom` pushes in and widens; `dutch` rolls the horizon. |
+| `amount` | `FLOAT` | Yes | 2.0 |  | Scene units for push in, truck, crane, pedestal and dolly zoom; degrees for orbit, pan, tilt and dutch; the lens to end on in mm for zoom. `2.0` pushes in two units, `-2.0` pulls out, `90` orbits a quarter turn right. |
+| `start` | `FLOAT` | Yes | 0.0 |  | Where the move begins, as a fraction of the shot. 0.0 = the first frame, 0.5 = halfway. |
+| `end` | `FLOAT` | Yes | 1.0 |  | Where the move is complete, as a fraction of the shot. 1.0 = the last frame. |
+| `ease` | `COMBO` | Yes | ease in and out | `ease in and out`, `ease in`, `ease out`, `linear` | `ease in and out` = starts and settles gently; `ease in` = starts gently; `ease out` = settles gently; `linear` = one speed throughout. |
+| `rise` | `FLOAT` | Yes | 0.0 |  | Scene units the camera climbs during an orbit. 0.0 = level; other moves leave it unused. |
+| `units` | `COMBO` | Yes | per capture | `per capture`, `per timeline` | `per capture` = start and end are fractions of the frames Three Render takes; `per timeline` = fractions of Three App's loop_seconds. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `camera` | `THREE_CAMERA` | The camera with the move added, for Three App or another Three Camera Move. |
 
 </details>
 

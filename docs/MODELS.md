@@ -345,6 +345,36 @@ are.
 | `kandinsky6_audio_vae.safetensors` | **CC BY-NC 4.0, non-commercial use only**, the MMAudio autoencoder in it; MIT, the BigVGAN vocoder |
 | `hunyuan_video_vae_bf16.safetensors` | Tencent Hunyuan Community License, which does not apply in the European Union, the United Kingdom or South Korea |
 
+### Video super-resolution
+
+Kandinsky 6 Upscale Video takes one upscaler, the K-VAE, and a latent upscaler for the scale. The
+files are at the same repository under `models/kandinsky6/`. One upscaler file is enough.
+
+| File | Goes in | Size | Loaded by |
+|---|---|--:|---|
+| [`kandinsky6_vsr2_int8_convrot.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/diffusion_models/kandinsky6_vsr2_int8_convrot.safetensors) | `ComfyUI/models/diffusion_models` | 2.1 GB | Kandinsky 6 Upscale Model Loader |
+| [`kandinsky6_vsr2_w6a8.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/diffusion_models/kandinsky6_vsr2_w6a8.safetensors) | `ComfyUI/models/diffusion_models` | 1.8 GB | Kandinsky 6 Upscale Model Loader |
+| [`kandinsky6_vsr2_w4a8.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/diffusion_models/kandinsky6_vsr2_w4a8.safetensors) | `ComfyUI/models/diffusion_models` | 1.6 GB | Kandinsky 6 Upscale Model Loader |
+| [`kandinsky6_vsr_kvae_bf16.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/vae/kandinsky6_vsr_kvae_bf16.safetensors) | `ComfyUI/models/vae` | 3.5 GB | Kandinsky 6 Upscale VAE Loader |
+| [`kandinsky6_vsr_latent_upscaler_x2.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/latent_upscale_models/kandinsky6_vsr_latent_upscaler_x2.safetensors) | `ComfyUI/models/latent_upscale_models` | 1.5 GB | Kandinsky 6 Upscale Video, `2x` and `2.25x` |
+| [`kandinsky6_vsr_latent_upscaler_x4.safetensors`](https://huggingface.co/WAS/was-node-suite-weights/blob/main/models/kandinsky6/latent_upscale_models/kandinsky6_vsr_latent_upscaler_x4.safetensors) | `ComfyUI/models/latent_upscale_models` | 2.9 GB | Kandinsky 6 Upscale Video, `4x` |
+
+| Upscaler | Weights | Output against bfloat16 |
+|---|---|--:|
+| `_int8_convrot` | 8-bit, run as 8-bit | 51.7 dB |
+| `_w6a8` | 6-bit, run with 8-bit activations | 49.9 dB |
+| `_w4a8` | 4-bit, run with 8-bit activations, the smallest | 44.0 dB |
+
+| `upscaler` on Kandinsky 6 Upscale Video | Enlarges with |
+|---|---|
+| `auto` | the latent upscaler for the scale in `models/latent_upscale_models` |
+| a file | that file |
+| `pixels` | each tile resized in pixels before encoding, no latent upscaler needed |
+
+| File | Licence |
+|---|---|
+| The upscalers, the K-VAE and the latent upscalers | MIT, Kandinsky Lab |
+
 ## Fibo 2.0
 
 ComfyUI's own loaders read every file, and nothing is fetched. The transformers are Comfy-Org's
@@ -434,6 +464,28 @@ decode when the card holds less.
 | `This file is not the DC-AE f64c128 autoencoder` | BluePixel VAE Loader is set to another file in `models/vae` |
 | Faces come out garbled or soft | `resolution` is under 4096. Faces hold best at 4096 |
 | Areas the instruction does not name come out softer than the source | BluePixel redraws the whole picture through its autoencoder, at bfloat16 and in every quantized form |
+
+## Point clouds
+
+Point Cloud From Depth reads core's MoGe and Depth Anything 3 geometry, loaded by core's own loaders.
+Point Cloud From Pictures reads AnySplat, fetched on first use with `features.network` on.
+
+| File | Goes in | Size | Loaded by |
+|---|---|--:|---|
+| [`anysplat.safetensors`](https://huggingface.co/lhjiang/anysplat/blob/main/model.safetensors), saved under this name | `ComfyUI/models/geometry_estimation` | 2.9 GB | Point Cloud From Pictures |
+| [`moge_3_vitl_fp16.safetensors`](https://huggingface.co/Comfy-Org/MoGe/blob/main/geometry_estimation/moge_3_vitl_fp16.safetensors) | `ComfyUI/models/geometry_estimation` | 740 MB | Load MoGe Model |
+| [`depth_anything_3_base.safetensors`](https://huggingface.co/Comfy-Org/Depth-Anything-3/blob/main/geometry_estimation/depth_anything_3_base.safetensors) | `ComfyUI/models/geometry_estimation` | 541 MB | Load Depth Anything 3 |
+
+| File | Licence |
+|---|---|
+| `anysplat.safetensors` | MIT, Lihan Jiang and Yucheng Mao; fine-tuned from Meta's VGGT-1B, whose weights are **CC BY-NC 4.0, non-commercial use only** |
+| `moge_3_vitl_fp16.safetensors` | MIT, Microsoft |
+| `depth_anything_3_base.safetensors` | Apache-2.0, ByteDance |
+
+| What you see | What it means |
+|---|---|
+| `The AnySplat checkpoint anysplat.safetensors was not found` | `features.network` is off. Download the file by hand into `ComfyUI/models/geometry_estimation`, or turn the key on |
+| `needs at least two pictures` | One picture is wired. Use MoGe Inference into Point Cloud From Depth for a single picture |
 
 ## Language models
 
@@ -676,4 +728,6 @@ beside the SFT.
 | `This file is not the Kandinsky 6 audio VAE` | Kandinsky 6 Audio VAE Loader is set to another file in `models/vae` |
 | Out of memory on Kandinsky 6 Pro | The `_w6a8` file is the smallest. Pro runs on a 24 GB card in either quantised form, streamed through ComfyUI's VRAM management |
 | ComfyUI quits with `Fatal Python error: Aborted` in VAE Decode after Kandinsky 6 Pro | Decode with VAE Decode (Tiled): `tile_size` 512, `overlap` 64, `temporal_size` 64, `temporal_overlap` 8 |
+| `found no Kandinsky 6 latent upscaler` | `kandinsky6_vsr_latent_upscaler_x2.safetensors` or `_x4` is not in `ComfyUI/models/latent_upscale_models`. Place it, or set `upscaler` to `pixels` |
+| `needs the Kandinsky 6 upscaler` or `needs the K-VAE` | model or vae on Kandinsky 6 Upscale Video comes from another loader. Wire Kandinsky 6 Upscale Model Loader and Kandinsky 6 Upscale VAE Loader |
 | Sound from a `pretrain` Kandinsky 6 transformer is off | The pack decodes every non-distilled transformer at audio scale 0.5302, the released checkpoints' value; the pretrained ones use 0.417 |

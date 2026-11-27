@@ -741,6 +741,14 @@ def _data_uri(block) -> str:
     return f"data:{mimetype};base64,{data}"
 
 
+def _sound_uri(block) -> str:
+    """A sound block as a ``data:`` address; llama.cpp reads WAV, MP3 and FLAC from the bytes it carries."""
+    data = block.resolve_audio(as_base64=True).read()
+    if isinstance(data, bytes):
+        data = data.decode("ascii")
+    return f"data:audio/{block.format or 'wav'};base64,{data}"
+
+
 def gguf_model():
     """The llama-index chat model class around a GGUF model.
 
@@ -792,10 +800,10 @@ def gguf_model():
 
             Args:
                 items: llama-index ``ChatMessage`` objects.
-                pictures: True to hand pictures over, False to note them in the text.
+                pictures: True to hand pictures and sounds over, False to note them in the text.
 
             Returns:
-                ``(messages, count)``, ``count`` the pictures handed over.
+                ``(messages, count)``, ``count`` the pictures and sounds handed over.
             """
             system, turns = conversation(items)
             rows = [{"role": "system", "content": system}] if system else []
@@ -806,8 +814,9 @@ def gguf_model():
                     rows.append({"role": "assistant", "content": turn.text})
                 elif turn.role == TOOL:
                     rows.append({"role": "user", "content": f"Tool result:\n{turn.text}"})
-                elif turn.pictures and pictures:
+                elif (turn.pictures or turn.sounds) and pictures:
                     addresses = [_data_uri(block) for block in turn.pictures]
+                    addresses += [_sound_uri(block) for block in turn.sounds]
                     count += len(addresses)
                     if template:
                         # Each address stands in the text where its picture goes.
@@ -818,7 +827,7 @@ def gguf_model():
                         parts.append({"type": "text", "text": turn.text})
                         rows.append({"role": "user", "content": parts})
                 else:
-                    note = "[picture] " * len(turn.pictures)
+                    note = "[picture] " * len(turn.pictures) + "[sound] " * len(turn.sounds)
                     rows.append({"role": "user", "content": f"{note}{turn.text}"})
             if not any(row["role"] == "user" for row in rows):
                 rows.append({"role": "user", "content": ""})

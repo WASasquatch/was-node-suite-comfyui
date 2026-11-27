@@ -42,6 +42,7 @@ LITERAL_INPUTS = {
     "WASVideoTimecode": ("start", "text_color", "box_color"),
     "WASVideoLowerThird": ("accent_color", "text_color", "bar_color"),
     "WASCurveToNumbers": ("curve_points",),
+    "WASPointCloudNavigator": ("path",),
     "Mask Rect Area": ("drawn_mask",),
     "Mask Rect Area (Advanced)": ("drawn_mask",),
     "Mask Threshold Region": ("drawn_mask",),

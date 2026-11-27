@@ -48,6 +48,7 @@ const NODES = [
   "WASNSImageTileShuffle",
   "WASLatentScaleToMaxDimension",
   "WASPSSRSuperResolution",
+  "WASKandinsky6UpscaleVideo",
   "WASNSTiledImageUpscaleWithModel",
   "WASTextEncodeBluePixel",
 ];

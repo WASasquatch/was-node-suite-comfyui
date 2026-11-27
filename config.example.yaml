@@ -73,7 +73,7 @@ features:                # optional node groups
                          #           so nothing is installed for them
   audio:       true      # editing, mixing, metering and effect nodes for AUDIO, on torch
                          #           and scipy, so nothing is installed for them
-  threejs:     true      # 43 nodes: build a Three.js scene on the canvas and render it in
+  threejs:     true      # 47 nodes: build a Three.js scene on the canvas and render it in
                          #           the browser. Three.js ships with the pack, and the browser
                          #           fetches it only when a scene runs
   document_export: false #  0 nodes: lets Save DOC write .docx, .odt and .pdf. The only group

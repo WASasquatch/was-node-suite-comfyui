@@ -1,11 +1,13 @@
 /**
  * The window Three Render captures, set by dragging a strip on the node.
  *
- * The strip reads and writes the node's own `start`, `num_frames` and `fps` widgets, and takes
- * the length of its axis from the Three App wired into it.
+ * The strip edits the node's `start`, `num_frames` and `fps`, shows a wired one from the last
+ * capture, and runs its axis to the wired Three App's loop.
  */
 
 import { app } from "../../scripts/app.js";
+import { onNodeFinished } from "./interface/run_events.mjs";
+import { fetchRunResult, whenReadable } from "./interface/run_result.mjs";
 import { createTimeSpanPanel } from "./interface/time_span.mjs";
 import { appendInterfaceWidget } from "./interface/widget.mjs";
 
@@ -19,6 +21,9 @@ const START = "start";
 const FRAMES = "num_frames";
 const FPS = "fps";
 const LOOP_SECONDS = "loop_seconds";
+
+// The counts a run reports, by the widget each one stands in for.
+const CAPTURE_COUNTS = { frames: FRAMES, fps: FPS, start: START };
 
 const UI_WIDGET_NAME = "was_three_render_ui";
 const UI_WIDGET_TYPE = "was_time_span";
@@ -64,6 +69,32 @@ function widgetValue(node, name, fallback) {
 }
 
 /**
+ * Whether a widget's value arrives over a link instead of from the widget.
+ *
+ * @param {object} node - The node holding it.
+ * @param {string} name - The widget's name.
+ * @returns {boolean} True where its input socket is linked.
+ */
+function wired(node, name) {
+  const input = node?.inputs?.find((one) => one.name === name);
+  return input?.link !== undefined && input?.link !== null;
+}
+
+/**
+ * One value of the window: the last capture's where the socket is wired, the widget's otherwise.
+ *
+ * @param {object} node - The Three Render node.
+ * @param {string} name - The widget's name.
+ * @param {number} fallback - Answered where neither is readable.
+ * @returns {number} The value.
+ */
+function windowValue(node, name, fallback) {
+  const captured = node?.__wasCaptured?.[name];
+  if (wired(node, name) && Number.isFinite(captured)) return captured;
+  return widgetValue(node, name, fallback);
+}
+
+/**
  * How long the app wired into a render loops for.
  *
  * @param {object} node - The Three Render node.
@@ -93,9 +124,9 @@ function loopSeconds(node) {
 function spanAccessor(node) {
   return {
     read() {
-      const fps = Math.max(0.01, widgetValue(node, FPS, 24));
-      const frames = Math.max(1, Math.round(widgetValue(node, FRAMES, 1)));
-      const start = Math.max(0, widgetValue(node, START, 0));
+      const fps = Math.max(0.01, windowValue(node, FPS, 24));
+      const frames = Math.max(1, Math.round(windowValue(node, FRAMES, 1)));
+      const start = Math.max(0, windowValue(node, START, 0));
       const loop = loopSeconds(node);
       return {
         start,
@@ -106,6 +137,7 @@ function spanAccessor(node) {
     },
     write({ start, frames }) {
       for (const [name, value] of [[START, start], [FRAMES, frames]]) {
+        if (wired(node, name)) continue;
         const widget = node.widgets?.find((one) => one.name === name);
         if (!widget) continue;
         const low = Number(widget.options?.min);
@@ -181,10 +213,33 @@ app.registerExtension({
           return answer;
         };
 
+        // A window wired in from another node is only known once a run has captured it.
+        const learn = async () => {
+          try {
+            const answer = await fetchRunResult(this);
+            const counts = answer?.result?.counts ?? [];
+            const captured = {};
+            for (const { name, value } of counts) {
+              const widget = CAPTURE_COUNTS[name];
+              if (widget) captured[widget] = Number(value);
+            }
+            if (Number.isFinite(captured[FRAMES])) {
+              this.__wasCaptured = captured;
+              panel.refresh();
+            }
+          } catch (error) {
+            console.error(`[${EXT_NAME}] Failed to read the last capture:`, error);
+          }
+        };
+        const stopFinished = onNodeFinished(this, () => learn());
+        const stopSettling = whenReadable(this, () => learn());
+
         const originalOnRemoved = this.onRemoved;
         this.onRemoved = function (...args) {
           const removed = originalOnRemoved?.apply(this, args);
           try {
+            stopFinished();
+            stopSettling();
             panel.dispose();
           } catch (error) {
             console.error(`[${EXT_NAME}] Failed to release the capture strip:`, error);

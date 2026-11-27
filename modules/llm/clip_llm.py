@@ -118,11 +118,13 @@ class Turn:
         role: :data:`USER`, :data:`ASSISTANT` or :data:`TOOL`.
         text: The words, thinking left out.
         pictures: The ``ImageBlock`` objects it carries.
+        sounds: The ``AudioBlock`` objects it carries.
     """
 
     role: str
     text: str
     pictures: list = field(default_factory=list)
+    sounds: list = field(default_factory=list)
 
 
 def conversation(items, controls: tuple = ()) -> tuple[str, list[Turn]]:
@@ -136,7 +138,7 @@ def conversation(items, controls: tuple = ()) -> tuple[str, list[Turn]]:
         ``(system, turns)``. Pictures past the newest :data:`MAX_PICTURES` are replaced by a
         ``[picture]`` note.
     """
-    from llama_index.core.llms import ImageBlock
+    from llama_index.core.llms import AudioBlock, ImageBlock
 
     system_parts: list[str] = []
     turns: list[Turn] = []
@@ -151,12 +153,16 @@ def conversation(items, controls: tuple = ()) -> tuple[str, list[Turn]]:
             block for block in getattr(item, "blocks", ()) or ()
             if isinstance(block, ImageBlock) and block.image
         ]
+        sounds = [
+            block for block in getattr(item, "blocks", ()) or ()
+            if isinstance(block, AudioBlock) and block.audio
+        ]
         if role in ("tool", "function"):
             turns.append(Turn(TOOL, text))
         elif role in ("assistant", "model", "chatbot"):
             turns.append(Turn(ASSISTANT, text))
         else:
-            turns.append(Turn(USER, text, pictures))
+            turns.append(Turn(USER, text, pictures, sounds))
     total = sum(len(turn.pictures) for turn in turns)
     excess = total - MAX_PICTURES
     for turn in turns:

@@ -82,6 +82,13 @@ class AudioBeats(io.ComfyNode):
                     display_name="report",
                     tooltip="Tempo, counts and the first beat and bar times.",
                 ),
+                io.String.Output(
+                    display_name="brief",
+                    tooltip=(
+                        "The music as text for a language model: tempo, bar starts, quiet and loud stretches and "
+                        "the strongest hits, in seconds."
+                    ),
+                ),
             ],
         )
 
@@ -108,5 +115,5 @@ class AudioBeats(io.ComfyNode):
         )
         return io.NodeOutput(
             result, stretch, float(result.tempo), float(result.bar_seconds),
-            len(result.times), picture, report, ui=ui.PreviewImage(picture, cls=cls),
+            len(result.times), picture, report, beat_analysis.brief(result), ui=ui.PreviewImage(picture, cls=cls),
         )
