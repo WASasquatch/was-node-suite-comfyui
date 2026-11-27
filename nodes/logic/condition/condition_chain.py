@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
-from ....modules.logic.compare import CONDITION_NAMES, MAX_CONDITIONS, to_boolean
+from ....modules.logic.compare import MAX_CONDITIONS, counted_conditions
 
 #: Tooltip on every condition. One wording for all of them: the letter is already on the socket.
 SLOT_TIP = (
     "One condition, `true` or `false`, tested in slot order. The first `true` decides the "
-    "answer. An unconnected slot is skipped, so the numbering follows what is wired."
+    "answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired."
 )
 
 
@@ -142,9 +142,10 @@ class ConditionChain(io.ComfyNode):
                 ),
                 io.Int.Output(
                     display_name="count",
-                    tooltip="Connected conditions. The index runs 0..count-1.",
+                    tooltip="Conditions counted: the wired ones, and any unwired slot ticked `true`. The index runs 0..count-1.",
                 ),
             ],
+            hidden=[io.Hidden.prompt, io.Hidden.unique_id],
         )
 
     @classmethod
@@ -158,8 +159,8 @@ class ConditionChain(io.ComfyNode):
         Returns:
             The position, whether a condition held, and how many are connected.
         """
-        wired = [name for name in CONDITION_NAMES if name in conditions]
-        for position, name in enumerate(wired):
-            if to_boolean(conditions.get(name), default=False):
-                return io.NodeOutput(position, True, len(wired))
-        return io.NodeOutput(int(fallback), False, len(wired))
+        counted = counted_conditions(conditions, cls.hidden.prompt, cls.hidden.unique_id)
+        for position, (_, value) in enumerate(counted):
+            if value:
+                return io.NodeOutput(position, True, len(counted))
+        return io.NodeOutput(int(fallback), False, len(counted))

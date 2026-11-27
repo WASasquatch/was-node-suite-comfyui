@@ -13,6 +13,7 @@ __all__ = [
     "REDUCTIONS",
     "CONDITION_NAMES",
     "compare",
+    "counted_conditions",
     "reduce_booleans",
     "to_boolean",
 ]
@@ -48,6 +49,37 @@ CONDITION_NAMES: tuple[str, ...] = tuple(
 #: Words a checkbox may arrive as from a text field or a JSON round trip.
 TRUE_WORDS = ("true", "1", "yes", "y", "on", "t")
 FALSE_WORDS = ("false", "0", "no", "n", "off", "f", "")
+
+
+def _linked(prompt, unique_id, name: str) -> bool | None:
+    """Whether one input of a node is linked in the queued prompt, or None where unknown."""
+    node = prompt.get(str(unique_id)) if isinstance(prompt, dict) else None
+    inputs = node.get("inputs") if isinstance(node, dict) else None
+    if not isinstance(inputs, dict):
+        return None
+    value = inputs.get(name)
+    return isinstance(value, (list, tuple)) and len(value) == 2
+
+
+def counted_conditions(conditions: dict, prompt=None, unique_id=None) -> list[tuple[str, bool]]:
+    """The condition slots a reducer counts, in slot order: wired ones, and unwired ones ticked true.
+
+    Args:
+        conditions: The condition values the node was called with, by slot name.
+        prompt: The queued prompt, to tell a wired slot from a box left as it was.
+        unique_id: The node's id in that prompt.
+
+    Returns:
+        ``(name, value)`` pairs. Every slot given is counted where the prompt does not say.
+    """
+    found = []
+    for name in CONDITION_NAMES:
+        if name not in conditions:
+            continue
+        value = to_boolean(conditions.get(name), default=False)
+        if value or _linked(prompt, unique_id, name) is not False:
+            found.append((name, value))
+    return found
 
 
 def to_boolean(value, default: bool = False) -> bool:

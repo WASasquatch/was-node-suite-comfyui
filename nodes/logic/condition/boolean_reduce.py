@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from comfy_api.latest import io
 
-from ....modules.logic.compare import CONDITION_NAMES, REDUCTIONS, reduce_booleans, to_boolean
+from ....modules.logic.compare import REDUCTIONS, counted_conditions, reduce_booleans
 
 #: Tooltip on every condition. One wording for all of them: the letter is already on the socket.
 SLOT_TIP = (
-    "One condition, `true` or `false`. An unconnected slot is not counted, so the reduction "
-    "runs over what is actually wired."
+    "One condition, `true` or `false`, wired from a test. An unwired slot counts only when "
+    "ticked `true`; unticked, it is left out, so the reduction runs over what is wired."
 )
 
 
@@ -137,9 +137,10 @@ class BooleanReduce(io.ComfyNode):
                 ),
                 io.Int.Output(
                     display_name="count",
-                    tooltip="Connected conditions.",
+                    tooltip="Conditions counted: the wired ones, and any unwired slot ticked `true`.",
                 ),
             ],
+            hidden=[io.Hidden.prompt, io.Hidden.unique_id],
         )
 
     @classmethod
@@ -151,13 +152,10 @@ class BooleanReduce(io.ComfyNode):
             conditions: The condition slots the graph wired.
 
         Returns:
-            The combined answer, how many were true, and how many are connected.
+            The combined answer, how many were true, and how many were counted.
 
         Raises:
             ValueError: The reduction is unknown.
         """
-        values = [
-            to_boolean(conditions.get(name), default=False)
-            for name in CONDITION_NAMES if name in conditions
-        ]
+        values = [value for _, value in counted_conditions(conditions, cls.hidden.prompt, cls.hidden.unique_id)]
         return io.NodeOutput(reduce_booleans(values, reduction), sum(values), len(values))

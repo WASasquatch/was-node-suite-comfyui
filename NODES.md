@@ -11754,32 +11754,32 @@ Combine any number of conditions into one answer: all of them, any of them, none
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `reduction` | `COMBO` | Yes | all | `all`, `any`, `none`, `exactly one`, `majority` | How the conditions combine. With 3 wired and 2 true: `all` = false, `any` = true, `none` = false, `exactly one` = false, `majority` = true. |
-| `condition_a` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_b` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_c` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_d` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_e` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_f` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_g` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_h` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_i` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_j` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_k` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_l` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_m` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_n` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_o` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_p` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_q` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_r` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_s` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_t` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_u` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_v` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_w` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_x` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_y` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
-| `condition_z` | `BOOLEAN` | No | False |  | One condition, `true` or `false`. An unconnected slot is not counted, so the reduction runs over what is actually wired. |
+| `condition_a` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_b` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_c` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_d` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_e` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_f` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_g` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_h` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_i` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_j` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_k` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_l` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_m` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_n` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_o` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_p` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_q` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_r` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_s` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_t` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_u` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_v` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_w` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_x` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_y` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
+| `condition_z` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, wired from a test. An unwired slot counts only when ticked `true`; unticked, it is left out, so the reduction runs over what is wired. |
 
 **Outputs**
 
@@ -11787,7 +11787,7 @@ Combine any number of conditions into one answer: all of them, any of them, none
 |---|---|---|
 | `boolean` | `BOOLEAN` | The combined answer. Wire it to any switch's boolean. |
 | `true_count` | `INT` | How many connected conditions are true. |
-| `count` | `INT` | Connected conditions. |
+| `count` | `INT` | Conditions counted: the wired ones, and any unwired slot ticked `true`. |
 
 </details>
 
@@ -11857,32 +11857,32 @@ Test conditions in order and answer the position of the first one that holds. Wi
 | Name | Type | Required | Default | Choices | What it does |
 |---|---|---|---|---|---|
 | `fallback` | `INT` | Yes | 0 |  | Answer when no condition holds; this is the `else`. -1 answers -1 and sets matched to false, which an index switch reads as its last slot. |
-| `condition_a` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_b` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_c` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_d` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_e` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_f` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_g` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_h` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_i` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_j` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_k` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_l` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_m` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_n` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_o` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_p` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_q` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_r` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_s` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_t` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_u` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_v` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_w` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_x` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_y` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
-| `condition_z` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unconnected slot is skipped, so the numbering follows what is wired. |
+| `condition_a` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_b` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_c` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_d` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_e` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_f` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_g` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_h` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_i` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_j` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_k` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_l` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_m` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_n` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_o` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_p` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_q` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_r` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_s` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_t` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_u` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_v` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_w` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_x` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_y` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
+| `condition_z` | `BOOLEAN` | No | False |  | One condition, `true` or `false`, tested in slot order. The first `true` decides the answer. An unwired slot is skipped unless ticked `true`, so the numbering follows what is wired. |
 
 **Outputs**
 
@@ -11890,7 +11890,7 @@ Test conditions in order and answer the position of the first one that holds. Wi
 |---|---|---|
 | `index` | `INT` | Position of the first true condition, counting connected slots from 0, or the fallback when none held. |
 | `matched` | `BOOLEAN` | true when a condition held, false when the fallback answered. |
-| `count` | `INT` | Connected conditions. The index runs 0..count-1. |
+| `count` | `INT` | Conditions counted: the wired ones, and any unwired slot ticked `true`. The index runs 0..count-1. |
 
 </details>
 
