@@ -492,8 +492,7 @@ async def _get_json(url: str, *, params=None, headers=None, body=None) -> dict:
     sent = {"User-Agent": USER_AGENT, "Accept": "application/json", **(headers or {})}
     async with httpx.AsyncClient(timeout=API_TIMEOUT, follow_redirects=False) as client:
         method = "POST" if body is not None else "GET"
-        payload = {"content": body} if isinstance(body, bytes) else {"json": body}
-        request = client.build_request(method, url, params=params, headers=sent, **payload)
+        request = client.build_request(method, url, params=params, headers=sent, json=body)
         host = request.url.host
         for _ in range(MAX_API_REDIRECTS + 1):
             response = await client.send(request, stream=True)
@@ -807,25 +806,26 @@ async def _monid_search(query: str, count: int, key: str) -> list:
     """
     headers = {"Authorization": f"Bearer {key}"}
     body = {"provider": "context.dev", "endpoint": "/web/search", "input": {"body": {"query": query, "numResults": count}}}
-    run = await _get_json(
-        MONID_RUN,
-        headers={**headers, "Content-Type": "application/json; charset=utf-8"},
-        body=json.dumps(body, ensure_ascii=False).encode("utf-8"),
-    )
+    run = await _get_json(MONID_RUN, headers=headers, body=body)
+    run_id = run.get("runId")
     loop = asyncio.get_running_loop()
     deadline = loop.time() + MONID_WAIT
     while "output" not in run and run.get("status") not in MONID_ENDED:
-        if not run.get("runId"):
+        if not run_id:
             raise ValueError("Monid answered without results or a search to wait for")
         if loop.time() >= deadline:
             raise ValueError(f"the search was still going after {MONID_WAIT:g} seconds")
         await asyncio.sleep(MONID_POLL)
         runtime.check_interrupt()
-        run = await _get_json(MONID_RUNS + quote(str(run["runId"]), safe=""), headers=headers)
+        run = await _get_json(MONID_RUNS + quote(str(run_id), safe=""), headers=headers)
     status = run.get("status")
     if status not in (None, "COMPLETED"):
         raise ValueError(f"the search ended {str(status)[:20]}")
-    answered = (run.get("providerResponse") or {}).get("httpStatus") or 200
+    provider = run.get("providerResponse") if isinstance(run.get("providerResponse"), dict) else {}
+    try:
+        answered = int(provider.get("httpStatus") or 200)
+    except (TypeError, ValueError):
+        answered = 200
     if answered >= 400:
         raise ValueError(f"the service answered HTTP {answered}")
     output = run.get("output") if isinstance(run.get("output"), dict) else {}
