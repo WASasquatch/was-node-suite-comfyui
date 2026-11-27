@@ -49,6 +49,7 @@ workflow carries none. Set the variable, then restart ComfyUI.
 | LLM Provider: NVIDIA | `NVIDIA_API_KEY` | `https://integrate.api.nvidia.com/v1` |
 | LLM Tool: web search (Tavily) | `TAVILY_API_KEY` | `https://api.tavily.com/search` |
 | LLM Tool: web search (Brave) | `BRAVE_API_KEY` | `https://api.search.brave.com/res/v1/web/search` |
+| LLM Tool: web search (Monid) | `MONID_API_KEY` | `https://api.monid.ai/v1/run`, and `https://api.monid.ai/v1/runs/<id>` for a search still going |
 | A server in `llm.endpoints` | the variable its `key_env` names | its `url` |
 
 ## Servers on this machine

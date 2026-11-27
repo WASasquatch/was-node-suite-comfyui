@@ -91,12 +91,14 @@ Load Web Page and for the web page tool an agent calls, through `http.client` an
 loopback, private, link-local, multicast, reserved, unspecified, `168.63.129.16` or on a network
 this machine sits on, including one carried inside an IPv6 address, checking again after each of
 at most five redirects, connecting only to an address it checked, and reading at most 20 MB.
-`modules/llm/tools.py` calls three fixed services for the agent tools through `httpx`,
+`modules/llm/tools.py` calls four fixed services for the agent tools through `httpx`,
 following a redirect only to the same host over `https`, at most three times:
 Wikipedia's search and page summary API, Tavily's search API with the key in
-`TAVILY_API_KEY`, and Brave Search's API with the key in `BRAVE_API_KEY`. The hosted language
-and embedding models reach their providers through those providers' own libraries, as
-[Language models](#language-models) lists.
+`TAVILY_API_KEY`, Brave Search's API with the key in `BRAVE_API_KEY`, and Monid at
+`https://api.monid.ai` with the key in `MONID_API_KEY`, which runs Context.dev's web search,
+bills per call and is read back at `https://api.monid.ai/v1/runs/<id>` while a search is still
+going. The hosted language and embedding models reach their providers through those
+providers' own libraries, as [Language models](#language-models) lists.
 
 No other Python code here is an HTTP client: nothing else imports `requests`, `httpx`,
 `urllib.request`, `http.client`, `urllib3` or `websockets`, and nothing else opens a socket.

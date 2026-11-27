@@ -93,6 +93,19 @@ class WASLLMTool(io.ComfyNode):
                 ],
             ),
             io.DynamicCombo.Option(
+                key="web search (Monid)",
+                inputs=[
+                    io.Int.Input(
+                        "results", default=5, min=1, max=20,
+                        tooltip="Results one search lists, each with its address and a short description. Monid bills per call: every search the model makes is charged to the account of MONID_API_KEY.",
+                    ),
+                    io.Int.Input(
+                        "max_characters", default=6000, min=500, max=50000,
+                        tooltip="The most text one search hands the model. `6000` is about 1000 words.",
+                    ),
+                ],
+            ),
+            io.DynamicCombo.Option(
                 key="document reader",
                 inputs=[
                     picker.path_input(io.Combo.Input(
@@ -121,14 +134,15 @@ class WASLLMTool(io.ComfyNode):
                 "calculator",
                 "wikipedia",
                 "web search",
+                "Monid",
                 "fetch web page",
                 "document reader",
             ],
             category="WAS Suite/LLM/Agents",
             description=(
                 "Give an agent a ready-made tool: a calculator, the date and time, Wikipedia, a "
-                "web page reader, web search through Tavily or Brave, or a reader for one picked "
-                "document. Chain several and connect the last to LLM Agent."
+                "web page reader, web search through Tavily, Brave or Monid, or a reader for one "
+                "picked document. Chain several and connect the last to LLM Agent."
             ),
             inputs=[
                 io.DynamicCombo.Input(
@@ -136,7 +150,8 @@ class WASLLMTool(io.ComfyNode):
                     tooltip=(
                         "`calculator` = exact arithmetic; `date and time` = today's date and date sums; "
                         "`wikipedia` = search and page summaries; `web page` = reads one address; "
-                        "`web search` = Tavily or Brave, keyed by TAVILY_API_KEY or BRAVE_API_KEY; "
+                        "`web search` = Tavily, Brave or Monid, keyed by TAVILY_API_KEY, BRAVE_API_KEY or "
+                        "MONID_API_KEY (Monid bills per call); "
                         "`document reader` = one picked file."
                     ),
                 ),
@@ -197,6 +212,8 @@ class WASLLMTool(io.ComfyNode):
             made = agent_tools.tavily_tools(int(choice.get("results", 5)), int(choice.get("max_characters", 6000)))
         elif which == "web search (Brave)":
             made = agent_tools.brave_tools(int(choice.get("results", 5)), int(choice.get("max_characters", 6000)))
+        elif which == "web search (Monid)":
+            made = agent_tools.monid_tools(int(choice.get("results", 5)), int(choice.get("max_characters", 6000)))
         elif which == "document reader":
             made = agent_tools.document_tools(
                 choice.get("document", ""), choice.get("name", "read_document"), int(choice.get("max_characters", 8000)),
@@ -211,7 +228,7 @@ class WASLLMTool(io.ComfyNode):
                     f"LLM Tool, or give the document reader another name."
                 )
         result = wires.chain(chained, *made)
-        network = which in ("wikipedia", "web page", "web search (Tavily)", "web search (Brave)")
+        network = which in ("wikipedia", "web page", "web search (Tavily)", "web search (Brave)", "web search (Monid)")
         if network:
             from ...modules.model import network_enabled
 

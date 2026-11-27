@@ -57,7 +57,7 @@ ERROR_CHARS = 2000
 #: Shapes of API keys and bearer tokens, replaced in any error text a node hands on.
 _SECRET = re.compile(
     r"(sk-[A-Za-z0-9_\-*]{8,}|sk_[A-Za-z0-9_\-*]{8,}|AIza[0-9A-Za-z_\-]{20,}|gsk_[A-Za-z0-9]{16,}"
-    r"|xai-[A-Za-z0-9]{16,}|hf_[A-Za-z0-9]{16,}|tvly-[A-Za-z0-9\-]{12,}"
+    r"|xai-[A-Za-z0-9]{16,}|hf_[A-Za-z0-9]{16,}|tvly-[A-Za-z0-9\-]{12,}|monid_[A-Za-z0-9_\-]{16,}"
     r"|(?i:bearer)\s+[A-Za-z0-9._\-]{12,}|(?i:api[_-]?key)[\"'=: ]+[A-Za-z0-9._\-]{12,})"
 )
 
