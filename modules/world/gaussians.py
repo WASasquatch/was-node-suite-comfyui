@@ -26,7 +26,7 @@ from dataclasses import dataclass
 
 import torch
 
-from . import cameras
+from . import cameras, compiled as kernels
 from .cloud import SH_C0, Cloud, pack, splat_items
 
 
@@ -47,6 +47,15 @@ MOST_ALPHA = 0.99
 
 #: Least opacity a splat must lend a pixel to count.
 LEAST_ALPHA = 1.0 / 255.0
+
+#: Splat and pixel pairs per tile blended at once before covered tiles are dropped.
+CHUNK_ELEMENTS = 1 << 10
+
+#: Light left at a pixel below which nothing further behind is blended.
+LEAST_THROUGH = 1e-4
+
+#: Tile list entries gathered in one pass.
+PASS_ENTRIES = 1 << 24
 
 #: Variance, in pixels squared, added to every projected splat so none is thinner than a pixel.
 DILATION = 0.3
@@ -219,12 +228,20 @@ class Raster:
     ahead: torch.Tensor | None = None
 
 
-def _weights(mu, co, op, pixels):
-    """Blend weights of tile lists over their pixels, with what their gradient needs.
+def _weights(mu, co, op, pixels, start):
+    """Blend weights of one chunk of tile lists over their pixels, with what their gradient needs.
+
+    Args:
+        mu: ``(C, K, 2)`` centres.
+        co: ``(C, K, 3)`` conics.
+        op: ``(C, K)`` opacities.
+        pixels: ``(C, P, 2)`` pixel centres.
+        start: ``(C, P)`` log of the light reaching the chunk's first splat.
 
     Returns:
-        ``(weight, alpha, through, falloff, dx, dy)``, each ``(C, K, P)``; ``through`` is the
-        light reaching each splat, ``falloff`` the Gaussian before opacity.
+        ``(weight, alpha, through, falloff, dx, dy)``, each ``(C, K, P)``, and the ``(C, P)`` log of
+        the light left behind the chunk; ``through`` is the light reaching each splat, ``falloff``
+        the Gaussian before opacity.
     """
     dx = pixels[:, None, :, 0] - mu[:, :, None, 0]
     dy = pixels[:, None, :, 1] - mu[:, :, None, 1]
@@ -233,52 +250,86 @@ def _weights(mu, co, op, pixels):
     alpha = (op[:, :, None] * falloff).clamp_max(MOST_ALPHA)
     alpha = torch.where(alpha < LEAST_ALPHA, torch.zeros_like(alpha), alpha)
     lost = torch.log1p(-alpha)
-    through = torch.exp(torch.cumsum(lost, dim=1) - lost)
-    return alpha * through, alpha, through, falloff, dx, dy
+    reached = torch.cumsum(lost, dim=1)
+    through = torch.exp(start[:, None, :] + reached - lost)
+    return alpha * through, alpha, through, falloff, dx, dy, start + reached[:, -1]
 
 
 class _Blend(torch.autograd.Function):
-    """Front to back blending of per-tile splat lists; the last row pads short lists, gets no gradient."""
+    """Chunked front to back blending of padded tile lists, stopping tiles under :data:`LEAST_THROUGH` light."""
 
     @staticmethod
     def forward(ctx, mean2d, conic, opacity, colour, depth, entries, pixels):
-        weight = _weights(mean2d[entries], conic[entries], opacity[entries], pixels)[0]
-        ctx.save_for_backward(mean2d, conic, opacity, colour, depth, entries, pixels)
-        return (torch.einsum("ckp,ckd->cpd", weight, colour[entries]), weight.sum(1),
-                torch.einsum("ckp,ck->cp", weight, depth[entries]))
+        tiles, deepest = entries.shape
+        per_tile = pixels.shape[1]
+        chunk = max(8, CHUNK_ELEMENTS // per_tile)
+        pad = mean2d.shape[0] - 1
+        device = mean2d.device
+        shade = torch.zeros(tiles, per_tile, 3, device=device)
+        cover = torch.zeros(tiles, per_tile, device=device)
+        depth_sum = torch.zeros(tiles, per_tile, device=device)
+        live = torch.arange(tiles, device=device)
+        light = torch.zeros(tiles, per_tile, device=device)
+        floor = math.log(LEAST_THROUGH)
+        chunks = []
+        for first in range(0, deepest, chunk):
+            rows = entries[live, first:first + chunk]
+            weight, *_, after = _weights(mean2d[rows], conic[rows], opacity[rows], pixels[live], light)
+            shade.index_add_(0, live, torch.einsum("ckp,ckd->cpd", weight, colour[rows]))
+            cover.index_add_(0, live, weight.sum(1))
+            depth_sum.index_add_(0, live, torch.einsum("ckp,ck->cp", weight, depth[rows]))
+            chunks.append((first, live, light))
+            if first + chunk >= deepest:
+                break
+            keep = (after > floor).any(1) & (entries[live, first + chunk] != pad)
+            live, light = live[keep], after[keep]
+            if not live.numel():
+                break
+        ctx.chunks = chunks
+        ctx.chunk = chunk
+        ctx.save_for_backward(mean2d, conic, opacity, colour, depth, entries, pixels, shade, cover, depth_sum)
+        return shade, cover, depth_sum
 
     @staticmethod
     def backward(ctx, grad_shade, grad_cover, grad_depth):
-        mean2d, conic, opacity, colour, depth, entries, pixels = ctx.saved_tensors
-        mu, co, op, col, dep = mean2d[entries], conic[entries], opacity[entries], colour[entries], depth[entries]
-        weight, alpha, through, falloff, dx, dy = _weights(mu, co, op, pixels)
-        grad_shade = grad_shade if grad_shade is not None else torch.zeros(*pixels.shape[:2], 3, device=mu.device)
-        grad_cover = grad_cover if grad_cover is not None else torch.zeros(pixels.shape[:2], device=mu.device)
-        grad_depth = grad_depth if grad_depth is not None else torch.zeros(pixels.shape[:2], device=mu.device)
-        d_col = torch.einsum("ckp,cpd->ckd", weight, grad_shade)
-        d_dep = torch.einsum("ckp,cp->ck", weight, grad_depth)
-        value = (torch.einsum("ckd,cpd->ckp", col, grad_shade) + dep[:, :, None] * grad_depth[:, None, :]
-                 + grad_cover[:, None, :])
-        share = weight * value
-        running = torch.cumsum(share, dim=1)
-        behind = running[:, -1:] - running
-        d_alpha = through * value - behind / (1.0 - alpha)
-        live = (alpha > 0) & (alpha < MOST_ALPHA)
-        d_alpha = torch.where(live, d_alpha, torch.zeros_like(d_alpha))
-        d_op = (d_alpha * falloff).sum(-1)
-        d_power = d_alpha * op[:, :, None] * falloff
-        d_co = torch.stack([(-0.5 * d_power * dx * dx).sum(-1), (-d_power * dx * dy).sum(-1),
-                            (-0.5 * d_power * dy * dy).sum(-1)], -1)
-        a, b, c = co[:, :, None, 0], co[:, :, None, 1], co[:, :, None, 2]
-        d_mu = torch.stack([(d_power * (a * dx + b * dy)).sum(-1), (d_power * (c * dy + b * dx)).sum(-1)], -1)
-        real = entries < mean2d.shape[0] - 1
-        index = entries[real]
-
-        def spread(source: torch.Tensor, grad: torch.Tensor) -> torch.Tensor:
-            return torch.zeros_like(source).index_add_(0, index, grad[real])
-
-        return (spread(mean2d, d_mu), spread(conic, d_co), spread(opacity, d_op), spread(colour, d_col),
-                spread(depth, d_dep), None, None)
+        mean2d, conic, opacity, colour, depth, entries, pixels, shade, cover, depth_sum = ctx.saved_tensors
+        grad_shade = grad_shade if grad_shade is not None else torch.zeros_like(shade)
+        grad_cover = grad_cover if grad_cover is not None else torch.zeros_like(cover)
+        grad_depth = grad_depth if grad_depth is not None else torch.zeros_like(depth_sum)
+        # Every splat's blended value, summed over a pixel's whole list.
+        total = (shade * grad_shade).sum(-1) + depth_sum * grad_depth + cover * grad_cover
+        before = torch.zeros_like(total)
+        pad = mean2d.shape[0] - 1
+        d_mean2d, d_conic, d_opacity = torch.zeros_like(mean2d), torch.zeros_like(conic), torch.zeros_like(opacity)
+        d_colour, d_depth = torch.zeros_like(colour), torch.zeros_like(depth)
+        for first, live, light in ctx.chunks:
+            rows = entries[live, first:first + ctx.chunk]
+            mu, co, op, col, dep = mean2d[rows], conic[rows], opacity[rows], colour[rows], depth[rows]
+            weight, alpha, through, falloff, dx, dy, _ = _weights(mu, co, op, pixels[live], light)
+            g_shade, g_cover, g_depth = grad_shade[live], grad_cover[live], grad_depth[live]
+            d_col = torch.einsum("ckp,cpd->ckd", weight, g_shade)
+            d_dep = torch.einsum("ckp,cp->ck", weight, g_depth)
+            value = (torch.einsum("ckd,cpd->ckp", col, g_shade) + dep[:, :, None] * g_depth[:, None, :]
+                     + g_cover[:, None, :])
+            running = before[live][:, None, :] + torch.cumsum(weight * value, dim=1)
+            behind = total[live][:, None, :] - running
+            before[live] = running[:, -1]
+            d_alpha = through * value - behind / (1.0 - alpha)
+            d_alpha = torch.where((alpha > 0) & (alpha < MOST_ALPHA), d_alpha, torch.zeros_like(d_alpha))
+            d_op = (d_alpha * falloff).sum(-1)
+            d_power = d_alpha * op[:, :, None] * falloff
+            d_co = torch.stack([(-0.5 * d_power * dx * dx).sum(-1), (-d_power * dx * dy).sum(-1),
+                                (-0.5 * d_power * dy * dy).sum(-1)], -1)
+            a, b, c = co[:, :, None, 0], co[:, :, None, 1], co[:, :, None, 2]
+            d_mu = torch.stack([(d_power * (a * dx + b * dy)).sum(-1), (d_power * (c * dy + b * dx)).sum(-1)], -1)
+            real = rows < pad
+            index = rows[real]
+            d_mean2d.index_add_(0, index, d_mu[real])
+            d_conic.index_add_(0, index, d_co[real])
+            d_opacity.index_add_(0, index, d_op[real])
+            d_colour.index_add_(0, index, d_col[real])
+            d_depth.index_add_(0, index, d_dep[real])
+        return d_mean2d, d_conic, d_opacity, d_colour, d_depth, None, None
 
 
 def _blend(mean2d, conic, opacity, colour, depth, entries, pixels):
@@ -292,7 +343,7 @@ def _blend(mean2d, conic, opacity, colour, depth, entries, pixels):
 
 def rasterize(gaussians: Gaussians, camera_info: Mapping, width: int, height: int, background=0.0,
               eye: torch.Tensor | None = None, rows: torch.Tensor | None = None, tile: int = TILE,
-              near: float = 1e-4, widest: float | None = None) -> Raster:
+              near: float = 1e-4, widest: float | None = None, compiled: bool | None = None) -> Raster:
     """Draw splats from one camera, blending each pixel front to back.
 
     Args:
@@ -306,6 +357,7 @@ def rasterize(gaussians: Gaussians, camera_info: Mapping, width: int, height: in
         tile: Tile side in pixels; smaller is faster for small splats, larger for big ones.
         near: Splats nearer the camera than this are left out.
         widest: Splats reaching further than this many pixels from their centre are left out.
+        compiled: Blend on the compiled kernels: None uses them where they can run, False never does.
 
     Returns:
         The view.
@@ -325,6 +377,14 @@ def rasterize(gaussians: Gaussians, camera_info: Mapping, width: int, height: in
 
     if not gaussians.count:
         return empty()
+    if compiled is not False and kernels.available(device):
+        drawn = kernels.draw(gaussians.means, gaussians.scales, gaussians.rotations, gaussians.opacities,
+                             gaussians.sh, eye, rows, focal, width, height, near, widest)
+        if drawn is None:
+            return empty()
+        shade, cover, depth_image, centres = drawn
+        return Raster(shade + (1.0 - cover)[..., None] * colour_bg, cover, depth_image, centres,
+                      torch.arange(gaussians.count, device=device))
     local = (gaussians.means - eye) @ rows.T
     z = local[:, 2]
     with torch.no_grad():
@@ -349,17 +409,22 @@ def rasterize(gaussians: Gaussians, camera_info: Mapping, width: int, height: in
     det = (a * c - b * b).clamp_min(1e-12)
     conic = torch.stack([c / det, -b / det, a / det], -1)
     mean2d = torch.stack([focal * local[:, 0] / z + width / 2.0, focal * local[:, 1] / z + height / 2.0], -1)
+    opacity = gaussians.opacities[ahead]
     with torch.no_grad():
         middle = 0.5 * (a + c)
         largest = middle + torch.sqrt((middle * middle - det).clamp_min(0.1))
         radius = torch.ceil(3.0 * torch.sqrt(largest))
+        # Each axis reaches as far as the splat still lends a pixel the least counted opacity.
+        reach = 2.0 * torch.log((opacity.detach() / LEAST_ALPHA).clamp_min(1.0))
+        reach_x = torch.sqrt(reach * a)
+        reach_y = torch.sqrt(reach * c)
         u, v = mean2d[:, 0], mean2d[:, 1]
-        x0 = torch.floor((u - radius) / tile).clamp(0, tiles_x - 1)
-        x1 = torch.floor((u + radius) / tile).clamp(0, tiles_x - 1)
-        y0 = torch.floor((v - radius) / tile).clamp(0, tiles_y - 1)
-        y1 = torch.floor((v + radius) / tile).clamp(0, tiles_y - 1)
-        seen = (u + radius >= 0) & (u - radius < width) & (v + radius >= 0) & (v - radius < height)
-        seen &= torch.isfinite(u) & torch.isfinite(v)
+        x0 = torch.floor((u - reach_x) / tile).clamp(0, tiles_x - 1)
+        x1 = torch.floor((u + reach_x) / tile).clamp(0, tiles_x - 1)
+        y0 = torch.floor((v - reach_y) / tile).clamp(0, tiles_y - 1)
+        y1 = torch.floor((v + reach_y) / tile).clamp(0, tiles_y - 1)
+        seen = (u + reach_x >= 0) & (u - reach_x < width) & (v + reach_y >= 0) & (v - reach_y < height)
+        seen &= (reach > 0) & torch.isfinite(u) & torch.isfinite(v)
         if widest is not None:
             seen &= radius <= widest
         span_x = torch.where(seen, x1 - x0 + 1, torch.zeros_like(x0)).long()
@@ -370,7 +435,6 @@ def rasterize(gaussians: Gaussians, camera_info: Mapping, width: int, height: in
         return empty()
     directions = torch.nn.functional.normalize(gaussians.means[ahead] - eye, dim=-1)
     shade = sh_colour(gaussians.sh[ahead], directions)
-    opacity = gaussians.opacities[ahead]
     with torch.no_grad():
         owner = torch.repeat_interleave(torch.arange(spans.numel(), device=device), spans)
         first = torch.cumsum(spans, 0) - spans
@@ -386,6 +450,7 @@ def rasterize(gaussians: Gaussians, camera_info: Mapping, width: int, height: in
         del step, first, key
         tile_count = torch.bincount(slot, minlength=tiles_x * tiles_y)
         tile_start = torch.cumsum(tile_count, 0) - tile_count
+    with torch.no_grad():
         busy = torch.nonzero(tile_count, as_tuple=False)[:, 0]
         busy = busy[torch.argsort(tile_count[busy], descending=True)]
         offsets = torch.arange(tile, device=device, dtype=torch.float32) + 0.5
@@ -405,7 +470,9 @@ def rasterize(gaussians: Gaussians, camera_info: Mapping, width: int, height: in
     while start < len(counts):
         deepest = counts[start]
         shallower = bisect.bisect_right(descending, -deepest * PASS_SPREAD)
-        take = max(1, min(PASS_ELEMENTS // (deepest * pixels_per_tile), shallower - start))
+        chunk = max(8, CHUNK_ELEMENTS // pixels_per_tile)
+        take = max(1, min(PASS_ELEMENTS // (min(deepest, chunk) * pixels_per_tile), PASS_ENTRIES // deepest,
+                          shallower - start))
         group = busy[start:start + take]
         with torch.no_grad():
             depth_range = torch.arange(deepest, device=device)

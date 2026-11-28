@@ -110,22 +110,22 @@ def psnr(a: torch.Tensor, b: torch.Tensor) -> float:
 
 
 def _window(device) -> torch.Tensor:
-    """An 11-tap Gaussian window, sigma 1.5, as a ``(3, 1, 11, 11)`` kernel."""
+    """An 11-tap Gaussian line, sigma 1.5, as a ``(15, 1, 1, 11)`` kernel for five 3-channel maps."""
     taps = torch.arange(11, dtype=torch.float32, device=device) - 5.0
     line = torch.exp(-(taps * taps) / (2.0 * 1.5 * 1.5))
     line = line / line.sum()
-    return (line[:, None] * line[None, :]).expand(3, 1, 11, 11).contiguous()
+    return line.reshape(1, 1, 1, 11).expand(15, 1, 1, 11).contiguous()
 
 
 def _ssim(a: torch.Tensor, b: torch.Tensor, window: torch.Tensor) -> torch.Tensor:
     """Structural similarity ``(H, W)`` of two ``(H, W, 3)`` pictures."""
     x, y = a.permute(2, 0, 1)[None], b.permute(2, 0, 1)[None]
-
-    def blur(t):
-        return torch.nn.functional.conv2d(t, window, padding=5, groups=3)
-
-    mx, my = blur(x), blur(y)
-    vx, vy, cxy = blur(x * x) - mx * mx, blur(y * y) - my * my, blur(x * y) - mx * my
+    stack = torch.cat([x, y, x * x, y * y, x * y], 1)
+    # The 11 x 11 window is applied as a row pass then a column pass.
+    rows = torch.nn.functional.conv2d(stack, window, padding=(0, 5), groups=15)
+    blurred = torch.nn.functional.conv2d(rows, window.transpose(2, 3), padding=(5, 0), groups=15)
+    mx, my, xx, yy, xy = blurred.split(3, 1)
+    vx, vy, cxy = xx - mx * mx, yy - my * my, xy - mx * my
     c1, c2 = 0.01 ** 2, 0.03 ** 2
     return (((2 * mx * my + c1) * (2 * cxy + c2)) / ((mx * mx + my * my + c1) * (vx + vy + c2)))[0].mean(0)
 
@@ -303,7 +303,7 @@ def _fit(start, pictures, poses, steps, degree, refine_cameras, device, progress
     if moving:
         groups.append({"params": [turn], "lr": RATES["turn"], "name": "turn"})
         groups.append({"params": [shift], "lr": RATES["shift"] * depth, "name": "shift"})
-    optimiser = torch.optim.Adam(groups, eps=1e-15)
+    optimiser = torch.optim.Adam(groups, eps=1e-15, fused=torch.device(device).type == "cuda")
     window = _window(device)
     generator = torch.Generator().manual_seed(int(seed))
     order: list[int] = []

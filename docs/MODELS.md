@@ -482,10 +482,20 @@ Point Cloud From Pictures reads AnySplat, fetched on first use with `features.ne
 | `moge_3_vitl_fp16.safetensors` | MIT, Microsoft |
 | `depth_anything_3_base.safetensors` | Apache-2.0, ByteDance |
 
+Point Cloud Refine, Point Cloud Render, Point Cloud Camera Path and Point Cloud From Pictures draw
+Gaussian splats on compiled GPU kernels when the optional `slangpy` package is installed and ComfyUI
+runs on an NVIDIA card. Without it they draw in torch. Point Cloud Refine's panel shows which ran.
+
+| Install | Command |
+|---|---|
+| Windows portable, from `ComfyUI_windows_portable` | `python_embeded\python.exe -m pip install slangpy` |
+| Other installs, in ComfyUI's Python | `python -m pip install slangpy` |
+
 | What you see | What it means |
 |---|---|
 | `The AnySplat checkpoint anysplat.safetensors was not found` | `features.network` is off. Download the file by hand into `ComfyUI/models/geometry_estimation`, or turn the key on |
 | `needs at least two pictures` | One picture is wired. Use MoGe Inference into Point Cloud From Depth for a single picture |
+| Point Cloud Refine's panel shows `kernels torch` on an NVIDIA card | `slangpy` is not installed in ComfyUI's Python, or its kernels did not start; the ComfyUI log names the cause on the first run |
 
 ## Language models
 

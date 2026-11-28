@@ -9,7 +9,7 @@ from ...modules.compat import limits
 from ...modules.compat.types import LOAD3D_CAMERA, SPLAT
 from ...modules.interface.progress import progress_bar
 from ...modules.mesh import device as devices
-from ...modules.world import cameras, fit as fitting, gaussians, render, report
+from ...modules.world import cameras, compiled, fit as fitting, gaussians, render, report
 
 #: Bytes each splat costs while fitting: its fields, their gradients and the optimiser's two moments.
 SPLAT_BYTES = 320
@@ -228,6 +228,7 @@ class PointCloudRefine(io.ComfyNode):
             "faint splats removed": result.removed,
             "splats added": result.added,
             "cameras moved % of depth": round(100.0 * max(result.moved or [0.0]), 3),
+            "kernels": "compiled" if compiled.available(device) else "torch",
         }
         if extra:
             facts["repainted views"] = f"{extra} fitted at weight {float(repainted_weight):g}, cameras held"
