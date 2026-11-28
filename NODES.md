@@ -1,8 +1,8 @@
 # Node reference
 
-Every node in WAS Node Suite: **778** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
+Every node in WAS Node Suite: **779** of them, grouped by the `config.yaml` switch that gates them and then, inside each group, by the category they appear under in the Add Node menu. Click a node to see what it takes and what it gives back.
 
-691 of them load in a fresh install. The other 87 wait behind a switch that starts off.
+692 of them load in a fresh install. The other 87 wait behind a switch that starts off.
 
 This page is generated from the nodes themselves, so it cannot drift from what is installed.
 
@@ -12,7 +12,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 | Section | In a fresh install | Nodes |
 |---|---|---:|
-| [Always loaded](#always-loaded) | always on | 530 |
+| [Always loaded](#always-loaded) | always on | 531 |
 | [`features.llm`](#featuresllm) | off | 80 |
 | [`features.pssr`](#featurespssr) | off | 1 |
 | [`legacy.cache`](#legacycache) | off | 2 |
@@ -41,7 +41,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 
 ## Always loaded
 
-530 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
+531 nodes that answer to no key in `config.yaml`. They are here whatever else is turned off.
 
 - [WAS Suite/3D/Character](#was-suite3dcharacter) (4)
 - [WAS Suite/3D/Mesh](#was-suite3dmesh) (13)
@@ -57,7 +57,7 @@ A gate is one key in `config.yaml`. While it is off, its nodes stay out of the A
 - [WAS Suite/IO](#was-suiteio) (19)
 - [WAS Suite/Image](#was-suiteimage) (12)
 - [WAS Suite/Image/Adjustment](#was-suiteimageadjustment) (11)
-- [WAS Suite/Image/Analyze](#was-suiteimageanalyze) (7)
+- [WAS Suite/Image/Analyze](#was-suiteimageanalyze) (8)
 - [WAS Suite/Image/Bound](#was-suiteimagebound) (17)
 - [WAS Suite/Image/Color Management](#was-suiteimagecolor-management) (2)
 - [WAS Suite/Image/Develop](#was-suiteimagedevelop) (6)
@@ -4816,6 +4816,35 @@ Score each picture in a batch, as several seeds of one prompt make, from 0 to 10
 | `passed` | `BOOLEAN` | True when the kept picture reaches every least score. |
 | `scores` | `STRING` | Every picture's scores and notes as a JSON list, in batch order. |
 | `notes` | `STRING` | The flaws found in the kept picture, for Generate Edit Instruction's feedback. |
+
+</details>
+
+<a id="node-wasvideoscopes"></a>
+<details>
+<summary><b>Video Scopes</b></summary>
+
+Measure a video or a batch of frames frame by frame and play its histogram, waveform, RGB parade, vectorscope and sound spectrogram on the node in step with the clip, over a timeline of exposure, clipping and saturation. Wire the scopes output to keep them as a video.
+
+| | |
+|---|---|
+| Node id | `WASVideoScopes` |
+| Output node | Yes, it runs even with nothing wired after it |
+
+**Inputs**
+
+| Name | Type | Required | Default | Choices | What it does |
+|---|---|---|---|---|---|
+| `source` | `COMFY_MATCHTYPE_V3` | Yes |  |  | The clip: a VIDEO, which keeps its frame rate and sound, or IMAGE frames. It comes back out unchanged. |
+| `fps` | `FLOAT` | Yes | 24.0 |  | Frames per second given to IMAGE frames: `24` = film. A VIDEO keeps its own. |
+| `video_size` | `COMBO` | Yes | 1080p | `720p`, `1080p`, `1440p`, `4K` | Size of the scopes video: `720p` = 1280x720; `1080p` = 1920x1080; `4K` = 3840x2160. |
+
+**Outputs**
+
+| Name | Type | What it is |
+|---|---|---|
+| `source` | `COMFY_MATCHTYPE_V3` | The clip that came in, unchanged, as the same type. |
+| `scopes` | `VIDEO` | The scopes dashboard as a video, one frame per source frame, with the source's sound. Drawn only when wired. |
+| `report` | `STRING` | The whole clip's figures as JSON: mean exposure, saturation, and the frames that clip or crush. |
 
 </details>
 

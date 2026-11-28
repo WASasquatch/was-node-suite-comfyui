@@ -60,10 +60,10 @@ MAX_FILES = 2000
 MAX_LISTED = MAX_FILES * 4
 
 #: Suffixes kept, each with the media type it is served as.
-MEDIA_TYPES = {".mp4": "video/mp4", ".png": "image/png", ".wav": "audio/wav"}
+MEDIA_TYPES = {".mp4": "video/mp4", ".png": "image/png", ".wav": "audio/wav", ".json": "application/json"}
 
 #: The shape of a kept file's name.
-NAME = re.compile(r"[0-9a-f]{32}\.(?:mp4|png|wav)")
+NAME = re.compile(r"[0-9a-f]{32}\.(?:mp4|png|wav|json)")
 
 #: Seconds after which serving a file marks it as used again.
 TOUCH_SECONDS = 3600

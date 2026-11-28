@@ -851,6 +851,12 @@
       "description": "A clip in Sony S-Log3 decoded into ACEScg by Image Color Space, rendered by Image ACES Output for an sRGB screen and for 1000 nit HDR10, and saved as tagged SDR and 10-bit HDR video."
     },
     {
+      "file": "video-scopes.json",
+      "section": "Colour, HDR and scopes",
+      "title": "Scopes along a whole clip",
+      "description": "Video Scopes measures a dance clip frame by frame: its panel plays the waveform, RGB parade, vectorscope, histogram and the song's spectrogram in step with it, and the scopes are saved as a video with the clip's sound."
+    },
+    {
       "file": "restore-footage.json",
       "section": "Video editing and restoration",
       "title": "Restore grainy, dusty footage",

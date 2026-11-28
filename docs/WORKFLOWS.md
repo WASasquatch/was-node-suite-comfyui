@@ -1,13 +1,13 @@
 # Workflow index
 
-All 143 example graphs in [`docs/workflows`](workflows), by area. A file opens when it is dragged onto the ComfyUI canvas, or from the Workflows sidebar once it is in `ComfyUI/user/default/workflows`, and ComfyUI offers each model it lacks for download.
+All 144 example graphs in [`docs/workflows`](workflows), by area. A file opens when it is dragged onto the ComfyUI canvas, or from the Workflows sidebar once it is in `ComfyUI/user/default/workflows`, and ComfyUI offers each model it lacks for download.
 
 | Section | Workflows |
 |---|--:|
 | [Image generation and sampling](#image-generation-and-sampling) | 17 |
 | [Image editing](#image-editing) | 10 |
 | [Photo and film looks](#photo-and-film-looks) | 4 |
-| [Colour, HDR and scopes](#colour-hdr-and-scopes) | 5 |
+| [Colour, HDR and scopes](#colour-hdr-and-scopes) | 6 |
 | [Masks, regions and subjects](#masks-regions-and-subjects) | 7 |
 | [Filters, layers and preprocessors](#filters-layers-and-preprocessors) | 10 |
 | [MiniMax H3 video](#minimax-h3-video) | 20 |
@@ -82,6 +82,7 @@ All 143 example graphs in [`docs/workflows`](workflows), by area. A file opens w
 |  | **HDR decode, dequantise and reconstruct** | HDR VAE Decode beside VAE Decode through the same filters, then a banded, clipped 8-bit frame repaired by Image Dequantise and HDR Reconstruct and written as EXR and DNG. | [open](workflows/hdr.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/hdr.json) |
 |  | **Optics and grade** | Lens distortion, perspective, directional blur, vignette, auto levels, colour balance, tone mapping and a matte, each previewed on one picture. | [open](workflows/image-optics-and-grade.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/image-optics-and-grade.json) |
 | <a href="workflows/images/color-management.webp"><img src="workflows/images/color-management.webp" width="240" alt="Camera log to SDR and HDR10"></a> | **Camera log to SDR and HDR10** | A clip in Sony S-Log3 decoded into ACEScg by Image Color Space, rendered by Image ACES Output for an sRGB screen and for 1000 nit HDR10, and saved as tagged SDR and 10-bit HDR video. | [open](workflows/color-management.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/color-management.json) |
+|  | **Scopes along a whole clip** | Video Scopes measures a dance clip frame by frame: its panel plays the waveform, RGB parade, vectorscope, histogram and the song's spectrogram in step with it, and the scopes are saved as a video with the clip's sound. | [open](workflows/video-scopes.json)<br>[download](https://raw.githubusercontent.com/WASasquatch/was-node-suite-comfyui/main/docs/workflows/video-scopes.json) |
 
 ---
 

@@ -15,7 +15,7 @@ export const KEPT_TYPE = "was_compare";
 const KEPT_ROUTE = "/was/interface/api/compare_file";
 
 // The name a kept side is written under.
-const KEPT_NAME = /^[0-9a-f]{32}\.(?:mp4|png|wav)$/;
+const KEPT_NAME = /^[0-9a-f]{32}\.(?:mp4|png|wav|json)$/;
 
 /**
  * Whether an entry names a side the pack kept, the only kind restored from a saved node.

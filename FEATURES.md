@@ -305,6 +305,20 @@ For footage from a log camera, for an ACES pipeline, and for HDR video a televis
 
 ---
 
+## Scopes along a whole clip
+
+**Video Scopes** measures a video or a batch of frames frame by frame and plays its luma waveform,
+RGB parade, vectorscope and histogram on the node in step with the clip, over a timeline of
+exposure, clipped highlights, crushed shadows and saturation, and the sound's spectrogram. Clicking
+the timeline jumps to that frame. For checking exposure, colour and clipping through a whole shot
+rather than one frame of it. Wired to a save, it draws the same dashboard as a video with the
+clip's sound; its `report` gives the whole clip's figures and the worst frames.
+
+[`NODES.md`](NODES.md) under **WAS Suite/Image/Analyze**. Graph:
+[`video-scopes.json`](docs/workflows/video-scopes.json).
+
+---
+
 ## HDR and linear light
 
 9 nodes. **Linear Light** and **Images to Linear** move an image out of picture codes.

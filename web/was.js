@@ -127,6 +127,7 @@ const EXTENSIONS = [
   "was_video_join.mjs",
   "was_video_look_transition.mjs",
   "was_video_player.mjs",
+  "was_video_scopes.mjs",
   "was_video_split_scenes.mjs",
   "was_video_text.mjs",
   "was_vision_agent.mjs",
