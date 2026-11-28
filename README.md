@@ -1,256 +1,331 @@
-# **WAS** Node Suite v3 &nbsp; ![ComfyUI](https://img.shields.io/badge/ComfyUI-Custom_Node-blue) [![Open Manager](https://img.shields.io/badge/Open_Manager-Compatible-yellow)](https://github.com/WASasquatch/open-manager-comfyui) ![License](https://img.shields.io/badge/License-MIT-green) [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://paypal.me/ThompsonJordan?country.x=US&locale.x=en_US) [![Discord](https://img.shields.io/badge/Discord-Open_Nodes-5865F2?logo=discord&logoColor=white)](https://discord.gg/y7FRDaNNun)
+<div align="center">
 
-<img src="was-node-suite-v3.png" width="600">
+<img src="was-node-suite-v3.png" width="520">
 
-### Join [Open Nodes on Discord](https://discord.gg/y7FRDaNNun) for help, release news and node development.
+# WAS Node Suite v3
 
-WAS Node Suite has been going since 2023 on Civitai and on GitHub, and was among the
-first packs to put hundreds of nodes into users' hands. WAS-NS has over a million downloads, 
-and is used by thousands of users daily. It has been MIT since the first commit: use it, change it, 
-teach with it, or run it in paid services.
+**779 nodes for ComfyUI. Image, video, 3D, language models and the plumbing between them.**<br>
+MIT since 2023 · over a million downloads · nothing installed, nothing fetched unless you ask
 
-The pack contains **779 nodes for ComfyUI**, across images, filters and colour, masking, 
-text and prompts, logic and flow, numbers, latents and sampling, files, animation and video, 
-and Llama-Index in ComfyUI. 
+![ComfyUI](https://img.shields.io/badge/ComfyUI-Custom_Node-blue) [![Open Manager](https://img.shields.io/badge/Open_Manager-Compatible-yellow)](https://github.com/WASasquatch/open-manager-comfyui) ![License](https://img.shields.io/badge/License-MIT-green) [![Discord](https://img.shields.io/badge/Discord-Open_Nodes-5865F2?logo=discord&logoColor=white)](https://discord.gg/y7FRDaNNun) [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://paypal.me/ThompsonJordan?country.x=US&locale.x=en_US)
 
-**Llama-Index in ComfyUI** puts llama-index on the canvas. Models, document loaders, splitters,
-indexes, vector stores, retrievers, query and chat engines, memory, tools, agents and evaluation
-are each a node, wired and queued like any other. They run on the models a graph already loads,
-such as the Qwen3 or Gemma inside a core Load CLIP, as well as GGUF files, Hugging Face folders,
-local servers such as Ollama, and hosted providers. Pictures and video frames are indexed beside
-text, so a graph can answer from a folder of notes, find a render by what it shows, or send an
-agent to look things up before it writes a prompt. The group installs on its own and ships off;
-without it the pack needs no packages. [What it covers](FEATURES.md#llama-index-in-comfyui).
+**[Install](#install)** · **[What's inside](#highlights-of-what-youll-find)** · **[Hosted services](#hosted-services)** · **[Node reference](NODES.md)** · **[Features](FEATURES.md)** · **[144 example workflows](docs/WORKFLOWS.md)** · **[Models](docs/MODELS.md)** · **[Configuration](docs/CONFIG.md)** · **[Upgrading from v2](#upgrading-from-v2)**
 
-### See [`NODES.md`](NODES.md) for reference.
-### Browse the [workflow index](docs/WORKFLOWS.md): every example graph by area, with a preview and a download link.
-### Consider [donating to the project](https://paypal.me/ThompsonJordan?country.x=US&locale.x=en_US) to help me afford caffeine.
+</div>
 
 ---
 
-# Installation
+<table>
+<tr>
+<td width="33%"><a href="docs/BLOCKOUT.md"><img src="docs/images/readme/blockout.jpg" alt="Blockout Scenes: a grey-box dinner for two inset over the candlelit restaurant MiniMax H3 filmed from it"></a></td>
+<td width="33%"><a href="docs/H3_COND_TIMELINE.md"><img src="docs/images/readme/prompt-timeline.jpg" alt="Prompt Timeline: a scene's prompt, its preview and the scene strip"></a></td>
+<td width="33%"><a href="docs/IMAGE_EDITING.md"><img src="docs/images/readme/image-editing.jpg" alt="Image Editing: a café street changed in three edits, awning, car and flowers"></a></td>
+</tr>
+<tr>
+<td><a href="docs/3D.md"><img src="docs/images/readme/3d-scenes.jpg" alt="3D Scenes: a generated helmet path traced on a mirrored plinth"></a></td>
+<td><a href="FEATURES.md#content-viewer"><img src="docs/images/readme/content-viewer.jpg" alt="Content Viewer: a table, a flowchart and a formula rendered in a node"></a></td>
+<td><a href="docs/LLM.md"><img src="docs/images/readme/language-models.jpg" alt="Language Models: a chat answering from studio notes on a local Qwen3 4B"></a></td>
+</tr>
+</table>
+
+---
+
+<div align="center">
+
+## Highlights of What You'll Find
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+<img src="docs/images/readme/icons/generation-card.png" width="74" align="left">
+
+**Image generation and sampling**<br>
+Tiled and affine samplers, noise shaping, shift and schedule control, model quantizing, LoRA stacks.<br>
+<sub>[17 example workflows](docs/WORKFLOWS.md#image-generation-and-sampling)</sub>
+
+</td>
+<td width="50%" valign="top">
+
+<img src="docs/images/readme/icons/editing-card.png" width="74" align="left">
+
+**Image editing**<br>
+Crop-and-restore edits, edit regions, MiniMax H3 Image, Fibo 2.0, BluePixel 4K.<br>
+<sub>[10 example workflows](docs/WORKFLOWS.md#image-editing)</sub>
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+<img src="docs/images/readme/icons/looks-card.png" width="74" align="left">
+
+**Photo and film looks**<br>
+Raw-style develop, film stocks, a darkroom, looks baked into LUTs.<br>
+<sub>[4 example workflows](docs/WORKFLOWS.md#photo-and-film-looks)</sub>
+
+</td>
+<td valign="top">
+
+<img src="docs/images/readme/icons/colour-card.png" width="74" align="left">
+
+**Colour, HDR and scopes**<br>
+Levels, LUTs, ACES and colour spaces, linear light, HDR video, scopes and charts.<br>
+<sub>[5 example workflows](docs/WORKFLOWS.md#colour-hdr-and-scopes)</sub>
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+<img src="docs/images/readme/icons/masks-card.png" width="74" align="left">
+
+**Masks, regions and subjects**<br>
+Skin, face and subject masks, masks drawn on the picture, subjects followed through a clip.<br>
+<sub>[7 example workflows](docs/WORKFLOWS.md#masks-regions-and-subjects)</sub>
+
+</td>
+<td valign="top">
+
+<img src="docs/images/readme/icons/layers-card.png" width="74" align="left">
+
+**Filters, layers and preprocessors**<br>
+Filters and optics, layer stacks, layered PSD and TIFF, ControlNet preprocessors.<br>
+<sub>[10 example workflows](docs/WORKFLOWS.md#filters-layers-and-preprocessors)</sub>
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+<img src="docs/images/readme/icons/minimax-card.png" width="74" align="left">
+
+**MiniMax H3 video**<br>
+The Prompt Timeline, long videos built a segment at a time, upscaling, sparse attention, Pika H3 Flex.<br>
+<sub>[20 example workflows](docs/WORKFLOWS.md#minimax-h3-video)</sub>
+
+</td>
+<td valign="top">
+
+<img src="docs/images/readme/icons/kandinsky-card.png" width="74" align="left">
+
+**Kandinsky 6 video**<br>
+Video with sound, and video super-resolution of any length.<br>
+<sub>[3 example workflows](docs/WORKFLOWS.md#kandinsky-6-video)</sub>
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+<img src="docs/images/readme/icons/video-card.png" width="74" align="left">
+
+**Video editing and restoration**<br>
+Edits, transitions and titles, restored footage, faces restored through a shot, audio mixing and beats.<br>
+<sub>[8 example workflows](docs/WORKFLOWS.md#video-editing-and-restoration)</sub>
+
+</td>
+<td valign="top">
+
+<img src="docs/images/readme/icons/three-card.png" width="74" align="left">
+
+**3D and Three.js**<br>
+Scenes, generated models, characters and meshes, blockouts, point cloud worlds, Video Blueprint.<br>
+<sub>[24 example workflows](docs/WORKFLOWS.md#3d-and-threejs)</sub>
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+<img src="docs/images/readme/icons/text-card.png" width="74" align="left">
+
+**Prompts and text**<br>
+Prompt terminology, a style library, a system prompt library, text, lists and dictionaries.<br>
+<sub>[9 example workflows](docs/WORKFLOWS.md#prompts-and-text)</sub>
+
+</td>
+<td valign="top">
+
+<img src="docs/images/readme/icons/language-card.png" width="74" align="left">
+
+**Language models and Llama-Index**<br>
+Local and hosted models, documents, indexes, retrieval, chat, memory, tools and agents.<br>
+<sub>[11 example workflows](docs/WORKFLOWS.md#language-models-and-llama-index)</sub>
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+<img src="docs/images/readme/icons/files-card.png" width="74" align="left">
+
+**Files, datasets and documents**<br>
+Archives, folders, captioned training sets checked and fixed, a pose library, document export.<br>
+<sub>[7 example workflows](docs/WORKFLOWS.md#files-datasets-and-documents)</sub>
+
+</td>
+<td valign="top">
+
+<img src="docs/images/readme/icons/logic-card.png" width="74" align="left">
+
+**Logic, loops and apps**<br>
+Comparisons, switches, For and While loops, gates, numbers, apps built from a graph.<br>
+<sub>[8 example workflows](docs/WORKFLOWS.md#logic-loops-and-apps)</sub>
+
+</td>
+</tr>
+</table>
+
+## **Runs natively through ComfyUI**. No wrappers. _No Diffusers._
+
+<img src="docs/images/readme/icons/minimax.png" width="48" title="MiniMax H3 and H3 Image">&nbsp;
+<img src="docs/images/readme/icons/kandinsky.png" width="48" title="Kandinsky 6 and Kandinsky 6 VSR">&nbsp;
+<img src="docs/images/readme/icons/vivo.png" width="48" title="vivo BluePixel 4K"><br>
+<sub>MiniMax H3 · Kandinsky 6 · vivo BluePixel 4K · Fibo 2.0 · MOSS-Image · FLUX 3 Image Klein</sub>
+
+
+### See **[FEATURES.md](FEATURES.md)**, and every node with its inputs, outputs and tooltips is in **[NODES.md](NODES.md)**.
+
+---
+
+## Why WAS-NS
+
+<font size="3">**One of the first packs to put hundreds of nodes into ComfyUI users' and businesses' hands, rebuilt from the ground up for a modern ComfyUI**<br>
+Since 2023, over a million downloads on Comfy Registry alone, and in daily use by thousands of people.</font>
+
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🎬 The whole pipeline in one pack
+Write it with a language model, generate it, edit it, grade it, film it, upscale it, cut it to
+music and save it, without leaving ComfyUI. 779 nodes, 144 example workflows ready to open.
+
+</td>
+<td width="50%" valign="top">
+
+### 🆓 Free for anything
+MIT since the first commit. Use it, change it, teach with it, build a product on it, run it in
+paid services. The 176 third-party files it bundles each ship with their own licence.
+[docs/THIRD_PARTY.md](docs/THIRD_PARTY.md)
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🚀 New models, native
+MiniMax H3, Kandinsky 6, Fibo 2.0, BluePixel 4K and MOSS-Image run on ComfyUI's own model
+loading and memory management, in int8, W6A8 and W4A8 as well as full precision.
+
+</td>
+<td valign="top">
+
+### 🪶 Lean by design
+Nothing to install beyond a clone. No packages by default, nothing pulled from a git URL, and no
+download unless you switch the network on. Optional groups stay off until you want them.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🛡️ Safe to host
+No outbound request unless allowed, no process started, no package installed at run time. Every
+file a node names is checked against an allowlist first, and API keys never ride in a workflow.
+[SECURITY.md](SECURITY.md)
+
+</td>
+<td valign="top">
+
+### 🔍 Nodes that show their work
+Panels draw before and after, size changes, what a loader read and what a run measured, right on
+the node. No extra preview wiring to see whether it worked.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 📦 Weights hosted, links included
+Example workflows name every model they load, so ComfyUI offers each missing file with its download
+address. [docs/MODELS.md](docs/MODELS.md)
+
+</td>
+<td valign="top">
+
+### 🔁 Saved workflows still open
+Old settings are carried onto the new widgets as a workflow loads.
+213 of the 220 v2 node ids are unchanged: [Upgrading from v2](#upgrading-from-v2)
+
+</td>
+</tr>
+</table>
+
+---
+
+## Hosted services
+
+The pack's language model, embedding and tool nodes reach hosted APIs with a key read from an
+environment variable. A workflow never carries a key. **[docs/LLM.md](docs/LLM.md)** lists each
+variable and address.
+
+| Kind | Services |
+|---|---|
+| Language models | OpenAI · Anthropic · Google Gemini · Groq · DeepSeek · xAI · Mistral · OpenRouter · Together AI · Fireworks AI · Perplexity · Cerebras · NVIDIA |
+| Embeddings | OpenAI · Google Gemini |
+| Agent web search | Tavily · Brave Search · Monid |
+| Servers on your machine | Ollama · LM Studio · vLLM · llama.cpp server, plus any OpenAI-compatible endpoint in `config.yaml` |
+| 3D generators | Models from ComfyUI's Tripo, Hunyuan3D, Meshy and Rodin nodes go straight into a Three.js scene with **Three Load Model** |
+
+The same nodes also run fully local: GGUF files, Hugging Face folders, and the Qwen3 or Gemma
+already loaded inside a core **Load CLIP**.
+
+---
+
+## Install
 
 > [!WARNING]
-> **WAS Node Suite v3** should not be installed through ComfyUI Manager unless intalling a approved version, or it will silently downgrade your installation and may break things. Either directly clone the repository or use the [Open Manager](https://github.com/WASasquatch/open-manager-comfyui).
+> Install v3 by cloning or through [Open Manager](https://github.com/WASasquatch/open-manager-comfyui). ComfyUI Manager can silently replace it with an outdated copy.
 
-### Manually clone into `custom_nodes`:
+</div>
 
 ```sh
 cd ComfyUI/custom_nodes
 git clone https://github.com/WASasquatch/was-node-suite-comfyui.git
 ```
 
-Requires **ComfyUI 0.14.0 or newer** and **Python 3.10+**.
+<div align="center">
 
-That is the whole install. **Nothing is installed, downloaded or built**, now or on any later
-start. The pack never runs pip on its own.
+Requires **ComfyUI 0.14.0+** and **Python 3.10+**. That is the whole basic default install.
 
-**The first start takes a second or two longer than the rest.** Your `config.yaml`, the state
-database and the wildcard, LUT and view-extension folders are written under
-`<ComfyUI user dir>/was-node-suite/`, and python compiles the pack to bytecode. An update
-recompiles, so it happens once more each time you pull.
-
-Four optional groups want packages and ship off: `document_export`, which lets **Save DOC**
-write `.docx`, `.odt` and `.pdf`, `llm`, the language model nodes, `vector_stores`, which adds
-LanceDB, FAISS and Postgres to the LLM nodes' vector stores, and `chroma`, which adds Chroma.
-
-```sh
-# portable ComfyUI, from the ComfyUI_windows_portable directory
-python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\was-node-suite-comfyui\requirements\document_export.txt
-python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\was-node-suite-comfyui\requirements\llm.txt
-python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\was-node-suite-comfyui\requirements\vector_stores.txt
-python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\was-node-suite-comfyui\requirements\chroma.txt
-```
-
-[Open Manager](https://github.com/WASasquatch/open-manager-comfyui) installs the same four
-groups from the **Optional** tab on the pack's page.
-
-Then set `document_export: true`, `llm: true`, `vector_stores: true` or `chroma: true` under `features:` in `config.yaml`. The `llm`
-group's keys, model folders and servers: [`docs/LLM.md`](docs/LLM.md).
-[`docs/CONFIG.md`](docs/CONFIG.md#features) has every group, what it needs and what it gates.
+Four optional groups need packages and start off: `llm`, `vector_stores`, `chroma` and
+`document_export`. Install their requirements file, then turn the group on in `config.yaml`:
+**[docs/CONFIG.md](docs/CONFIG.md#features)**. Open Manager installs them from the pack's
+**Optional** tab.
 
 ---
 
-# What changed since v2
+## Upgrading from v2
 
-779 nodes across a package of source files. The pack itself needs no packages, and nothing is
-fetched from a git URL. What it bundles ships in the repository with its licence beside it,
-listed in [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
-
-| | v2 | v3 |
-|---|---|---|
-| Nodes | 220 | 723 |
-| Default packages installed | 20 | 0 |
-| Installed from a git URL | 3 | 0 |
-| Third-party carried in the repository | SAM and BLIP, 75 files of python | 176 files: browser libraries, fonts, eight face cascades, three sets of weights, five networks and one prompt, each with its licence |
-| Optional node groups | none | 26 keys in `config.yaml`, 10 of them off out of the box. Per-node disable group. |
-
-213 of the 220 node ids are unchanged. Four are retired onto replacements, three are removed
-outright, and the section below says what opens in their place. Face detection, gradient maps, background removal, frame interpolation,
-seamless textures, colour matching, levels, palettes, masks and deconvolution all run on torch,
-on ComfyUI's own device, so OpenCV, numba, rembg, timm, scipy, scikit-image, scikit-learn and
-matplotlib are not installed. Everything else a node reaches for either ships with ComfyUI or
-belongs to an optional group.
-
-## 425 new nodes
-
-| Area | New | Area | New |
-|---|--:|---|--:|
-| Llama-Index in ComfyUI | 79 | Bounds | 10 |
-| Three.js scenes | 44 | HDR and linear light | 9 |
-| Audio | 39 | Affine sampling | 7 |
-| Files, archives and documents | 28 | Everything else | 161 |
-| Logic and flow | 26 | | |
-| Layers | 22 | | |
-
-What each area does: [`FEATURES.md`](FEATURES.md).
+213 of the 220 v2 node ids are unchanged, and a workflow saved before v3 is carried across as it
+loads. Four retired nodes come back through ComfyUI's replace button, and five removed ones open
+as red boxes. What changed, node by node: **[docs/UPGRADING.md](docs/UPGRADING.md)**.
 
 ---
 
-# Opening a workflow saved before v3
+<div align="center">
 
-No node id is renamed. Two nodes are now a different node under the same menu name, two ids
-are gone and another node does the job of each, and ComfyUI offers to swap all four in. Five
-ids are removed with nothing in their place. Widgets, slot counts, three menu labels and six
-results changed, and a workflow saved before v3 is carried across as it loads.
-
-**Four retired ids.** Each one opens listed in ComfyUI's missing-node dialog. Tick it, press
-the replace button, and the node comes back in place. Leave the dialog and it stays missing.
-The old name still finds its replacement in the Add Node search.
-
-| Saved as | Comes back as | With |
-|---|---|---|
-| `Image Crop Face` | the same name, on a replacement running the same eight cascades | wiring, crop padding, cascade choice, flip setting |
-| `Image Gradient Map` | the same name, on a replacement running the same gradients | wiring and settings |
-| `Load Lora` | **Lora Loader (Advanced)**, same five inputs and three outputs | model and CLIP wired, all three outputs wired, LoRA choice, both strengths |
-| `Number to Text` | **Number to String**, same NUMBER, INT and FLOAT input, same STRING output | both wires. Neither node has a widget, so nothing is retyped |
-
-The two face and gradient nodes ran through OpenCV, which the pack no longer installs. Their
-replacements run on ComfyUI's own device and need nothing installed.
-
-**Five removed ids.** Each opens as a red box where it stood, with its links dropped. There
-is no replacement for any of them; delete the node.
-
-| Saved as | What it did | What to do |
-|---|---|---|
-| `Image Send HTTP` | Posted an image batch to an address | Write the batch with **Image Save** |
-| `Text Random Prompt` | Read a prompt from lexica.art | Write the prompt, or use **Prompt Library** |
-| `True Random.org Number Generator` | Drew a seed from RANDOM.ORG | Use **Random Number** or **Seed** |
-| `WASDownloadImage` | Read an image from a web address | Save the file, then use **Load Image** |
-| `WASNoodleSoupPantryRefresh` | Downloaded the Noodle Soup pantry | Nothing. The pantry ships with the pack and seeds the database on first start |
-
-The pack now makes no outbound request of its own from any node.
-
-**Widgets and slots, carried across for you.** Thirty-six dropdowns reading `true` and `false`
-are now checkboxes, and fourteen nodes that stopped at four to eight slots now declare
-twenty-four or twenty-six, drawing one empty slot below the last one filled. Saved settings are
-read back onto the new widgets and everything wired stays wired. The three batchers each gain a
-`count` output below the one they had. `Image Save`'s `prefix_as_filename` is now
-`overwrite_mode`, ticked where it read `true`. `Image Save`'s `show_previews` is now the
-`gallery` menu in the same place: `node gallery` where it read `true`, and `interface gallery`
-where it read `false`. `Logic Boolean`'s 0 to 1 slider is a checkbox,
-ticked where it read above 0.5.
-
-**Three Custom Material takes a module file.** Its `javascript` box is gone. The node now picks
-a `.js` or `.txt` module from ComfyUI's `input` folder or a folder under `paths.allow_read`, and
-the module's header names the textures it wants, which the node's slots then read as. A body
-typed into an older workflow is dropped rather than read onto the menu, so open one, put the
-body in a file and pick it. Code no longer travels inside a workflow, so a graph from someone
-else cannot bring javascript with it. [docs/CONFIG.md](docs/CONFIG.md#threejs) has the setting
-that permits a module to run at all.
-
-**Three renamed labels.** `KSampler` is now `KSampler (Seed Socket)`, `Seed` is
-`Seed (Number Outputs)` and `Save Video` is `Save Video (Advanced)`, so none shares a name with
-a core ComfyUI node. Only the label changed, and the old names still find them in search.
-
-**Six changed results.**
-
-| Node | What changed | What to do |
-|---|---|---|
-| `Image Blending Mode` | 26 blend modes instead of 14, in linear light on the GPU, keeping values above white. `add` now adds the two layers rather than painting `image_b` over `image_a` | A graph using `add` comes out brighter. Switch it to `normal` for what it did before |
-| `Image Style Filter` | 37 looks, every graded one finished with a halation. The 26 period looks keep the colour their name has always meant | Nothing. A saved workflow opens on the same style |
-| `Image Film Grain` | Adds grain that follows the picture's brightness and keeps its colour, instead of blending a grey, sharpened noise layer over it. `density`, `intensity`, `highlights` and `supersample_factor` are replaced by `strength`, `grain_size`, `color` and `seed` | Nothing. A saved workflow opens on the new defaults, which give fine film grain |
-| `Logic Boolean` | Its input takes a wired INT, FLOAT, NUMBER or text as well as the checkbox, and reads a number as true unless it is 0, where it rounded at 0.5. The FLOAT output gives 1.0 or 0.0 instead of the slider's value | A FLOAT between 0 and 0.5 wired into it now reads true. Put **Logic Compare Numbers** in front of it, `a > b` against 0.5, for the old answer |
-| `Mask Erode Region` | Holds the frame edge instead of treating outside the frame as unset | A mask that touched an edge comes out wider. One with a clear margin is unchanged |
-| `Image SSAO (Ambient Occlusion)` | Traces rays across the map as real relief instead of averaging neighbouring pixels, so the shading follows the surface and no longer reacts to the image's own colour. The `depth_images` input is now `height_maps`, `tile_size` is gone, and `height_scale`, `ray_count`, `step_count` and `angle_bias` set the relief and the tracing. The whole body is float now, so linear light above 1.0 is shaded rather than clipped, and a `precision` widget writes 8, 16 or 32 bit for EXR Save | Re-wire the depth map into `height_maps`, which opens unconnected. The other settings are read back onto the new widgets. Highlight masking now starts off, so the node shades as soon as it is dropped, and `strength` at 0 leaves the image untouched rather than black |
-
----
-
-# Nodes
-
-**779 nodes** across 76 categories. [`NODES.md`](NODES.md) carries every input, output and
-tooltip, and groups them by the `config.yaml` switch that gates them:
-[feature gates](NODES.md#feature-gates).
-
-**28 are deprecated**, which ComfyUI marks in the Add Node menu, and each names its
-replacement. They sit in the nine `legacy` groups in `config.yaml`, four of which start off:
-[`docs/CONFIG.md`](docs/CONFIG.md#legacy).
-
----
-# Features
-
-[`FEATURES.md`](FEATURES.md) covers what the pack does, by area: masking, layers, bounds,
-filters and optics, transforms, colour and LUTs, HDR, instruments, logic and flow, numbers,
-text and dictionaries, prompt terminology and styles, files and archives, animation, models
-and LoRA, the affine transform, noise shaping, Kandinsky 6 video with sound, video comparison,
-execution gating, the Content Viewer, Three.js scenes and graph plumbing.
-
----
-# Model weights
-
-Nothing is downloaded unless you ask for it. `features.network` is `false` out of the box, so a node needing weights it cannot find says so and names the key rather than reaching for the network, and **Three Texture URL** takes only `data:` addresses and the pack's own assets.
-
-**Let it download.** Set `network: true` under `features:` in `config.yaml`.
-
-## See **[docs/MODELS.md](docs/MODELS.md)** for more information.
-
----
-
-# Configuration
-
-Written for you on first start at `<ComfyUI user dir>/was-node-suite/config.yaml`, as a copy of
-[`config.example.yaml`](config.example.yaml) with every key at its default and the comment that
-explains it. Edit it there as it will survive updates.
-
-## [`docs/CONFIG.md`](docs/CONFIG.md)
-
----
-
-# Third-party code in the pack
-
-The suite is MIT, see [`LICENSE`](LICENSE). It bundles 176 third-party files: three.js and
-three-gpu-pathtracer, HugeRTE, Prism.js, KaTeX and Mermaid, the EMA-VFI, SEA-RAFT, FlowSeek,
-MiniMax H3 latent upscaler and Kandinsky 6 networks, Shot Reader v2's prompt, the DejaVu, Liberation and Aileron fonts,
-eight face cascades and three sets of weights. Each keeps its own licence text in the folder it
-ships in, and none of it is ever fetched. Every licence permits redistribution.
-
-The measurements and charts of **Dataset Health** and **Caption Statistics** come from
-[ZenTrainer](https://github.com/Nynxz/ZenTrainer) by Nynxz, MIT, with its licence in
-[`modules/dataset/`](modules/dataset/LICENSE.zentrainer).
-
-Versions, copyright lines, which licence covers what and a byte-level account of every bundled
-copy: [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
-
-The software licences place no conditions on what you make with the suite: documents, captions
-and images you produce are yours. Open RAIL++-M, covering one 8 KB embedding, is the exception.
-It claims no rights in output but its use restrictions reach any use of that output, including
-the intrinsic maps **Power Preprocessor** answers with.
-
----
-
-# Security
-
-Outbound requests are off out of the box, nothing starts a process or installs a package, and a
-node input naming a file is resolved against an allowlist before the filesystem is touched.
-What the pack does and does not do, and how to report a vulnerability:
-[`SECURITY.md`](SECURITY.md).
-
----
-
-# Contributing
-
-Bug reports and feature requests are welcome as issues. For a change to a node, open an issue first, so its inputs and outputs are settled before the code is written. See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md).
+**[Security](SECURITY.md)** · **[Third-party code](docs/THIRD_PARTY.md)** · **[Contributing](docs/CONTRIBUTING.md)** · **[Discord](https://discord.gg/y7FRDaNNun)** · **[Donate](https://paypal.me/ThompsonJordan?country.x=US&locale.x=en_US)**
 
 <a href="https://github.com/WASasquatch/was-node-suite-comfyui/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=WASasquatch/was-node-suite-comfyui" />
 </a>
+
+<sub>MiniMax, Kandinsky and vivo names and logos belong to their owners and mark the models the pack runs; no endorsement is implied.</sub>
+
+</div>
+
+</div>
